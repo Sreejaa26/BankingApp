@@ -40,6 +40,16 @@ export const AppShell: FunctionalComponent<AppShellProps> = ({
           </span>
         </div>
 
+        <div class="sidebar-account">
+          <span class="sidebar-account__icon">₹</span>
+          <div>
+            <small>Personal banking</small>
+            <strong>Northstar Premier</strong>
+          </div>
+          <span class="sidebar-account__chevron">⌄</span>
+        </div>
+
+        <p class="navigation-label">Workspace</p>
         <nav class="primary-navigation">
           {NAVIGATION_ITEMS.map((item) => (
             <button
@@ -61,8 +71,9 @@ export const AppShell: FunctionalComponent<AppShellProps> = ({
           <span class="sidebar-help__icon">?</span>
           <div>
             <strong>Need help?</strong>
-            <small>We are available 24/7</small>
+            <small>Chat with us, 24/7</small>
           </div>
+          <span class="sidebar-help__arrow">›</span>
         </div>
       </aside>
 
@@ -80,10 +91,11 @@ export const AppShell: FunctionalComponent<AppShellProps> = ({
           onToggleNavigation={() => setNavigationOpen(true)}
           onLogout={onLogout}
         />
-        <main class="page-content">{children}</main>
+        <main key={activeRoute} class="page-content">
+          {children}
+        </main>
         <Footer />
       </div>
     </div>
   );
 };
-

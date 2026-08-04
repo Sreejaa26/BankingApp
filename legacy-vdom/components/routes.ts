@@ -16,15 +16,15 @@ export interface NavigationItem {
 }
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
-  { route: "dashboard", label: "Dashboard", shortLabel: "DB" },
-  { route: "accounts", label: "Accounts", shortLabel: "AC" },
-  { route: "transactions", label: "Transactions", shortLabel: "TX" },
-  { route: "beneficiaries", label: "Beneficiaries", shortLabel: "BE" },
-  { route: "transfer", label: "Transfer Money", shortLabel: "TR" },
-  { route: "loans", label: "Loans", shortLabel: "LN" },
-  { route: "cards", label: "Cards", shortLabel: "CD" },
-  { route: "notifications", label: "Notifications", shortLabel: "NT" },
-  { route: "admin", label: "Admin Dashboard", shortLabel: "AD" }
+  { route: "dashboard", label: "Dashboard", shortLabel: "⌂" },
+  { route: "accounts", label: "Accounts", shortLabel: "▤" },
+  { route: "transactions", label: "Transactions", shortLabel: "↕" },
+  { route: "beneficiaries", label: "Beneficiaries", shortLabel: "◎" },
+  { route: "transfer", label: "Transfer Money", shortLabel: "↗" },
+  { route: "loans", label: "Loans", shortLabel: "◇" },
+  { route: "cards", label: "Cards", shortLabel: "▱" },
+  { route: "notifications", label: "Notifications", shortLabel: "◌" },
+  { route: "admin", label: "Admin Dashboard", shortLabel: "⌘" }
 ];
 
 const VALID_ROUTES = new Set<AppRoute>(
@@ -41,4 +41,3 @@ export function routeTitle(route: AppRoute): string {
     NAVIGATION_ITEMS.find((item) => item.route === route)?.label ?? "Dashboard"
   );
 }
-

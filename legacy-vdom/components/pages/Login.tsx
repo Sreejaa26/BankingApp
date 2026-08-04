@@ -6,11 +6,15 @@ import "ojs/ojbutton";
 
 interface LoginProps {
   onLogin: (username: string, password: string) => Promise<void> | void;
+  onShowRegister: () => void;
 }
 
 type ValueChangedEvent = CustomEvent<{ value: string | null | undefined }>;
 
-export const Login: FunctionalComponent<LoginProps> = ({ onLogin }) => {
+export const Login: FunctionalComponent<LoginProps> = ({
+  onLogin,
+  onShowRegister
+}) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,13 +45,8 @@ export const Login: FunctionalComponent<LoginProps> = ({ onLogin }) => {
         <div class="login-story__glow login-story__glow--two" />
 
         <div class="brand brand--light">
-          <span class="brand-mark" aria-hidden="true">
-            N
-          </span>
-          <span>
-            <strong>Northstar</strong>
-            <small>Digital Banking</small>
-          </span>
+          <span class="brand-mark" aria-hidden="true">N</span>
+          <span><strong>Northstar</strong><small>Digital Banking</small></span>
         </div>
 
         <div class="login-story__content">
@@ -59,18 +58,9 @@ export const Login: FunctionalComponent<LoginProps> = ({ onLogin }) => {
           </p>
 
           <div class="trust-row">
-            <div>
-              <strong>24/7</strong>
-              <span>Account access</span>
-            </div>
-            <div>
-              <strong>256-bit</strong>
-              <span>Encryption</span>
-            </div>
-            <div>
-              <strong>Instant</strong>
-              <span>Alerts</span>
-            </div>
+            <div><strong>24/7</strong><span>Account access</span></div>
+            <div><strong>256-bit</strong><span>Encryption</span></div>
+            <div><strong>Instant</strong><span>Alerts</span></div>
           </div>
         </div>
 
@@ -83,31 +73,21 @@ export const Login: FunctionalComponent<LoginProps> = ({ onLogin }) => {
       <section class="login-panel">
         <div class="login-card">
           <div class="mobile-brand brand">
-            <span class="brand-mark" aria-hidden="true">
-              N
-            </span>
-            <span>
-              <strong>Northstar</strong>
-              <small>Digital Banking</small>
-            </span>
+            <span class="brand-mark" aria-hidden="true">N</span>
+            <span><strong>Northstar</strong><small>Digital Banking</small></span>
           </div>
 
           <div class="login-heading">
-            <span class="welcome-icon" aria-hidden="true">
-              →
-            </span>
+            <span class="welcome-icon" aria-hidden="true">↗</span>
             <p class="page-eyebrow">Welcome back</p>
             <h2>Sign in to online banking</h2>
             <p>Enter your credentials to securely access your accounts.</p>
           </div>
 
-          <form
-            class="login-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submitLogin();
-            }}
-          >
+          <form class="login-form" onSubmit={(event) => {
+            event.preventDefault();
+            void submitLogin();
+          }}>
             <oj-c-input-text
               labelHint="Username"
               value={username}
@@ -134,17 +114,11 @@ export const Login: FunctionalComponent<LoginProps> = ({ onLogin }) => {
             />
 
             <div class="login-options">
-              <label>
-                <input type="checkbox" /> Remember username
-              </label>
+              <label><input type="checkbox" /> Remember username</label>
               <a href="#/forgot-password">Forgot password?</a>
             </div>
 
-            {error && (
-              <div class="form-error" role="alert">
-                {error}
-              </div>
-            )}
+            {error && <div class="form-error" role="alert">{error}</div>}
 
             <oj-button
               class="login-button"
@@ -158,7 +132,9 @@ export const Login: FunctionalComponent<LoginProps> = ({ onLogin }) => {
 
           <div class="register-prompt">
             <span>New to digital banking?</span>
-            <a href="#/register">Register now</a>
+            <button class="auth-link" type="button" onClick={onShowRegister}>
+              Register now
+            </button>
           </div>
 
           <div class="login-support">

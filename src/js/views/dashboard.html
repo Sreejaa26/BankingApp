@@ -1,0 +1,87 @@
+<div class="dashboard-page page-stack">
+  <section class="welcome-banner dashboard-hero">
+    <div>
+      <p class="page-eyebrow">Tuesday, 4 August</p>
+      <h2>Good morning, Sreeja.</h2>
+      <p>Your finances are looking healthy. Here’s today’s overview.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="secondary-action" data-bind="click: go.bind($data, 'transactions')">Download statement</button>
+      <button class="primary-page-button" data-bind="click: go.bind($data, 'transfer')"><span class="button-icon">↗</span> Make a transfer</button>
+    </div>
+  </section>
+
+  <section class="metric-grid" aria-label="Account summary">
+    <article class="metric-card metric-card--primary">
+      <div class="metric-card__top"><span>Total balance</span><span class="metric-icon">₹</span></div>
+      <strong>₹4,82,650.20</strong><small>Across 3 accounts</small>
+      <div class="balance-card__footer"><div class="mini-sparkline" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="trend trend--light">↑ 4.8%</span></div>
+    </article>
+    <article class="metric-card">
+      <div class="metric-card__top"><span>Monthly income</span><span class="metric-icon metric-icon--green">↓</span></div>
+      <strong>₹1,04,500</strong><small>August 2026</small><div class="trend">↑ ₹8,200 vs July</div>
+    </article>
+    <article class="metric-card">
+      <div class="metric-card__top"><span>Monthly spending</span><span class="metric-icon metric-icon--gold">↗</span></div>
+      <strong>₹48,730</strong><small>46% of monthly income</small><div class="progress-track"><span style="width:46%"></span></div>
+    </article>
+  </section>
+
+  <section class="quick-action-bar" aria-label="Quick actions">
+    <div class="quick-action-intro"><p class="page-eyebrow">Quick actions</p><strong>What would you like to do?</strong></div>
+    <button data-bind="click: go.bind($data, 'transfer')"><span>↗</span> Send money</button>
+    <button data-bind="click: go.bind($data, 'beneficiaries')"><span>＋</span> Add beneficiary</button>
+    <button data-bind="click: go.bind($data, 'cards')"><span>▱</span> Manage cards</button>
+    <button data-bind="click: go.bind($data, 'loans')"><span>◇</span> View loans</button>
+  </section>
+
+  <section class="lifestyle-banner" aria-label="Digital banking from anywhere">
+    <div class="lifestyle-banner__copy">
+      <p class="page-eyebrow">Bank around your life</p>
+      <h3>Simple money management, wherever the day takes you.</h3>
+      <p>Stay close to your accounts, payments, cards and goals from one secure experience.</p>
+      <button class="secondary-action" type="button" data-bind="click: go.bind($data, 'accounts')">Explore digital banking →</button>
+    </div>
+    <figure><img src="styles/images/northstar-digital-life.png" alt="Customer securely managing finances on a smartphone"></figure>
+  </section>
+
+  <section class="discovery-section" aria-labelledby="offers-title">
+    <div class="section-heading-row">
+      <div><p class="page-eyebrow">Selected for you</p><h3 id="offers-title">Make more of your money</h3></div>
+      <button class="text-button" type="button" data-bind="click: go.bind($data, 'accounts')">Explore all products →</button>
+    </div>
+    <div class="offer-grid" data-bind="foreach: offers">
+      <article class="offer-card" data-bind="css: accentClass">
+        <div class="offer-card__top"><span class="offer-icon" data-bind="text: icon"></span><span class="offer-tag" data-bind="text: tag"></span></div>
+        <div><p data-bind="text: eyebrow"></p><h4 data-bind="text: title"></h4><span data-bind="text: copy"></span></div>
+        <button type="button" data-bind="click: $parent.go.bind($parent, route)"><span data-bind="text: action"></span> <i>→</i></button>
+      </article>
+    </div>
+  </section>
+
+  <section class="chart-grid" aria-label="Financial charts">
+    <article class="surface-card chart-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Six-month overview</p><h3>Cash flow</h3></div><div class="chart-heading-actions"><span class="status-chip status-chip--positive">● Healthy</span><button class="period-select">Last 6 months⌄</button></div></div>
+      <oj-chart class="banking-chart" type="line" series="[[cashFlowSeries]]" groups="[[cashFlowGroups]]" animation-on-display="auto" legend.position="bottom"></oj-chart>
+    </article>
+    <article class="surface-card chart-card">
+      <div class="card-heading"><div><p class="page-eyebrow">August spending</p><h3>Spending breakdown</h3></div><button class="card-menu" aria-label="Spending options">•••</button></div>
+      <oj-chart class="banking-chart" type="pie" series="[[spendingSeries]]" groups="[[spendingGroups]]" animation-on-display="auto" legend.position="bottom"></oj-chart>
+    </article>
+  </section>
+
+  <section class="dashboard-grid">
+    <article class="surface-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Portfolio</p><h3>Your accounts</h3></div><button class="text-button" data-bind="click: go.bind($data, 'accounts')">View all →</button></div>
+      <div class="account-list" data-bind="foreach: accounts">
+        <div class="account-row"><span class="account-icon" data-bind="text: icon, css: iconClass"></span><div><strong data-bind="text: name"></strong><small data-bind="text: meta"></small></div><strong data-bind="text: amount"></strong></div>
+      </div>
+    </article>
+    <article class="surface-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Latest activity</p><h3>Recent transactions</h3></div><button class="text-button" data-bind="click: go.bind($data, 'transactions')">View all →</button></div>
+      <div class="transaction-list" data-bind="foreach: transactions">
+        <div class="transaction-row"><span class="transaction-icon" data-bind="text: icon"></span><div><strong data-bind="text: name"></strong><small data-bind="text: meta"></small></div><strong data-bind="text: amount, css: {'amount-positive': positive}"></strong></div>
+      </div>
+    </article>
+  </section>
+</div>

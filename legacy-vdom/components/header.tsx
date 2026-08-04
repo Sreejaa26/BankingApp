@@ -31,6 +31,15 @@ export const Header: FunctionalComponent<HeaderProps> = ({
     </div>
 
     <div class="header-actions">
+      <label class="header-search">
+        <span aria-hidden="true">⌕</span>
+        <input type="search" placeholder="Search banking" aria-label="Search banking" />
+        <kbd>⌘ K</kbd>
+      </label>
+      <button class="header-icon-button" type="button" aria-label="View notifications">
+        <span aria-hidden="true">◌</span>
+        <i />
+      </button>
       <div class="customer-summary" aria-label="Signed in customer">
         <span class="customer-avatar">SP</span>
         <span class="customer-copy">
@@ -38,10 +47,9 @@ export const Header: FunctionalComponent<HeaderProps> = ({
           <small>Primary customer</small>
         </span>
       </div>
-      <oj-button chroming="borderless" onojAction={onLogout}>
-        Sign out
-      </oj-button>
+      <button class="signout-button" type="button" onClick={onLogout} aria-label="Sign out">
+        ↪
+      </button>
     </div>
   </header>
 );
-

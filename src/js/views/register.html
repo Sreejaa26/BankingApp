@@ -1,0 +1,89 @@
+<main class="login-page register-page">
+  <section class="login-story register-story" aria-label="Northstar registration introduction">
+    <div class="login-story__glow login-story__glow--one"></div>
+    <div class="login-story__glow login-story__glow--two"></div>
+    <div class="brand brand--light"><span class="brand-mark" aria-hidden="true">N</span><span><strong>Northstar</strong><small>Digital Banking</small></span></div>
+    <div class="login-story__content">
+      <span class="security-pill">Simple, secure onboarding</span>
+      <h1>Your financial future starts here.</h1>
+      <p>Create your digital banking profile in a few steps and securely manage every part of your financial life.</p>
+      <div class="registration-steps" aria-label="Registration benefits">
+        <div><span>01</span><p><strong>Create your profile</strong><small>Tell us how to reach you.</small></p></div>
+        <div><span>02</span><p><strong>Secure your access</strong><small>Choose a unique username and password.</small></p></div>
+        <div><span>03</span><p><strong>Start banking</strong><small>Open your personalized dashboard.</small></p></div>
+      </div>
+    </div>
+    <p class="login-story__footer">Your information is protected with bank-grade security and encryption.</p>
+  </section>
+
+  <section class="login-panel register-panel">
+    <div class="login-card register-card">
+      <div class="mobile-brand brand"><span class="brand-mark" aria-hidden="true">N</span><span><strong>Northstar</strong><small>Digital Banking</small></span></div>
+      <div class="login-heading">
+        <span class="welcome-icon" aria-hidden="true">＋</span>
+        <p class="page-eyebrow">Open your profile</p>
+        <h2>Register for digital banking</h2>
+        <p>Enter your details to create secure online access.</p>
+      </div>
+
+      <div class="auth-stepper" aria-label="Registration progress">
+        <div data-bind="css: { 'is-active': step() === 1, 'is-complete': step() === 2 }"><span>1</span><strong>Account details</strong></div>
+        <i aria-hidden="true"></i>
+        <div data-bind="css: { 'is-active': step() === 2 }"><span>2</span><strong>Secure with 2FA</strong></div>
+      </div>
+
+      <form class="login-form register-form auth-step-panel" data-bind="submit: continueToTwoFactor, visible: step() === 1">
+        <div class="register-form__grid">
+          <oj-input-text label-hint="Full name" value="{{fullName}}" required autocomplete="name" placeholder="Enter your full name"></oj-input-text>
+          <oj-input-text label-hint="Email address" value="{{email}}" required autocomplete="email" placeholder="name@example.com"></oj-input-text>
+          <oj-input-text label-hint="Mobile number" value="{{mobile}}" required autocomplete="tel" placeholder="Enter 10-digit number"></oj-input-text>
+          <oj-input-text label-hint="Username" value="{{username}}" required autocomplete="username" placeholder="Choose a username"></oj-input-text>
+          <oj-input-password label-hint="Password" value="{{password}}" required autocomplete="new-password" placeholder="Minimum 8 characters" mask-icon="visible"></oj-input-password>
+          <oj-input-password label-hint="Confirm password" value="{{confirmPassword}}" required autocomplete="new-password" placeholder="Re-enter your password" mask-icon="visible"></oj-input-password>
+        </div>
+        <p class="password-note">Use at least 8 characters and avoid personal information.</p>
+        <div class="captcha-box" role="group" aria-labelledby="captcha-heading">
+          <div class="captcha-challenge">
+            <span class="captcha-icon" aria-hidden="true">✓</span>
+            <div><small id="captcha-heading">Security check</small><strong>Type the characters</strong></div>
+          </div>
+          <canvas class="captcha-canvas" width="190" height="56" data-bind="captchaCanvas: captchaCode" role="img" aria-label="Five-character CAPTCHA image"></canvas>
+          <oj-input-text class="captcha-answer" label-hint="Enter characters" value="{{captchaAnswer}}" required autocomplete="off" placeholder="Type code"></oj-input-text>
+          <button class="captcha-refresh" type="button" data-bind="click: refreshCaptcha" aria-label="Generate a new CAPTCHA image"><span aria-hidden="true">↻</span> New image</button>
+        </div>
+        <label class="terms-check"><input type="checkbox" data-bind="checked: acceptedTerms"><span>I agree to the <a href="#/terms">Terms of Service</a> and <a href="#/privacy">Privacy Policy</a>.</span></label>
+        <div class="form-error" role="alert" data-bind="visible: error, text: error"></div>
+        <button class="primary-auth-button" type="submit">Continue to 2FA</button>
+      </form>
+
+      <form class="login-form register-form auth-step-panel" data-bind="submit: verifyTwoFactor, visible: step() === 2">
+        <section class="two-factor-setup" aria-labelledby="two-factor-heading">
+          <div class="two-factor-copy">
+            <span class="two-factor-badge">Final security step</span>
+            <h3 id="two-factor-heading">Set up two-factor authentication</h3>
+            <p>Your details are verified. Now connect an authenticator app to protect every sign-in.</p>
+            <ol class="two-factor-steps">
+              <li>Open Google Authenticator, Microsoft Authenticator, or another authenticator app.</li>
+              <li>Add an account and scan the QR code.</li>
+              <li>Enter the current 6-digit code to finish registration.</li>
+            </ol>
+            <oj-input-text class="two-factor-input" label-hint="6-digit authenticator code" value="{{twoFactorCode}}" required maxlength="6" autocomplete="one-time-code" virtual-keyboard="number" placeholder="000000"></oj-input-text>
+            <p class="two-factor-note"><span aria-hidden="true">●</span> A new code will be required whenever you sign in.</p>
+          </div>
+          <div class="two-factor-qr-wrap">
+            <img class="two-factor-qr" data-bind="attr: { src: twoFactorQr }" alt="QR code for setting up two-factor authentication">
+            <strong>Scan to connect</strong>
+            <span>Authenticator app</span>
+          </div>
+        </section>
+        <div class="form-error" role="alert" data-bind="visible: error, text: error"></div>
+        <div class="auth-step-actions">
+          <button class="secondary-auth-button" type="button" data-bind="click: backToDetails">Back to details</button>
+          <button class="primary-auth-button" type="submit" data-bind="disable: isSubmitting, text: isSubmitting() ? 'Creating profile…' : 'Enable 2FA & create profile'"></button>
+        </div>
+      </form>
+
+      <div class="register-prompt auth-switch" data-bind="visible: step() === 1"><span>Already registered?</span><button class="auth-link" type="button" data-bind="click: showLogin">Sign in</button></div>
+    </div>
+  </section>
+</main>

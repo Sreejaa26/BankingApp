@@ -1,49 +1,103 @@
 <!DOCTYPE html>
-<!--
- Copyright (c) 2014, 2026, Oracle and/or its affiliates.
- Licensed under The Universal Permissive License (UPL), Version 1.0
- as shown at https://oss.oracle.com/licenses/upl/
- -->
-
-<!-- ************************ IMPORTANT INFORMATION ************************************
-  This web basic template is provided as an example of how to configure
-  a JET web application.  It contains the Oracle JET framework and a default
-  requireJS configuration file to show how JET can be setup in a common application.
-  This project template can be used in conjunction with demo code from the JET
-  website to test JET component behavior and interactions.
-
-  Any CSS styling with the prefix "demo-" is for demonstration only and is not
-  provided as part of the JET framework.
-
-  Please see the demos under Cookbook/Patterns/App Shell: Web and the CSS documentation
-  under Support/API Docs/Non-Component Styling on the JET website for more information on how to use
-  the best practice patterns shown in this template.
-
-  Aria Landmark role attributes are added to the different sections of the application
-  for accessibility compliance. If you change the type of content for a specific
-  section from what is defined, you should also change the role value for that
-  section to represent the appropriate content type.
-  ***************************** IMPORTANT INFORMATION ************************************ -->
 <html lang="en-us">
   <head>
-    <title>Oracle JET VDOM Starter Template - Basic</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1"/>
-    <meta name="description" content="The Oracle JET VDOM Starter Template" />
-    <link rel="icon" href="styles/images/JET-Favicon-Red-32x32.png" type="image/x-icon" />
-    <!-- This is injects main css file for the default theme -->
-		<!-- injector:theme -->
-		<!-- endinjector -->
-    <!-- This contains icon fonts used by the starter template -->
-		<!-- injector:font -->
-		<!-- endinjector:font -->
-    <!-- This is where you would add any app specific styling -->
-    <link rel="stylesheet" href="styles/app.css" type="text/css" />
+    <title>Northstar Digital Banking</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1">
+    <meta name="description" content="Northstar Digital Banking customer portal">
+    <link rel="icon" href="styles/images/JET-Favicon-Red-32x32.png" type="image/x-icon">
+    <!-- injector:theme -->
+    <!-- endinjector -->
+    <!-- injector:font -->
+    <!-- endinjector:font -->
+    <link rel="stylesheet" href="styles/app.css" type="text/css">
   </head>
-  <body class="oj-web-applayout-body" data-oj-binding-provider="none">
-    <app-root></app-root>
-    <!-- This injects script tags for the main javascript files -->
-		<!-- injector:scripts -->
-		<!-- endinjector -->
+  <body class="oj-web-applayout-body">
+    <div id="globalBody">
+      <div data-bind="if: !isAuthenticated()">
+        <oj-module config="[[authModuleConfig]]"></oj-module>
+      </div>
+
+      <div data-bind="if: isAuthenticated">
+        <div class="app-shell app-shell--topnav">
+          <aside class="side-navigation" data-bind="css: {'is-open': navigationOpen}" aria-label="Banking navigation">
+            <div class="brand brand--shell">
+              <span class="brand-mark" aria-hidden="true">N</span>
+              <span><strong>Northstar</strong><small>Digital Banking</small></span>
+            </div>
+
+            <div class="sidebar-account">
+              <span class="sidebar-account__icon">₹</span>
+              <div><small>Personal banking</small><strong>Northstar Premier</strong></div>
+              <span class="sidebar-account__chevron">⌄</span>
+            </div>
+
+            <p class="navigation-label">Workspace</p>
+            <nav class="primary-navigation" data-bind="foreach: navigationItems">
+              <button type="button"
+                data-bind="click: $parent.navigate.bind($parent, route), css: {'is-active': $parent.activeRoute() === route}, attr: {'aria-current': $parent.activeRoute() === route ? 'page' : null}">
+                <span class="nav-icon" aria-hidden="true" data-bind="text: icon"></span>
+                <span data-bind="text: label"></span>
+              </button>
+            </nav>
+
+            <div class="sidebar-help">
+              <span class="sidebar-help__icon">?</span>
+              <div><strong>Need help?</strong><small>Chat with us, 24/7</small></div>
+              <span class="sidebar-help__arrow">›</span>
+            </div>
+          </aside>
+
+          <button class="navigation-scrim" aria-label="Close navigation" data-bind="visible: navigationOpen, click: closeNavigation"></button>
+
+          <div class="shell-content">
+            <header class="banking-header">
+              <div class="main-navigation-row">
+                <div class="brand brand--topnav">
+                  <span class="brand-mark" aria-hidden="true">N</span>
+                  <span><strong>Northstar</strong><small>Digital Banking</small></span>
+                </div>
+                <button class="menu-toggle" type="button" aria-label="Open navigation" data-bind="click: openNavigation"><span></span><span></span><span></span></button>
+                <nav class="top-navigation" aria-label="Primary navigation" data-bind="foreach: primaryNavigationItems">
+                  <button type="button" data-bind="click: $parent.navigate.bind($parent, route), css: {'is-active': $parent.activeRoute() === route}, attr: {'aria-current': $parent.activeRoute() === route ? 'page' : null}">
+                    <span data-bind="text: label"></span>
+                  </button>
+                </nav>
+                <nav class="nav-utility-actions" aria-label="Support navigation">
+                  <button type="button" data-bind="click: navigate.bind($data, 'admin'), css: {'is-active': activeRoute() === 'admin'}">Admin</button>
+                  <button type="button">Help &amp; support</button>
+                </nav>
+                <div class="header-actions">
+                  <label class="header-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search" aria-label="Search banking"><kbd>⌘ K</kbd></label>
+                  <button class="header-icon-button" type="button" aria-label="View notifications" data-bind="click: navigate.bind($data, 'notifications')"><span aria-hidden="true">◌</span><i></i></button>
+                  <div class="customer-summary" aria-label="Signed in customer">
+                    <span class="customer-avatar">SP</span>
+                    <span class="customer-copy"><strong data-bind="text: customerName"></strong><small>Primary customer</small></span>
+                  </div>
+                  <button class="signout-button" type="button" data-bind="click: logout" aria-label="Sign out">↪</button>
+                </div>
+              </div>
+
+              <div class="page-title-bar">
+                <div><p class="page-eyebrow">Personal Banking</p><h1 data-bind="text: activeTitle"></h1></div>
+                <span>Home&nbsp; / &nbsp;<strong data-bind="text: activeTitle"></strong></span>
+              </div>
+            </header>
+
+            <main class="page-content">
+              <oj-module config="[[mainModuleConfig]]"></oj-module>
+            </main>
+
+            <footer class="app-footer">
+              <span>© 2026 Northstar Bank</span>
+              <span class="secure-session"><i></i> Secure session · 256-bit encryption</span>
+              <nav aria-label="Legal links"><a href="#/privacy">Privacy</a><a href="#/support">Support</a></nav>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- injector:scripts -->
+    <!-- endinjector -->
   </body>
 </html>
