@@ -1,6 +1,10 @@
 define([
   'knockout',
-  'ojs/ojinputtext'
+  'ojs/ojinputtext',
+  'ojs/ojtrain',
+  'ojs/ojfilepicker',
+  'ojs/ojvalidationgroup',
+  'ojs/ojmessages'
 ], function (ko) {
   'use strict';
 
@@ -65,10 +69,26 @@ define([
     self.captchaCode = ko.observable('');
     self.twoFactorCode = ko.observable('');
     self.step = ko.observable(1);
+    self.registrationTrainStep = ko.observable('details');
+    self.registrationTrainSteps = ko.observableArray([
+      { id: 'details', label: 'Personal details' },
+      { id: 'verification', label: 'Verification' },
+      { id: 'finish', label: 'Finish' }
+    ]);
+    self.kycFileName = ko.observable('');
     self.twoFactorQr = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAAD6AQAAAACgl2eQAAACvUlEQVR4Xu2YQXLjMAwEwY8Q///FPoX8CLnTw8ROdEjtIcJeRLkcCehUIcAAsBP75/MnrpbLeYBzHuCcBzjn34AR0fZoe3WdXNF729PGOmDqNXK0EU12gSEnxkpg6HHO0QlLDyP3ajbWAqMtXbpZqaut/A/AUpVUKjJE2fJEXgjABCrRNUS2yd2lmvcC6HNez1XVV/8vAz6rR0+CDMn301gHqFmk1NMwQaUw0MeFgIoivapYirQtJW2rdVy9QkBHNvpGykmGWUPEpYCEilVv6Sy95FIHKDbSIskozJVnkGqyZiHg2PQ2/S6eLH0NsgRoDpLIJpO0uV7jVawCYBAQKyRSqp0bpeCdhcD0ClN1XCNnie7NUmDidMEC7VAs+rcU2PROJ12bVaaAI9L5qgMU1EQ0+oiVpMzrjRALAY+Q1Viok0GiR+u3EBgskUnfSimdwUGlqFgdII1wZES2PNJEvi0DlCAly6sUtWyGCJZXogoAaUS2OB/1pBzS5ZtCgGYhIFVrQqtmvX0NsgCYVKtZIaoT4nGt+vuvuB9YGmCaXEn30DT2edHVAZugNELkwS+nhgk7rhSQTz07tU/xIp5AwoWAx9dgnataJ1in6l2s+4Htbz6d4Jokg08J+1qs+wH2Kir56FiNcxLVSgFZTmkUqPKliWpLVALDaQmPMKtHmrWAS4FBkPrxiZmpBeIjKrdwSrTq3Nz4y4BJqogMnx0LzWQloLgklEZwZAyp0EPaLIUAwzzdtWoiVku+Fl0VoGh4dVTiT92LG/NlAEexUSLvdETD77yCLAAI7Uwv9cw4lWPPvf+K+4HJa/JvgU5sB5WQCb4MUE6QB989Ar9bOd6DtApwy6hhTq58Ww2Qn0H/4uIJbyWwEarGhmbZYIpQtkC/dQCiHUwu7GxVNS7XN1XfDPx0HuCcBzjnAc75BeAv45uj3goFPmcAAAAASUVORK5CYII=';
     self.acceptedTerms = ko.observable(false);
     self.isSubmitting = ko.observable(false);
     self.error = ko.observable('');
+    self.messages = ko.observableArray([]);
+    self.error.subscribe(function (message) {
+      self.messages(message ? [{ severity: 'error', summary: 'Registration needs attention', detail: message }] : []);
+    });
+    self.onKycSelect = function (event) {
+      const files = event.detail && event.detail.files;
+      const selectedFile = files && files[0];
+      self.kycFileName(selectedFile ? selectedFile.name : '');
+    };
     self.refreshCaptcha = function () {
       const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       const previousCode = self.captchaCode();
@@ -124,6 +144,7 @@ define([
 
       self.error('');
       self.step(2);
+      self.registrationTrainStep('verification');
       return false;
     };
 
@@ -134,6 +155,7 @@ define([
       }
 
       self.error('');
+      self.registrationTrainStep('finish');
       self.isSubmitting(true);
       self.app.register({
         fullName: self.fullName().trim(),
@@ -155,6 +177,7 @@ define([
       self.error('');
       self.twoFactorCode('');
       self.step(1);
+      self.registrationTrainStep('details');
     };
 
     self.showLogin = function () { self.app.showLogin(); };

@@ -31,16 +31,17 @@
         <i aria-hidden="true"></i>
         <div data-bind="css: { 'is-active': step() === 2 }"><span>2</span><strong>Secure with 2FA</strong></div>
       </div>
+      <oj-train class="registration-train" selected-step="{{registrationTrainStep}}" steps="{{registrationTrainSteps}}"></oj-train>
 
       <form class="login-form register-form auth-step-panel" data-bind="submit: continueToTwoFactor, visible: step() === 1">
-        <div class="register-form__grid">
+        <oj-validation-group id="register-validation"><div class="register-form__grid">
           <oj-input-text label-hint="Full name" value="{{fullName}}" required autocomplete="name" placeholder="Enter your full name"></oj-input-text>
           <oj-input-text label-hint="Email address" value="{{email}}" required autocomplete="email" placeholder="name@example.com"></oj-input-text>
           <oj-input-text label-hint="Mobile number" value="{{mobile}}" required autocomplete="tel" placeholder="Enter 10-digit number"></oj-input-text>
           <oj-input-text label-hint="Username" value="{{username}}" required autocomplete="username" placeholder="Choose a username"></oj-input-text>
           <oj-input-password label-hint="Password" value="{{password}}" required autocomplete="new-password" placeholder="Minimum 8 characters" mask-icon="visible"></oj-input-password>
           <oj-input-password label-hint="Confirm password" value="{{confirmPassword}}" required autocomplete="new-password" placeholder="Re-enter your password" mask-icon="visible"></oj-input-password>
-        </div>
+        </div></oj-validation-group>
         <p class="password-note">Use at least 8 characters and avoid personal information.</p>
         <div class="captcha-box" role="group" aria-labelledby="captcha-heading">
           <div class="captcha-challenge">
@@ -52,6 +53,8 @@
           <button class="captcha-refresh" type="button" data-bind="click: refreshCaptcha" aria-label="Generate a new CAPTCHA image"><span aria-hidden="true">↻</span> New image</button>
         </div>
         <label class="terms-check"><input type="checkbox" data-bind="checked: acceptedTerms"><span>I agree to the <a href="#/terms">Terms of Service</a> and <a href="#/privacy">Privacy Policy</a>.</span></label>
+        <div class="kyc-upload"><span>Optional KYC document</span><oj-file-picker accept='["image/*", ".pdf"]' on-oj-select="[[onKycSelect]]"></oj-file-picker><small data-bind="text: kycFileName"></small></div>
+        <oj-messages class="jet-inline-messages oj-messages-outlined" messages="[[messages]]"></oj-messages>
         <div class="form-error" role="alert" data-bind="visible: error, text: error"></div>
         <button class="primary-auth-button" type="submit">Continue to 2FA</button>
       </form>
@@ -76,6 +79,7 @@
             <span>Authenticator app</span>
           </div>
         </section>
+        <oj-messages class="jet-inline-messages oj-messages-outlined" messages="[[messages]]"></oj-messages>
         <div class="form-error" role="alert" data-bind="visible: error, text: error"></div>
         <div class="auth-step-actions">
           <button class="secondary-auth-button" type="button" data-bind="click: backToDetails">Back to details</button>

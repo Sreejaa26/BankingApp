@@ -1,8 +1,10 @@
 define([
   'knockout',
+  'utils/i18n',
+  'ojs/ojconfig',
   'ojs/ojcontext',
   'ojs/ojmodule-element-utils'
-], function (ko, Context, ModuleElementUtils) {
+], function (ko, i18n, Config, Context, ModuleElementUtils) {
   'use strict';
 
   function AppViewModel() {
@@ -15,18 +17,27 @@ define([
     self.mainModuleConfig = ko.observable({ view: [], viewModel: null });
     self.navigationOpen = ko.observable(false);
     self.customerName = ko.observable('Sreeja Pamu');
+    self.locale = ko.observable(i18n.initialLocale());
+    self.languageOptions = i18n.languageOptions;
+    self.t = function (key, fallback) { return i18n.translate(self.locale(), key, fallback); };
+    self.formatCurrency = function (value) { return i18n.formatCurrency(self.locale(), value); };
+    self.formatDate = function (value, options) { return i18n.formatDate(self.locale(), value, options); };
+    i18n.persistLocale(self.locale());
 
     self.navigationItems = [
-      { route: 'dashboard', label: 'Dashboard', icon: '⌂' },
-      { route: 'accounts', label: 'Accounts', icon: '▤' },
-      { route: 'transactions', label: 'Transactions', icon: '↕' },
-      { route: 'beneficiaries', label: 'Beneficiaries', icon: '◎' },
-      { route: 'transfer', label: 'Transfer Money', icon: '↗' },
-      { route: 'loans', label: 'Loans', icon: '◇' },
-      { route: 'cards', label: 'Cards', icon: '▱' },
-      { route: 'notifications', label: 'Notifications', icon: '◌' },
-      { route: 'admin', label: 'Admin Dashboard', icon: '⌘' }
+      { route: 'dashboard', labelKey: 'nav.dashboard', icon: '⌂' },
+      { route: 'accounts', labelKey: 'nav.accounts', icon: '▤' },
+      { route: 'transactions', labelKey: 'nav.transactions', icon: '↕' },
+      { route: 'beneficiaries', labelKey: 'nav.beneficiaries', icon: '◎' },
+      { route: 'transfer', labelKey: 'nav.transfer', icon: '↗' },
+      { route: 'loans', labelKey: 'nav.loans', icon: '◇' },
+      { route: 'cards', labelKey: 'nav.cards', icon: '▱' },
+      { route: 'notifications', labelKey: 'nav.notifications', icon: '◌' },
+      { route: 'admin', labelKey: 'nav.admin', icon: '⌘' }
     ];
+    self.navigationItems.forEach(function (item) {
+      item.label = ko.pureComputed(function () { return self.t(item.labelKey); });
+    });
     self.primaryNavigationItems = self.navigationItems.slice(0, 7);
 
     const validRoutes = self.navigationItems.map(function (item) { return item.route; });
@@ -35,7 +46,7 @@ define([
       const match = self.navigationItems.find(function (item) {
         return item.route === self.activeRoute();
       });
-      return match ? match.label : 'Dashboard';
+      return match ? ko.unwrap(match.label) : self.t('nav.dashboard');
     });
 
     self.openNavigation = function () { self.navigationOpen(true); };
@@ -110,10 +121,17 @@ define([
       self.syncHash();
     };
 
+    self.locale.subscribe(function (locale) {
+      i18n.persistLocale(locale);
+      Config.setLocale(locale, self.syncHash);
+    });
+
     self.start = function () {
       window.addEventListener('hashchange', self.syncHash);
-      self.syncHash().finally(function () {
-        Context.getPageContext().getBusyContext().applicationBootstrapComplete();
+      Config.setLocale(self.locale(), function () {
+        self.syncHash().finally(function () {
+          Context.getPageContext().getBusyContext().applicationBootstrapComplete();
+        });
       });
     };
   }

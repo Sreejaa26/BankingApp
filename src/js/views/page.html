@@ -1,16 +1,184 @@
-<div class="page-stack">
+<div class="page-stack page-workspace" data-bind="css: pageRouteClass">
   <section class="page-introduction" data-bind="css: {'page-introduction--visual': heroImage}">
     <div><p class="page-eyebrow" data-bind="text: eyebrow"></p><h2 data-bind="text: title"></h2><p data-bind="text: description"></p></div>
-    <button class="primary-page-button" type="button" data-bind="text: action"></button>
+    <button class="primary-page-button" type="button" data-bind="text: action, click: primaryAction"></button>
     <figure class="page-introduction__visual" data-bind="visible: heroImage">
       <img data-bind="attr: {src: heroImage, alt: heroAlt}">
     </figure>
+    <p class="download-status" role="status" aria-live="polite" data-bind="visible: statementDownloadStatus, text: statementDownloadStatus"></p>
   </section>
 
   <section class="metric-grid metric-grid--compact" data-bind="foreach: highlights">
     <article class="metric-card" data-bind="css: {'metric-card--primary': $index() === 0}">
       <span data-bind="text: label"></span><strong data-bind="text: value"></strong><small data-bind="text: $index() === 0 ? 'Updated moments ago' : 'Current overview'"></small>
     </article>
+  </section>
+
+  <section class="surface-card transaction-table-card" data-bind="visible: isTransactions" aria-label="Transaction table">
+    <div class="card-heading"><div><p class="page-eyebrow">Oracle JET table</p><h3>Transaction history</h3></div><span class="status-chip">Latest activity</span></div>
+    <oj-table class="transaction-jet-table" aria-label="Transaction history" data="[[pagingTransactions]]" columns="[[transactionColumns]]" display="grid"></oj-table>
+    <oj-paging-control class="transaction-paging" data="[[pagingTransactions]]" page-size="3"></oj-paging-control>
+  </section>
+
+  <section id="page-action-panel" class="surface-card page-action-panel" data-bind="visible: !isLoans && !isTransactions && actionPanelOpen()" aria-labelledby="page-action-title">
+    <div class="page-action-panel__header">
+      <div><p class="page-eyebrow">Secure action</p><h3 id="page-action-title" data-bind="text: actionPanelTitle"></h3></div>
+      <button type="button" data-bind="click: closePageAction" aria-label="Close action panel">×</button>
+    </div>
+    <oj-messages class="jet-inline-messages oj-messages-outlined" messages="[[actionMessages]]"></oj-messages>
+
+    <form class="page-action-form" data-bind="visible: isAccounts, submit: submitNewAccount">
+      <oj-select-single label-hint="Account type" data="[[accountTypeOptions]]" value="{{newAccountType}}" required></oj-select-single>
+      <oj-input-number label-hint="Opening deposit" value="{{initialDeposit}}" min="1000" max="10000000" step="1000" required></oj-input-number>
+      <div class="page-action-summary"><span>Digital onboarding</span><strong>Usually completed within 1 business day</strong></div>
+      <button class="primary-page-button" type="submit">Submit account request</button>
+    </form>
+
+    <form class="page-action-form page-action-form--beneficiary" data-bind="visible: isBeneficiaries, submit: submitBeneficiary">
+      <oj-validation-group class="jet-validation-group">
+      <oj-input-text label-hint="Beneficiary name" value="{{beneficiaryName}}" required placeholder="Enter full name"></oj-input-text>
+      <oj-input-text label-hint="Account number" value="{{beneficiaryAccount}}" validators="[[accountNumberValidators]]" required placeholder="8 to 18 digits"></oj-input-text>
+      <oj-input-text label-hint="IFSC code" value="{{beneficiaryIfsc}}" validators="[[ifscValidators]]" required placeholder="Example: HDFC0001234"></oj-input-text>
+      <oj-input-text label-hint="Nickname (optional)" value="{{beneficiaryNickname}}" placeholder="Example: Rent"></oj-input-text>
+      </oj-validation-group>
+      <p class="page-action-note">For your security, a cooling period may apply before the first transfer.</p>
+      <button class="primary-page-button" type="submit">Add beneficiary securely</button>
+    </form>
+
+    <form class="page-action-form" data-bind="visible: isTransfer, submit: submitTransfer">
+      <oj-validation-group class="jet-validation-group">
+      <oj-select-single label-hint="From account" data="[[transferAccountOptions]]" value="{{transferFrom}}" required></oj-select-single>
+      <oj-select-single label-hint="Transfer to" data="[[transferDestinationOptions]]" value="{{transferDestinationType}}" required></oj-select-single>
+      <oj-select-single label-hint="Beneficiary" data="[[transferBeneficiaryOptions]]" value="{{transferBeneficiary}}" required data-bind="visible: !isOtherAccountTransfer()"></oj-select-single>
+      <oj-input-text label-hint="Recipient name" value="{{transferRecipientName}}" required data-bind="visible: isOtherAccountTransfer"></oj-input-text>
+      <oj-input-text label-hint="Account number" value="{{transferRecipientAccount}}" validators="[[accountNumberValidators]]" required virtual-keyboard="number" data-bind="visible: isOtherAccountTransfer"></oj-input-text>
+      <oj-input-text label-hint="Confirm account number" value="{{transferRecipientAccountConfirm}}" required virtual-keyboard="number" data-bind="visible: isOtherAccountTransfer"></oj-input-text>
+      <oj-input-text label-hint="IFSC code" value="{{transferRecipientIfsc}}" validators="[[ifscValidators]]" required placeholder="Example: HDFC0001234" data-bind="visible: isOtherAccountTransfer"></oj-input-text>
+      <oj-input-number label-hint="Transfer amount" value="{{transferAmount}}" converter="[[currencyConverter]]" min="1" max="500000" step="100" required></oj-input-number>
+      <oj-input-text label-hint="Purpose" value="{{transferPurpose}}" required></oj-input-text>
+      </oj-validation-group>
+      <p class="page-action-note" data-bind="visible: isOtherAccountTransfer">Verify the account number and IFSC carefully. The recipient does not need to be saved as a beneficiary.</p>
+      <div class="page-action-summary"><span>Daily transfer limit</span><strong>₹5,00,000</strong></div>
+      <button class="primary-page-button" type="submit">Review secure transfer</button>
+    </form>
+
+    <div class="card-centre" data-bind="visible: isCards">
+      <section class="card-management">
+        <div class="card-management__visual"><img src="styles/images/northstar-premium-cards.png" alt="Northstar premium credit and debit cards"></div>
+        <div class="card-management__heading"><p class="page-eyebrow">Card controls</p><h4>Northstar Signature •••• 4902</h4><span data-bind="text: cardLocked() ? 'Temporarily locked' : 'Active and ready to use', css: {'is-locked': cardLocked}"></span></div>
+        <div class="card-control-list">
+          <button type="button" data-bind="click: toggleCardLock"><span>Card status</span><strong data-bind="text: cardLocked() ? 'Unlock card' : 'Lock card'"></strong></button>
+          <button type="button" data-bind="click: toggleOnlinePayments"><span>Online payments</span><strong data-bind="text: cardOnlineEnabled() ? 'Enabled' : 'Disabled'"></strong></button>
+          <button type="button" data-bind="click: toggleInternationalPayments"><span>International usage</span><strong data-bind="text: cardInternationalEnabled() ? 'Enabled' : 'Disabled'"></strong></button>
+        </div>
+      </section>
+
+      <form class="card-application-form" data-bind="submit: submitCardApplication">
+        <div><p class="page-eyebrow">New card</p><h4>Apply for a credit or debit card</h4><p>Choose a card and submit a short digital application.</p></div>
+        <oj-select-single label-hint="Card type" data="[[cardTypeOptions]]" value="{{cardApplicationType}}" required></oj-select-single>
+        <oj-select-single label-hint="Card product" data="[[cardProductOptions]]" value="{{cardProduct}}" required></oj-select-single>
+        <oj-input-number label-hint="Monthly income" value="{{cardApplicantIncome}}" min="0" max="10000000" step="5000" required></oj-input-number>
+        <oj-input-text label-hint="Delivery address" value="{{cardDeliveryAddress}}" required placeholder="Enter complete address"></oj-input-text>
+        <button class="primary-page-button" type="submit">Submit card application</button>
+      </form>
+
+      <section class="card-application-tracker">
+        <div><p class="page-eyebrow">Application tracker</p><h4>Track your card request</h4></div>
+        <div class="card-tracker-item">
+          <span class="card-tracker-icon">CR</span>
+          <div><strong data-bind="text: cardApplicationType"></strong><small data-bind="text: cardApplicationReference"></small></div>
+          <span class="status-chip" data-bind="text: cardApplicationStatus, css: {'status-chip--positive': cardApplicationSubmitted}"></span>
+        </div>
+        <ol class="card-tracker-steps">
+          <li class="is-complete"><span>1</span><div><strong>Application received</strong><small>Your details have been recorded.</small></div></li>
+          <li data-bind="css: {'is-complete': cardApplicationSubmitted}"><span>2</span><div><strong>Eligibility review</strong><small>Income and account checks.</small></div></li>
+          <li><span>3</span><div><strong>Dispatch</strong><small>Card delivery after approval.</small></div></li>
+        </ol>
+      </section>
+    </div>
+
+    <div class="page-action-generic" data-bind="visible: isNotifications || isAdmin">
+      <span aria-hidden="true">✓</span>
+      <h4 data-bind="text: isNotifications ? 'Choose how Northstar contacts you' : 'Review pending banking approvals'"></h4>
+      <p data-bind="text: isNotifications ? 'Security alerts remain enabled. You can update product and transaction notification preferences.' : 'Open the operations queue below and review pending KYC, transfer, and account decisions.'"></p>
+      <button class="primary-page-button" type="button" data-bind="click: isNotifications ? saveNotificationSettings : reviewApprovals, text: isNotifications ? 'Save notification settings' : 'Open approvals queue'"></button>
+    </div>
+
+    <div class="form-error" role="alert" data-bind="visible: actionError, text: actionError"></div>
+    <div class="page-action-success" role="status" aria-live="polite" data-bind="visible: actionSuccess, text: actionSuccess"></div>
+  </section>
+
+  <oj-dialog id="transfer-confirmation-dialog" modality="modal">
+    <div slot="header"><h3>Confirm secure transfer</h3></div>
+    <div slot="body" class="transfer-confirmation-dialog">
+      <p>Review the transfer before submitting it.</p>
+      <div><span>Recipient</span><strong data-bind="text: pendingTransferDestination"></strong></div>
+      <div><span>Amount</span><strong data-bind="text: currencyConverter.format(pendingTransferAmount())"></strong></div>
+    </div>
+    <div slot="footer" class="dialog-actions"><button class="secondary-auth-button" type="button" data-bind="click: cancelTransferConfirmation">Cancel</button><button class="primary-page-button" type="button" data-bind="click: confirmTransfer">Confirm transfer</button></div>
+  </oj-dialog>
+
+  <section class="loan-marketplace" data-bind="visible: isLoans" aria-labelledby="loan-products-title">
+    <div class="section-heading-row">
+      <div><p class="page-eyebrow">Pre-qualified options</p><h3 id="loan-products-title">Choose the loan that fits your plans</h3></div>
+      <div class="loan-marketplace__actions">
+        <span class="status-chip status-chip--positive">● Instant eligibility check</span>
+        <div class="loan-scroll-controls" aria-label="Scroll loan options">
+          <button type="button" data-bind="click: scrollLoanProducts.bind($data, -1)" aria-label="View previous loan options">←</button>
+          <button type="button" data-bind="click: scrollLoanProducts.bind($data, 1)" aria-label="View more loan options">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="loan-product-grid" data-bind="foreach: loanProducts" tabindex="0" aria-label="Available loan products. Scroll horizontally for more options.">
+      <article class="loan-product-card" data-bind="css: accent">
+        <div class="loan-product-card__top"><span data-bind="text: icon"></span><strong><span data-bind="text: rate"></span>% <small>p.a.</small></strong></div>
+        <h4 data-bind="text: type"></h4>
+        <p data-bind="text: copy"></p>
+        <div class="loan-product-card__limit"><span>Eligible amount</span><strong data-bind="text: limit"></strong></div>
+        <button type="button" data-bind="click: $parent.chooseLoanProduct">Check EMI & apply <span aria-hidden="true">→</span></button>
+      </article>
+    </div>
+  </section>
+
+  <section id="loan-application" class="surface-card loan-application" data-bind="visible: isLoans && loanApplicationOpen()" aria-labelledby="loan-application-title">
+    <div class="loan-application__header">
+      <div><p class="page-eyebrow">New application</p><h3 id="loan-application-title">Apply for a new loan</h3><p>Adjust the details below to see an indicative repayment before submitting.</p></div>
+      <button class="loan-application__close" type="button" data-bind="click: closeLoanApplication" aria-label="Close loan application">×</button>
+    </div>
+
+    <form class="loan-application__body" data-bind="submit: submitLoanApplication, visible: !loanApplicationSubmitted()">
+      <div class="loan-form-grid">
+        <label class="loan-product-choice"><span>Loan type</span><strong data-bind="text: loanType"></strong><small><span data-bind="text: selectedLoanRate"></span>% indicative annual rate</small></label>
+        <oj-input-number label-hint="Loan amount" value="{{loanAmount}}" min="50000" max="15000000" step="10000" required></oj-input-number>
+        <oj-select-single label-hint="Repayment tenure" data="[[loanTenureOptions]]" value="{{loanTenure}}" required></oj-select-single>
+        <oj-select-single label-hint="Purpose" data="[[loanPurposeOptions]]" value="{{loanPurpose}}" required></oj-select-single>
+        <oj-select-single label-hint="Employment type" data="[[employmentOptions]]" value="{{employmentType}}" required></oj-select-single>
+        <oj-input-number label-hint="Monthly income" value="{{monthlyIncome}}" min="15000" max="10000000" step="5000" required></oj-input-number>
+      </div>
+
+      <aside class="loan-estimate" aria-label="Estimated loan repayment">
+        <p>Estimated monthly EMI</p>
+        <strong data-bind="text: formattedEmi"></strong>
+        <div><span>Interest rate</span><b><span data-bind="text: selectedLoanRate"></span>% p.a.</b></div>
+        <div><span>Total interest</span><b data-bind="text: totalInterest"></b></div>
+        <small>This is an estimate. Final approval and pricing depend on verification and eligibility.</small>
+      </aside>
+
+      <div class="form-error loan-form-error" role="alert" data-bind="visible: loanError, text: loanError"></div>
+      <div class="loan-form-actions">
+        <button class="secondary-auth-button" type="button" data-bind="click: closeLoanApplication">Cancel</button>
+        <button class="primary-page-button" type="submit">Submit loan application</button>
+      </div>
+    </form>
+
+    <div class="loan-success" data-bind="visible: loanApplicationSubmitted">
+      <span aria-hidden="true">✓</span>
+      <p class="page-eyebrow">Application received</p>
+      <h3>Your loan request is under review</h3>
+      <p>We have received your <strong data-bind="text: loanType"></strong> request. A banking specialist will contact you after eligibility verification.</p>
+      <div><span>Reference number</span><strong data-bind="text: applicationReference"></strong></div>
+      <button class="secondary-auth-button" type="button" data-bind="click: startAnotherApplication">Start another application</button>
+    </div>
   </section>
 
   <section class="workspace-grid">

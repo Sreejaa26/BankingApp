@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en-IN">
   <head>
     <title>Northstar Digital Banking</title>
     <meta charset="UTF-8">
@@ -32,7 +32,7 @@
               <span class="sidebar-account__chevron">⌄</span>
             </div>
 
-            <p class="navigation-label">Workspace</p>
+            <p class="navigation-label" data-bind="text: t('shell.workspace')"></p>
             <nav class="primary-navigation" data-bind="foreach: navigationItems">
               <button type="button"
                 data-bind="click: $parent.navigate.bind($parent, route), css: {'is-active': $parent.activeRoute() === route}, attr: {'aria-current': $parent.activeRoute() === route ? 'page' : null}">
@@ -43,7 +43,7 @@
 
             <div class="sidebar-help">
               <span class="sidebar-help__icon">?</span>
-              <div><strong>Need help?</strong><small>Chat with us, 24/7</small></div>
+              <div><strong data-bind="text: t('shell.needHelp')"></strong><small data-bind="text: t('shell.helpCopy')"></small></div>
               <span class="sidebar-help__arrow">›</span>
             </div>
           </aside>
@@ -64,23 +64,26 @@
                   </button>
                 </nav>
                 <nav class="nav-utility-actions" aria-label="Support navigation">
-                  <button type="button" data-bind="click: navigate.bind($data, 'admin'), css: {'is-active': activeRoute() === 'admin'}">Admin</button>
-                  <button type="button">Help &amp; support</button>
+                  <button type="button" data-bind="click: navigate.bind($data, 'admin'), css: {'is-active': activeRoute() === 'admin'}, text: t('shell.admin')"></button>
+                  <button type="button" data-bind="text: t('shell.helpSupport')"></button>
                 </nav>
                 <div class="header-actions">
-                  <label class="header-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search" aria-label="Search banking"><kbd>⌘ K</kbd></label>
+                  <label class="locale-switcher">
+                    <span aria-hidden="true">文</span>
+                    <select data-bind="options: languageOptions, optionsText: 'label', optionsValue: 'value', value: locale" aria-label="Language / भाषा"></select>
+                  </label>
+                  <label class="header-search"><span aria-hidden="true">⌕</span><input type="search" data-bind="attr: {placeholder: t('shell.search'), 'aria-label': t('shell.search')}"><kbd>⌘ K</kbd></label>
                   <button class="header-icon-button" type="button" aria-label="View notifications" data-bind="click: navigate.bind($data, 'notifications')"><span aria-hidden="true">◌</span><i></i></button>
                   <div class="customer-summary" aria-label="Signed in customer">
-                    <span class="customer-avatar">SP</span>
-                    <span class="customer-copy"><strong data-bind="text: customerName"></strong><small>Primary customer</small></span>
+                    <span class="customer-copy"><strong data-bind="text: customerName"></strong><small data-bind="text: t('shell.primaryCustomer')"></small></span>
                   </div>
                   <button class="signout-button" type="button" data-bind="click: logout" aria-label="Sign out">↪</button>
                 </div>
               </div>
 
               <div class="page-title-bar">
-                <div><p class="page-eyebrow">Personal Banking</p><h1 data-bind="text: activeTitle"></h1></div>
-                <span>Home&nbsp; / &nbsp;<strong data-bind="text: activeTitle"></strong></span>
+                <div><p class="page-eyebrow" data-bind="text: t('shell.personalBanking')"></p><h1 data-bind="text: activeTitle"></h1></div>
+                <span><span data-bind="text: t('shell.home')"></span>&nbsp; / &nbsp;<strong data-bind="text: activeTitle"></strong></span>
               </div>
             </header>
 
@@ -90,8 +93,8 @@
 
             <footer class="app-footer">
               <span>© 2026 Northstar Bank</span>
-              <span class="secure-session"><i></i> Secure session · 256-bit encryption</span>
-              <nav aria-label="Legal links"><a href="#/privacy">Privacy</a><a href="#/support">Support</a></nav>
+              <span class="secure-session"><i></i><span data-bind="text: t('shell.secureSession')"></span></span>
+              <nav aria-label="Legal links"><a href="#/privacy" data-bind="text: t('shell.privacy')"></a><a href="#/support" data-bind="text: t('shell.support')"></a></nav>
             </footer>
           </div>
         </div>

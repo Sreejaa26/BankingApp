@@ -1,29 +1,30 @@
 <div class="dashboard-page page-stack">
   <section class="welcome-banner dashboard-hero">
     <div>
-      <p class="page-eyebrow">Tuesday, 4 August</p>
-      <h2>Good morning, Sreeja.</h2>
-      <p>Your finances are looking healthy. Here’s today’s overview.</p>
+      <p class="page-eyebrow" data-bind="text: dashboardDate"></p>
+      <h2 data-bind="text: app.t('dashboard.greeting')"></h2>
+      <p data-bind="text: app.t('dashboard.overview')"></p>
     </div>
     <div class="hero-actions">
-      <button class="secondary-action" data-bind="click: go.bind($data, 'transactions')">Download statement</button>
-      <button class="primary-page-button" data-bind="click: go.bind($data, 'transfer')"><span class="button-icon">↗</span> Make a transfer</button>
+      <button class="secondary-action" type="button" data-bind="click: downloadStatement, text: app.t('dashboard.download')"></button>
+      <button class="primary-page-button" data-bind="click: go.bind($data, 'transfer')"><span class="button-icon">↗</span><span data-bind="text: app.t('dashboard.transfer')"></span></button>
     </div>
+    <p class="download-status" role="status" aria-live="polite" data-bind="visible: statementDownloadStatus, text: statementDownloadStatus"></p>
   </section>
 
   <section class="metric-grid" aria-label="Account summary">
     <article class="metric-card metric-card--primary">
-      <div class="metric-card__top"><span>Total balance</span><span class="metric-icon">₹</span></div>
-      <strong>₹4,82,650.20</strong><small>Across 3 accounts</small>
+      <div class="metric-card__top"><span data-bind="text: app.t('dashboard.totalBalance')"></span><span class="metric-icon">₹</span></div>
+      <strong data-bind="text: totalBalance"></strong><small data-bind="text: app.t('dashboard.acrossAccounts')"></small>
       <div class="balance-card__footer"><div class="mini-sparkline" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="trend trend--light">↑ 4.8%</span></div>
     </article>
     <article class="metric-card">
-      <div class="metric-card__top"><span>Monthly income</span><span class="metric-icon metric-icon--green">↓</span></div>
-      <strong>₹1,04,500</strong><small>August 2026</small><div class="trend">↑ ₹8,200 vs July</div>
+      <div class="metric-card__top"><span data-bind="text: app.t('dashboard.monthlyIncome')"></span><span class="metric-icon metric-icon--green">↓</span></div>
+      <strong data-bind="text: monthlyIncome"></strong><small>August 2026</small><div class="trend">↑ ₹8,200 vs July</div>
     </article>
     <article class="metric-card">
-      <div class="metric-card__top"><span>Monthly spending</span><span class="metric-icon metric-icon--gold">↗</span></div>
-      <strong>₹48,730</strong><small>46% of monthly income</small><div class="progress-track"><span style="width:46%"></span></div>
+      <div class="metric-card__top"><span data-bind="text: app.t('dashboard.monthlySpending')"></span><span class="metric-icon metric-icon--gold">↗</span></div>
+      <strong data-bind="text: monthlySpending"></strong><small data-bind="text: app.t('dashboard.incomeShare')"></small><div class="progress-track"><span style="width:46%"></span></div>
     </article>
   </section>
 
@@ -62,11 +63,11 @@
   <section class="chart-grid" aria-label="Financial charts">
     <article class="surface-card chart-card">
       <div class="card-heading"><div><p class="page-eyebrow">Six-month overview</p><h3>Cash flow</h3></div><div class="chart-heading-actions"><span class="status-chip status-chip--positive">● Healthy</span><button class="period-select">Last 6 months⌄</button></div></div>
-      <oj-chart class="banking-chart" type="line" series="[[cashFlowSeries]]" groups="[[cashFlowGroups]]" animation-on-display="auto" legend.position="bottom"></oj-chart>
+      <oj-chart class="banking-chart" type="line" series="[[cashFlowSeries]]" groups="[[cashFlowGroups]]" animation-on-display="auto" hover-behavior="dim" style-defaults.line-type="curved" style-defaults.line-width="3" legend.position="bottom"></oj-chart>
     </article>
     <article class="surface-card chart-card">
       <div class="card-heading"><div><p class="page-eyebrow">August spending</p><h3>Spending breakdown</h3></div><button class="card-menu" aria-label="Spending options">•••</button></div>
-      <oj-chart class="banking-chart" type="pie" series="[[spendingSeries]]" groups="[[spendingGroups]]" animation-on-display="auto" legend.position="bottom"></oj-chart>
+      <oj-chart class="banking-chart" type="pie" series="[[spendingSeries]]" groups="[[spendingGroups]]" data-label="[[spendingDataLabel]]" animation-on-display="auto" hover-behavior="dim" style-defaults.pie-inner-radius="0.58" style-defaults.data-label-position="outsideSlice" legend.position="bottom"></oj-chart>
     </article>
   </section>
 
