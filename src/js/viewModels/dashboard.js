@@ -8,6 +8,11 @@ define(['knockout', 'utils/statementDownload', 'ojs/ojchart'], function (ko, dow
     self.dashboardDate = ko.pureComputed(function () {
       return self.app.formatDate(new Date(2026, 7, 4), { weekday: 'long', day: 'numeric', month: 'long' });
     });
+    self.greeting = ko.pureComputed(function () {
+      const hour = new Date().getHours();
+      const salutation = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+      return salutation + ', ' + self.app.customerName() + '.';
+    });
     self.totalBalance = ko.pureComputed(function () { return self.app.formatCurrency(482650.20); });
     self.monthlyIncome = ko.pureComputed(function () { return self.app.formatCurrency(104500); });
     self.monthlySpending = ko.pureComputed(function () { return self.app.formatCurrency(48730); });
