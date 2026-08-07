@@ -29,53 +29,9 @@
 
     <form class="page-action-form" data-bind="visible: isAccounts, submit: submitNewAccount">
       <oj-select-single label-hint="Account type" data="[[accountTypeOptions]]" value="{{newAccountType}}" required></oj-select-single>
-      <oj-input-text label-hint="Branch IFSC" value="{{accountBranchIfsc}}" validators="[[ifscValidators]]" required placeholder="Example: ORCL0000123"></oj-input-text>
-      <section id="kyc-profile-step" class="account-kyc-profile" data-bind="visible: kycStep() === 'profile'" aria-labelledby="account-profile-title">
-        <div><p class="page-eyebrow">Step 1 of 3</p><h4 id="account-profile-title">Complete your profile</h4><p>Your profile must be completed before KYC documents can be submitted.</p></div>
-        <div class="account-kyc-profile__grid">
-          <oj-input-text label-hint="Full name" value="{{profileFullName}}" required></oj-input-text>
-          <oj-input-text label-hint="Father or spouse name" value="{{fatherOrSpouseName}}" required></oj-input-text>
-          <oj-input-text label-hint="Date of birth" value="{{dateOfBirth}}" required placeholder="YYYY-MM-DD"></oj-input-text>
-          <oj-input-text label-hint="Address line 1" value="{{addressLine1}}" required></oj-input-text>
-          <oj-input-text label-hint="Address line 2 (optional)" value="{{addressLine2}}"></oj-input-text>
-          <oj-input-text label-hint="City" value="{{profileCity}}" required></oj-input-text>
-          <oj-input-text label-hint="State" value="{{profileState}}" required></oj-input-text>
-          <oj-input-text label-hint="Country" value="{{profileCountry}}" required></oj-input-text>
-          <oj-input-text label-hint="Postal code" value="{{postalCode}}" required></oj-input-text>
-        </div>
-        <p class="form-error" role="alert" data-bind="visible: actionError, text: actionError"></p>
-        <div class="account-kyc-step-action"><span data-bind="text: profileSaved() ? 'Profile saved' : 'Save your profile before continuing'"></span><button class="primary-page-button" type="button" data-bind="click: saveCustomerProfile, disable: profileSaving, text: profileSaving() ? 'Saving profile…' : 'Save complete profile'"></button></div>
-      </section>
-      <section id="kyc-identity-step" class="account-kyc-profile" data-bind="visible: kycStep() === 'identity'" aria-labelledby="account-identity-title">
-        <div><p class="page-eyebrow">Step 2 of 3</p><h4 id="account-identity-title">Enter identity details</h4><p>Your Aadhaar and PAN are sent only to the secure KYC service.</p></div>
-        <div class="account-kyc-profile__grid">
-          <oj-input-text label-hint="Aadhaar number" value="{{aadhaarNumber}}" required virtual-keyboard="number" maxlength="12" placeholder="12 digits"></oj-input-text>
-          <oj-input-text label-hint="PAN number" value="{{panNumber}}" required maxlength="10" placeholder="ABCDE1234F"></oj-input-text>
-        </div>
-        <p class="form-error" role="alert" data-bind="visible: actionError, text: actionError"></p>
-        <div class="account-kyc-step-action"><span>Submit identity details before uploading documents.</span><button class="primary-page-button" type="button" data-bind="click: submitIdentityDetails, disable: identitySaving, text: identitySaving() ? 'Submitting identity…' : 'Submit identity details'"></button></div>
-      </section>
-      <section id="kyc-documents-step" class="account-kyc-upload" data-bind="visible: kycStep() === 'documents'" aria-labelledby="account-kyc-title">
-        <div><p class="page-eyebrow">KYC documents</p><h4 id="account-kyc-title">Upload documents for verification</h4><p>Aadhaar and PAN are required. Address proof is optional. PDF, JPG, JPEG, or PNG; maximum 5 MB each.</p></div>
-        <div class="account-kyc-upload__grid">
-          <div class="kyc-document-dropzone"><strong>Aadhaar document <em>Required</em></strong><oj-file-picker class="kyc-file-picker" accept='["application/pdf", "image/jpeg", "image/png"]' selection-mode="single" on-oj-select="[[onKycDocumentSelect.bind($data, 'AADHAAR')]]"></oj-file-picker><small data-bind="text: aadhaarDocumentName"></small></div>
-          <div class="kyc-document-dropzone"><strong>PAN document <em>Required</em></strong><oj-file-picker class="kyc-file-picker" accept='["application/pdf", "image/jpeg", "image/png"]' selection-mode="single" on-oj-select="[[onKycDocumentSelect.bind($data, 'PAN')]]"></oj-file-picker><small data-bind="text: panDocumentName"></small></div>
-          <div class="kyc-document-dropzone"><strong>Address proof <em>Optional</em></strong><oj-file-picker class="kyc-file-picker" accept='["application/pdf", "image/jpeg", "image/png"]' selection-mode="single" on-oj-select="[[onKycDocumentSelect.bind($data, 'ADDRESS_PROOF')]]"></oj-file-picker><small data-bind="text: addressProofDocumentName"></small></div>
-        </div>
-        <p class="form-error" role="alert" data-bind="visible: kycDocumentError, text: kycDocumentError"></p>
-        <p class="form-error" role="alert" data-bind="visible: actionError, text: actionError"></p>
-        <div class="account-kyc-step-action"><span>Upload selected documents separately from identity details.</span><button class="primary-page-button" type="button" data-bind="click: uploadKycDocuments, disable: documentUploading, text: documentUploading() ? 'Uploading documents…' : 'Upload KYC documents'"></button></div>
-      </section>
-      <div class="page-action-summary"><span>KYC status</span><strong data-bind="text: kycStatus"></strong></div>
-      <p class="form-error" role="alert" data-bind="visible: customerKycRejectionReason, text: customerKycRejectionReason"></p>
-      <section class="customer-kyc-documents" data-bind="visible: customerKycDocuments().length">
-        <p class="page-eyebrow">Uploaded KYC documents</p>
-        <div data-bind="foreach: customerKycDocuments">
-          <article><div><strong data-bind="text: documentType"></strong><small data-bind="text: originalFileName"></small></div><div><button class="text-button" type="button" data-bind="click: $parent.viewKycDocument">View</button><button class="text-button customer-kyc-documents__delete" type="button" data-bind="visible: $parent.kycStatus() !== 'VERIFIED', click: $parent.deleteCustomerKycDocument">Delete</button></div></article>
-        </div>
-      </section>
-      <p class="page-action-note" data-bind="visible: kycStatus() === 'PENDING'">Your KYC is awaiting administrator review. You will be able to open the account after it is verified.</p>
-      <button class="primary-page-button" type="submit" data-bind="visible: customerKycDocuments().length, disable: kycSubmitting, text: kycSubmitting() ? 'Opening account…' : 'Submit account request'"></button>
+      <oj-input-number label-hint="Opening deposit" value="{{initialDeposit}}" min="1000" max="10000000" step="1000" required></oj-input-number>
+      <div class="page-action-summary"><span>Digital onboarding</span><strong>Usually completed within 1 business day</strong></div>
+      <button class="primary-page-button" type="submit">Submit account request</button>
     </form>
 
     <form class="page-action-form page-action-form--beneficiary" data-bind="visible: isBeneficiaries, submit: submitBeneficiary">
@@ -147,21 +103,6 @@
       <p data-bind="text: isNotifications ? 'Security alerts remain enabled. You can update product and transaction notification preferences.' : 'Open the operations queue below and review pending KYC, transfer, and account decisions.'"></p>
       <button class="primary-page-button" type="button" data-bind="click: isNotifications ? saveNotificationSettings : reviewApprovals, text: isNotifications ? 'Save notification settings' : 'Open approvals queue'"></button>
     </div>
-
-    <section class="kyc-review-panel" data-bind="visible: isAdmin" aria-labelledby="kyc-review-title">
-      <div class="kyc-review-panel__heading"><div><p class="page-eyebrow">Administrator review</p><h4 id="kyc-review-title">Pending KYC documents</h4></div><button class="secondary-auth-button" type="button" data-bind="click: loadKycReviewQueue, disable: kycReviewLoading">Refresh queue</button></div>
-      <p class="page-action-note" data-bind="visible: kycReviewLoading">Loading review queue…</p>
-      <div class="kyc-review-list" data-bind="foreach: kycReviewItems">
-        <button type="button" data-bind="click: $parent.selectKycReview, css: {'is-selected': $parent.selectedKycReview() && $parent.selectedKycReview().userId === userId}"><span data-bind="text: userId"></span><strong><span data-bind="text: documentCount"></span> document(s)</strong><small data-bind="text: uploadedDocumentTypes.join(', ')"></small></button>
-      </div>
-      <p class="page-action-note" data-bind="visible: !kycReviewLoading() && kycReviewItems().length === 0">There are no pending KYC reviews.</p>
-      <div class="kyc-review-detail" data-bind="visible: selectedKycReview">
-        <h5>Selected customer documents</h5>
-        <div class="kyc-review-documents" data-bind="foreach: selectedKycDocuments"><button type="button" data-bind="click: $parent.viewKycDocument"><strong data-bind="text: documentType"></strong><small data-bind="text: originalFileName"></small><span>View protected file</span></button></div>
-        <oj-input-text label-hint="Rejection reason" value="{{kycRejectionReason}}" placeholder="Required only when rejecting KYC"></oj-input-text>
-        <div class="kyc-review-actions"><button class="secondary-auth-button" type="button" data-bind="click: updateKycReviewStatus.bind($data, 'REJECTED')">Reject KYC</button><button class="primary-page-button" type="button" data-bind="click: updateKycReviewStatus.bind($data, 'VERIFIED')">Approve KYC</button></div>
-      </div>
-    </section>
 
     <div class="form-error" role="alert" data-bind="visible: actionError, text: actionError"></div>
     <div class="page-action-success" role="status" aria-live="polite" data-bind="visible: actionSuccess, text: actionSuccess"></div>

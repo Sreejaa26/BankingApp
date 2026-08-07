@@ -8,7 +8,6 @@ define([
   'ojs/ojconverter-datetime',
   'ojs/ojinputnumber',
   'ojs/ojinputtext',
-  'ojs/ojfilepicker',
   'ojs/ojselectsingle',
   'ojs/ojtable',
   'ojs/ojpagingcontrol',
@@ -119,38 +118,8 @@ define([
     this.pendingTransferAmount = ko.observable(0);
     this.actionPanelTitle = this.isAccounts ? 'Open a new account' : this.isBeneficiaries ? 'Add a beneficiary' : this.isTransfer ? 'Make a new transfer' : this.isCards ? 'Card centre' : this.isNotifications ? 'Notification settings' : 'Review approvals';
 
-    this.newAccountType = ko.observable('SAVINGS');
-    this.accountBranchIfsc = ko.observable('');
-    this.profileFullName = ko.observable('');
-    this.fatherOrSpouseName = ko.observable('');
-    this.dateOfBirth = ko.observable('');
-    this.addressLine1 = ko.observable('');
-    this.addressLine2 = ko.observable('');
-    this.profileCity = ko.observable('');
-    this.profileState = ko.observable('');
-    this.profileCountry = ko.observable('India');
-    this.postalCode = ko.observable('');
-    this.aadhaarNumber = ko.observable('');
-    this.panNumber = ko.observable('');
-    this.kycStatus = ko.observable('NOT_SUBMITTED');
-    this.kycSubmitting = ko.observable(false);
-    this.profileSaving = ko.observable(false);
-    this.identitySaving = ko.observable(false);
-    this.documentUploading = ko.observable(false);
-    this.profileSaved = ko.observable(false);
-    this.kycStep = ko.observable('profile');
-    this.customerKycRejectionReason = ko.observable('');
-    this.customerKycDocuments = ko.observableArray([]);
-    this.kycReviewItems = ko.observableArray([]);
-    this.selectedKycReview = ko.observable(null);
-    this.selectedKycDocuments = ko.observableArray([]);
-    this.kycRejectionReason = ko.observable('');
-    this.kycReviewLoading = ko.observable(false);
-    this.aadhaarDocumentName = ko.observable('');
-    this.panDocumentName = ko.observable('');
-    this.addressProofDocumentName = ko.observable('');
-    this.kycDocumentError = ko.observable('');
-    this.kycDocuments = { AADHAAR: null, PAN: null, ADDRESS_PROOF: null };
+    this.newAccountType = ko.observable('Savings account');
+    this.initialDeposit = ko.observable(10000);
     this.beneficiaryName = ko.observable('');
     this.beneficiaryAccount = ko.observable('');
     this.beneficiaryIfsc = ko.observable('');
@@ -181,142 +150,11 @@ define([
     this.transactionDateConverter = new DateTimeConverters.IntlDateTimeConverter({ dateStyle: 'medium' });
 
     this.accountTypeOptions = new ArrayDataProvider([
-      { value: 'SAVINGS', label: 'Savings account' },
-      { value: 'CURRENT', label: 'Current account' },
-      { value: 'SALARY', label: 'Salary account' }
+      { value: 'Savings account', label: 'Savings account' },
+      { value: 'Current account', label: 'Current account' },
+      { value: 'Salary account', label: 'Salary account' },
+      { value: 'Fixed deposit', label: 'Fixed deposit' }
     ], { keyAttributes: 'value' });
-    this.onKycDocumentSelect = function (documentType, event) {
-      const files = event.detail && event.detail.files;
-      const selectedFile = files && files[0];
-      if (!selectedFile) { return; }
-
-      const supportedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-      const validExtension = /\.(pdf|jpe?g|png)$/i.test(selectedFile.name || '');
-      if ((selectedFile.type && supportedTypes.indexOf(selectedFile.type) < 0) || !validExtension) {
-        self.kycDocumentError('Upload a PDF, JPG, JPEG, or PNG document.');
-        return;
-      }
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        self.kycDocumentError('Each KYC document must be 5 MB or smaller.');
-        return;
-      }
-
-      self.kycDocuments[documentType] = selectedFile;
-      const documentName = documentType === 'AADHAAR' ? self.aadhaarDocumentName : documentType === 'PAN' ? self.panDocumentName : self.addressProofDocumentName;
-      documentName(selectedFile.name);
-      self.kycDocumentError('');
-    };
-    this.loadKycContext = function () {
-      self.kycStatus('NOT_SUBMITTED');
-      self.customerKycRejectionReason('');
-      self.customerKycDocuments([]);
-      self.profileSaved(false);
-      self.kycStep('profile');
-      return Promise.resolve();
-    };
-    this.scrollToKycStep = function (elementId) {
-      requestAnimationFrame(function () {
-        const element = document.getElementById(elementId);
-        if (element) { element.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-      });
-    };
-    this.loadKycReviewQueue = function () {
-      self.kycReviewItems([]);
-      self.kycReviewLoading(false);
-      return Promise.resolve();
-    };
-    this.selectKycReview = function (review) {
-      self.selectedKycReview(review);
-      self.selectedKycDocuments([]);
-      self.kycRejectionReason('');
-      self.selectedKycDocuments(review.documents || []);
-    };
-    this.viewKycDocument = function (document) {
-      self.actionSuccess(document.documentType + ' document is ready for review.');
-    };
-    this.deleteCustomerKycDocument = function (document) {
-      if (self.kycStatus() === 'VERIFIED') { return; }
-      self.customerKycDocuments.remove(document);
-      self.actionSuccess(document.documentType + ' document removed. You can upload a replacement.');
-    };
-    this.hasCompleteProfile = function () {
-      return self.profileFullName().trim() && self.fatherOrSpouseName().trim() && self.dateOfBirth() && self.addressLine1().trim() && self.profileCity().trim() && self.profileState().trim() && self.profileCountry().trim() && self.postalCode().trim();
-    };
-    this.saveCustomerProfile = function () {
-      if (!self.hasCompleteProfile()) {
-        self.actionError('Complete all required profile fields before saving your profile.');
-        return;
-      }
-      self.actionError('');
-      self.profileSaving(true);
-      window.setTimeout(function () {
-        self.profileSaved(true);
-        self.actionSuccess('Profile saved successfully. Continue to identity details.');
-        self.kycStep('identity');
-        self.scrollToKycStep('kyc-identity-step');
-        self.profileSaving(false);
-      }, 250);
-    };
-    this.submitIdentityDetails = function () {
-      if (!self.profileSaved()) {
-        self.actionError('Save your complete profile before submitting identity details.');
-        return;
-      }
-      if (!/^\d{12}$/.test(self.aadhaarNumber().trim()) || !/^[A-Za-z]{5}\d{4}[A-Za-z]$/.test(self.panNumber().trim())) {
-        self.actionError('Enter a valid 12-digit Aadhaar number and PAN number.');
-        return;
-      }
-      self.actionError('');
-      self.identitySaving(true);
-      window.setTimeout(function () {
-        self.kycStatus('PENDING');
-        self.customerKycRejectionReason('');
-        self.aadhaarNumber('');
-        self.panNumber('');
-        self.actionSuccess('Identity details submitted. Upload Aadhaar and PAN documents next.');
-        self.kycStep('documents');
-        self.scrollToKycStep('kyc-documents-step');
-        self.identitySaving(false);
-      }, 250);
-    };
-    this.uploadKycDocuments = function () {
-      if (self.kycStatus() === 'NOT_SUBMITTED') {
-        self.actionError('Submit identity details before uploading KYC documents.');
-        return;
-      }
-      const selectedDocuments = Object.keys(self.kycDocuments).filter(function (type) { return self.kycDocuments[type]; });
-      if (!selectedDocuments.length) {
-        self.actionError('Select at least one KYC document to upload or replace.');
-        return;
-      }
-      self.actionError('');
-      self.documentUploading(true);
-      window.setTimeout(function () {
-        const existing = self.customerKycDocuments();
-        selectedDocuments.forEach(function (type) {
-          const file = self.kycDocuments[type];
-          const existingDocument = existing.find(function (document) { return document.documentType === type; });
-          const metadata = { documentId: 'local-' + type, documentType: type, originalFileName: file.name };
-          if (existingDocument) { self.customerKycDocuments.replace(existingDocument, metadata); } else { self.customerKycDocuments.push(metadata); }
-        });
-        self.kycDocuments = { AADHAAR: null, PAN: null, ADDRESS_PROOF: null };
-        const types = self.customerKycDocuments().map(function (document) { return document.documentType; });
-        self.actionSuccess(types.indexOf('AADHAAR') >= 0 && types.indexOf('PAN') >= 0 ? 'Documents submitted locally and ready for review.' : 'Document saved. Upload both Aadhaar and PAN to complete KYC documents.');
-        self.documentUploading(false);
-      }, 250);
-    };
-    this.updateKycReviewStatus = function (status) {
-      const review = self.selectedKycReview();
-      const reason = self.kycRejectionReason().trim();
-      if (!review) { return; }
-      if (status === 'REJECTED' && !reason) {
-        self.actionError('Enter a rejection reason before rejecting KYC.');
-        return;
-      }
-      self.actionSuccess('KYC ' + status.toLowerCase() + ' locally.');
-      self.selectedKycReview(null);
-      self.selectedKycDocuments([]);
-    };
     this.transferAccountOptions = new ArrayDataProvider([
       { value: 'Savings •••• 4821', label: 'Savings •••• 4821 - ₹3,24,850' },
       { value: 'Current •••• 7634', label: 'Current •••• 7634 - ₹1,11,800' }
@@ -479,8 +317,6 @@ define([
       self.actionError('');
       self.actionSuccess('');
       self.actionPanelOpen(true);
-      if (self.isAccounts) { self.loadKycContext(); }
-      if (self.isAdmin) { self.loadKycReviewQueue(); }
       requestAnimationFrame(function () {
         const panel = document.getElementById('page-action-panel');
         if (panel) { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -496,21 +332,12 @@ define([
       self.actionMessages([{ severity: severity, summary: summary, detail: detail }]);
     };
     this.submitNewAccount = function () {
-      if (self.kycSubmitting()) { return false; }
-      if (self.kycStatus() === 'VERIFIED' || (self.kycStatus() === 'PENDING' && self.customerKycDocuments().some(function (document) { return document.documentType === 'AADHAAR'; }) && self.customerKycDocuments().some(function (document) { return document.documentType === 'PAN'; }))) {
-        const ifsc = self.accountBranchIfsc().trim().toUpperCase();
-        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
-          self.actionError('Enter a valid 11-character branch IFSC code.');
-          return false;
-        }
-        self.kycSubmitting(true);
-        window.setTimeout(function () {
-          self.actionSuccess('Account opening request submitted locally. Reference NSA-' + Date.now().toString().slice(-6) + '.');
-          self.kycSubmitting(false);
-        }, 250);
+      if (Number(self.initialDeposit()) < 1000) {
+        self.actionError('Enter an opening deposit of at least ₹1,000.');
         return false;
       }
-      self.actionError('Complete each KYC step separately. Account opening is available after administrator verification.');
+      self.actionError('');
+      self.actionSuccess(self.newAccountType() + ' request submitted. Reference NSA-' + Date.now().toString().slice(-6) + '.');
       return false;
     };
     this.submitBeneficiary = function () {
