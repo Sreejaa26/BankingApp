@@ -44,8 +44,8 @@
 
       <form class="login-form auth-step-panel" data-bind="submit: continueToTwoFactor, visible: step() === 1">
         <oj-validation-group id="login-credentials-validation">
-          <oj-input-text label-hint="Username" value="{{username}}" required autocomplete="username" placeholder="Enter your username"></oj-input-text>
-          <oj-input-password label-hint="Password" value="{{password}}" required autocomplete="current-password" placeholder="Enter your password" mask-icon="visible"></oj-input-password>
+          <oj-input-text label-hint="Username" value="{{username}}" on-raw-value-changed="[[usernameInput]]" required autocomplete="username" placeholder="Enter your username"></oj-input-text>
+          <oj-input-password label-hint="Password" value="{{password}}" on-raw-value-changed="[[passwordInput]]" required autocomplete="current-password" placeholder="Enter your password" mask-icon="visible"></oj-input-password>
         </oj-validation-group>
 
         <div class="login-options">
@@ -55,18 +55,19 @@
 
         <oj-messages class="jet-inline-messages oj-messages-outlined" messages="[[messages]]"></oj-messages>
         <div class="form-error" role="alert" data-bind="visible: error, text: error"></div>
-        <button class="primary-auth-button" type="submit">Continue securely</button>
+        <button class="primary-auth-button" type="submit" data-bind="disable: isSubmitting, text: isSubmitting() ? 'Checking details…' : 'Continue securely'"></button>
       </form>
 
       <form class="login-form auth-step-panel" data-bind="submit: verifyTwoFactor, visible: step() === 2">
         <div class="login-two-factor">
           <span class="login-two-factor__icon" aria-hidden="true">✓</span>
           <p class="page-eyebrow">Identity verification</p>
-          <h3>Enter your security code</h3>
-          <p>Open your authenticator app and enter the current 6-digit code for Northstar Digital Banking.</p>
+          <h3 data-bind="text: isSetupMode() ? 'Set up two-factor authentication' : 'Enter your security code'"></h3>
+          <p data-bind="text: isSetupMode() ? 'Scan this QR code with your authenticator app, then enter the current 6-digit code. This step is mandatory.' : 'Open your authenticator app and enter the current 6-digit code for Northstar Digital Banking.'"></p>
+          <div class="two-factor-qr-wrap" data-bind="visible: isSetupMode"><img class="two-factor-qr" data-bind="attr: {src: twoFactorQr}" alt="QR code for mandatory two-factor authentication setup"><strong>Scan to connect</strong></div>
         </div>
         <div class="login-otp-field">
-          <oj-validation-group id="login-otp-validation"><oj-input-text label-hint="One-time security code" value="{{twoFactorCode}}" required maxlength="6" autocomplete="one-time-code" virtual-keyboard="number" placeholder="Enter 6-digit code"></oj-input-text></oj-validation-group>
+          <oj-validation-group id="login-otp-validation"><oj-input-text label-hint="One-time security code" value="{{twoFactorCode}}" on-raw-value-changed="[[twoFactorCodeInput]]" required maxlength="6" autocomplete="one-time-code" virtual-keyboard="number" placeholder="Enter 6-digit code"></oj-input-text></oj-validation-group>
           <p>Codes refresh automatically and can only be used once.</p>
         </div>
         <oj-messages class="jet-inline-messages oj-messages-outlined" messages="[[messages]]"></oj-messages>

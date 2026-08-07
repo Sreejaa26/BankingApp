@@ -35,12 +35,12 @@
 
       <form class="login-form register-form auth-step-panel" data-bind="submit: continueToTwoFactor, visible: step() === 1">
         <oj-validation-group id="register-validation"><div class="register-form__grid">
-          <oj-input-text label-hint="Full name" value="{{fullName}}" required autocomplete="name" placeholder="Enter your full name"></oj-input-text>
-          <oj-input-text label-hint="Email address" value="{{email}}" required autocomplete="email" placeholder="name@example.com"></oj-input-text>
-          <oj-input-text label-hint="Mobile number" value="{{mobile}}" required autocomplete="tel" placeholder="Enter 10-digit number"></oj-input-text>
-          <oj-input-text label-hint="Username" value="{{username}}" required autocomplete="username" placeholder="Choose a username"></oj-input-text>
-          <oj-input-password label-hint="Password" value="{{password}}" required autocomplete="new-password" placeholder="Minimum 8 characters" mask-icon="visible"></oj-input-password>
-          <oj-input-password label-hint="Confirm password" value="{{confirmPassword}}" required autocomplete="new-password" placeholder="Re-enter your password" mask-icon="visible"></oj-input-password>
+          <oj-input-text label-hint="Full name" value="{{fullName}}" on-raw-value-changed="[[fullNameInput]]" required autocomplete="name" placeholder="Enter your full name"></oj-input-text>
+          <oj-input-text label-hint="Email address" value="{{email}}" on-raw-value-changed="[[emailInput]]" required autocomplete="email" placeholder="name@example.com"></oj-input-text>
+          <oj-input-text label-hint="Mobile number" value="{{mobile}}" on-raw-value-changed="[[mobileInput]]" required autocomplete="tel" placeholder="Enter 10-digit number"></oj-input-text>
+          <oj-input-text label-hint="Username" value="{{username}}" on-raw-value-changed="[[usernameInput]]" required autocomplete="username" placeholder="Choose a username"></oj-input-text>
+          <oj-input-password label-hint="Password" value="{{password}}" on-raw-value-changed="[[passwordInput]]" required autocomplete="new-password" placeholder="Minimum 8 characters" mask-icon="visible"></oj-input-password>
+          <oj-input-password label-hint="Confirm password" value="{{confirmPassword}}" on-raw-value-changed="[[confirmPasswordInput]]" required autocomplete="new-password" placeholder="Re-enter your password" mask-icon="visible"></oj-input-password>
         </div></oj-validation-group>
         <p class="password-note">Use at least 8 characters and avoid personal information.</p>
         <div class="captcha-box" role="group" aria-labelledby="captcha-heading">
@@ -49,11 +49,11 @@
             <div><small id="captcha-heading">Security check</small><strong>Type the characters</strong></div>
           </div>
           <canvas class="captcha-canvas" width="190" height="56" data-bind="captchaCanvas: captchaCode" role="img" aria-label="Five-character CAPTCHA image"></canvas>
-          <oj-input-text class="captcha-answer" label-hint="Enter characters" value="{{captchaAnswer}}" required autocomplete="off" placeholder="Type code"></oj-input-text>
+          <oj-input-text class="captcha-answer" label-hint="Enter characters" value="{{captchaAnswer}}" on-raw-value-changed="[[captchaAnswerInput]]" required autocomplete="off" placeholder="Type code"></oj-input-text>
           <button class="captcha-refresh" type="button" data-bind="click: refreshCaptcha" aria-label="Generate a new CAPTCHA image"><span aria-hidden="true">↻</span> New image</button>
         </div>
         <label class="terms-check"><input type="checkbox" data-bind="checked: acceptedTerms"><span>I agree to the <a href="#/terms">Terms of Service</a> and <a href="#/privacy">Privacy Policy</a>.</span></label>
-        <div class="kyc-upload"><span>Optional KYC document</span><oj-file-picker accept='["image/*", ".pdf"]' on-oj-select="[[onKycSelect]]"></oj-file-picker><small data-bind="text: kycFileName"></small></div>
+        <p class="page-action-note">After registration, complete your KYC identity details and upload proof securely from Profile.</p>
         <oj-messages class="jet-inline-messages oj-messages-outlined" messages="[[messages]]"></oj-messages>
         <div class="form-error" role="alert" data-bind="visible: error, text: error"></div>
         <button class="primary-auth-button" type="submit">Continue to 2FA</button>
@@ -70,7 +70,7 @@
               <li>Add an account and scan the QR code.</li>
               <li>Enter the current 6-digit code to finish registration.</li>
             </ol>
-            <oj-input-text class="two-factor-input" label-hint="6-digit authenticator code" value="{{twoFactorCode}}" required maxlength="6" autocomplete="one-time-code" virtual-keyboard="number" placeholder="000000"></oj-input-text>
+            <oj-input-text class="two-factor-input" label-hint="6-digit authenticator code" value="{{twoFactorCode}}" on-raw-value-changed="[[twoFactorCodeInput]]" required maxlength="6" autocomplete="one-time-code" virtual-keyboard="number" placeholder="000000"></oj-input-text>
             <p class="two-factor-note"><span aria-hidden="true">●</span> A new code will be required whenever you sign in.</p>
           </div>
           <div class="two-factor-qr-wrap">

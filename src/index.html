@@ -64,7 +64,7 @@
                   </button>
                 </nav>
                 <nav class="nav-utility-actions" aria-label="Support navigation">
-                  <button type="button" data-bind="click: navigate.bind($data, 'admin'), css: {'is-active': activeRoute() === 'admin'}, text: t('shell.admin')"></button>
+                  <button type="button" data-bind="visible: currentRole() === 'ADMIN', click: navigate.bind($data, 'admin'), css: {'is-active': activeRoute() === 'admin'}, text: t('shell.admin')"></button>
                   <button type="button" data-bind="text: t('shell.helpSupport')"></button>
                 </nav>
                 <div class="header-actions">
@@ -74,9 +74,9 @@
                   </label>
                   <label class="header-search"><span aria-hidden="true">⌕</span><input type="search" data-bind="attr: {placeholder: t('shell.search'), 'aria-label': t('shell.search')}"><kbd>⌘ K</kbd></label>
                   <button class="header-icon-button" type="button" aria-label="View notifications" data-bind="click: navigate.bind($data, 'notifications')"><span aria-hidden="true">◌</span><i></i></button>
-                  <div class="customer-summary" aria-label="Signed in customer">
+                  <button class="customer-summary" type="button" aria-label="Open profile" data-bind="click: navigate.bind($data, 'profile')">
                     <span class="customer-copy"><strong data-bind="text: customerName"></strong><small data-bind="text: t('shell.primaryCustomer')"></small></span>
-                  </div>
+                  </button>
                   <button class="signout-button" type="button" data-bind="click: logout" aria-label="Sign out">↪</button>
                 </div>
               </div>

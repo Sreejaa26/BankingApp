@@ -856,6 +856,11 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 9px;
   padding-left: 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
 
 .customer-avatar {
