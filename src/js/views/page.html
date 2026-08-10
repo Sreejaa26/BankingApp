@@ -22,7 +22,7 @@
         <p>Operational APIs and pending customer decisions load automatically when this dashboard opens.</p>
       </div>
       <div class="admin-command-centre__refresh">
-        <span data-bind="text: 'Last updated: ' + adminLastUpdated()"></span>
+        <span data-bind="text: 'Last updated: ' + (adminLastUpdated() || 'Waiting for refresh')"></span>
         <button class="primary-page-button" type="button" data-bind="click: loadAdminData, disable: adminLoading, text: adminLoading() ? 'Refreshing...' : 'Refresh all data'"></button>
       </div>
     </div>
