@@ -449,6 +449,7 @@ define([
     this.adminCardApplications = ko.observableArray([]);
     this.adminLoanApplications = ko.observableArray([]);
     this.adminKycReviews = ko.observableArray([]);
+    this.adminBeneficiaryApprovals = ko.observableArray([]);
 
     this.loanProducts = ko.observableArray([
       { icon: 'PL', type: 'Personal loan', rate: 10.4, limit: 'Up to ₹20 lakh', copy: 'Flexible funds for planned or unexpected personal expenses.', accent: 'loan-product--blue' },
@@ -1113,12 +1114,14 @@ define([
       const unavailable = self.adminServiceRows().filter(function (row) { return row.status !== 'AVAILABLE'; }).length;
       self.highlights([
         { label: 'Pending KYC reviews', value: String(self.adminKycReviews().length) },
+        { label: 'Pending beneficiaries', value: String(self.adminBeneficiaryApprovals().length) },
         { label: 'Pending card applications', value: String(self.adminCardApplications().length) },
         { label: 'Pending loan applications', value: String(self.adminLoanApplications().length) }
       ]);
       self.secondaryItems([
         { icon: 'API', name: 'Operational APIs', meta: 'Admin dashboard requests completed on page entry', value: String(self.adminServiceRows().length), status: unavailable ? unavailable + ' unavailable' : 'All available', progress: unavailable ? 70 : 100 },
         { icon: 'KYC', name: 'Identity verification', meta: 'Approvals enable customer account opening', value: String(self.adminKycReviews().length), status: 'Pending' },
+        { icon: 'BN', name: 'Payment approvals', meta: 'Beneficiaries awaiting bank verification', value: String(self.adminBeneficiaryApprovals().length), status: 'Pending' },
         { icon: 'AP', name: 'Product approvals', meta: 'Card and loan applications awaiting a decision', value: String(self.adminCardApplications().length + self.adminLoanApplications().length), status: 'Pending' }
       ]);
     };
@@ -1129,12 +1132,16 @@ define([
           .then(responseData).catch(function (error) { return { failed: true, message: 'Card approvals: ' + error.message }; }),
         api.request('/api/loans/admin/applications?status=PENDING&page=0&size=50', {}, token)
           .then(responseData).catch(function (error) { return { failed: true, message: 'Loan approvals: ' + error.message }; }),
+        api.request('/api/admin/beneficiaries?status=PENDING&page=0&size=50', {}, token)
+          .then(responseData).catch(function (error) { return { failed: true, message: 'Beneficiary approvals: ' + error.message }; }),
         api.request('/api/customers/kyc/reviews?status=PENDING', {}, token)
           .then(responseData).catch(function (error) { return { failed: true, message: 'KYC approvals: ' + error.message }; })
       ]).then(function (responses) {
         self.adminCardApplications(Array.isArray(responses[0]) ? responses[0] : []);
         self.adminLoanApplications(Array.isArray(responses[1]) ? responses[1] : []);
-        const kycReviews = Array.isArray(responses[2]) ? responses[2].map(function (review) {
+        const beneficiaryPage = responses[2] || {};
+        self.adminBeneficiaryApprovals(Array.isArray(beneficiaryPage.items) ? beneficiaryPage.items : Array.isArray(beneficiaryPage) ? beneficiaryPage : []);
+        const kycReviews = Array.isArray(responses[3]) ? responses[3].map(function (review) {
           return Object.assign({}, review, {
             documents: ko.observableArray([]),
             documentsLoading: ko.observable(true),
@@ -1252,6 +1259,21 @@ define([
         self.actionError(error.message || 'Unable to approve the KYC review.');
       }).finally(function () { self.adminActionBusy(''); });
     };
+    this.setBeneficiaryApprovalStatus = function (beneficiary, status) {
+      const actionId = 'beneficiary-' + status.toLowerCase() + '-' + beneficiary.beneficiaryId;
+      if (self.adminActionBusy()) { return; }
+      self.adminActionBusy(actionId); self.actionError(''); self.actionSuccess('');
+      api.request('/api/beneficiaries/' + encodeURIComponent(beneficiary.beneficiaryId) + '/status', {
+        method: 'PUT', body: JSON.stringify({ status: status })
+      }, params.app.authToken()).then(function () {
+        self.actionSuccess(status === 'VERIFIED' ? 'Beneficiary approved and enabled for customer transfers.' : 'Beneficiary blocked and removed from the approval queue.');
+        return self.loadAdminApprovalQueues();
+      }).catch(function (error) {
+        self.actionError(error.message || 'Unable to update the beneficiary approval.');
+      }).finally(function () { self.adminActionBusy(''); });
+    };
+    this.approveBeneficiary = function (beneficiary) { return self.setBeneficiaryApprovalStatus(beneficiary, 'VERIFIED'); };
+    this.blockBeneficiary = function (beneficiary) { return self.setBeneficiaryApprovalStatus(beneficiary, 'BLOCKED'); };
     this.openKycDocument = function (document) {
       const actionId = 'document-' + document.documentId;
       if (self.adminDocumentBusy()) { return; }

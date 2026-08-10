@@ -68,6 +68,22 @@
         </div>
       </section>
 
+      <section class="admin-approval-panel admin-beneficiary-approvals" aria-labelledby="admin-beneficiary-approvals">
+        <div class="admin-approval-panel__heading">
+          <div><p class="page-eyebrow">Payment security</p><h4 id="admin-beneficiary-approvals">Pending beneficiary approvals</h4></div>
+          <span class="admin-queue-count" data-bind="text: adminBeneficiaryApprovals().length"></span>
+        </div>
+        <p class="admin-empty-state" data-bind="visible: adminBeneficiaryApprovals().length === 0">No beneficiaries are waiting for approval.</p>
+        <div class="admin-approval-list" data-bind="foreach: adminBeneficiaryApprovals">
+          <article class="admin-approval-item">
+            <div class="admin-approval-item__title"><span>BN</span><div><strong data-bind="text: beneficiaryName"></strong><small data-bind="text: nickname + ' · ' + $parent.adminShortId(beneficiaryId)"></small></div><b data-bind="text: status"></b></div>
+            <dl><div><dt>Customer</dt><dd data-bind="text: $parent.adminShortId(customerUserId)"></dd></div><div><dt>Account</dt><dd data-bind="text: maskedAccountNumber"></dd></div><div><dt>IFSC</dt><dd data-bind="text: ifscCode"></dd></div></dl>
+            <p data-bind="text: $parent.adminEnumLabel(relationship) + (favourite ? ' · Customer favourite' : '')"></p>
+            <div class="admin-beneficiary-actions"><button class="admin-block-button" type="button" data-bind="click: $parent.blockBeneficiary, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'beneficiary-blocked-' + beneficiaryId ? 'Blocking...' : 'Block' "></button><button class="admin-approve-button" type="button" data-bind="click: $parent.approveBeneficiary, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'beneficiary-verified-' + beneficiaryId ? 'Approving...' : 'Approve beneficiary'"></button></div>
+          </article>
+        </div>
+      </section>
+
       <section class="admin-approval-panel" aria-labelledby="admin-kyc-approvals">
         <div class="admin-approval-panel__heading">
           <div><p class="page-eyebrow">Customer onboarding</p><h4 id="admin-kyc-approvals">KYC verification queue</h4></div>

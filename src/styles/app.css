@@ -3735,6 +3735,10 @@ a:hover { text-decoration: underline; }
 .beneficiary-detail-actions { margin-top:18px; }
 @media (max-width:800px) { .beneficiary-list-heading { align-items:flex-start; flex-direction:column; } .beneficiary-management-list > article { grid-template-columns:38px 1fr auto; } .beneficiary-management-list > article > i,.beneficiary-management-list > article > b { grid-column:2; justify-self:start; } .beneficiary-management-list article > div:last-child { grid-column:2/-1; } }
 
+.admin-beneficiary-actions { display:grid; grid-template-columns:.65fr 1.35fr; gap:8px; }
+.admin-block-button { min-height:38px; border:1px solid #efcaca; border-radius:10px; color:#a93030; background:#fff7f7; cursor:pointer; font-size:9px; font-weight:800; }
+.admin-block-button:disabled { cursor:not-allowed; opacity:.55; }
+
 /* Unified primary navigation */
 
 /* Reports centre */
