@@ -44,6 +44,7 @@ define([
       { route: 'profile', labelKey: 'nav.profile', labelFallback: 'Profile', icon: 'P' },
       { route: 'support', labelKey: 'shell.helpSupport', labelFallback: 'Help & support', icon: '?', utility: true }
     ];
+    allNavigationItems.splice(5, 0, { route: 'bill-payments', labelKey: 'nav.billPayments', labelFallback: 'Bill Payments', icon: 'BP' });
     allNavigationItems.forEach(function (item) {
       item.label = ko.pureComputed(function () { return self.t(item.labelKey, item.labelFallback); });
     });
@@ -94,7 +95,9 @@ define([
       else if (route === 'admin') { route = 'dashboard'; }
       self.activeRoute(route);
       self.navigationOpen(false);
-      return self.loadModule(route === 'dashboard' ? 'dashboard' : 'page', { route: route });
+      const dedicatedModules = ['bill-payments', 'scheduled-payments', 'reports', 'audit'];
+      const moduleName = route === 'dashboard' ? 'dashboard' : dedicatedModules.indexOf(route) >= 0 ? route : 'page';
+      return self.loadModule(moduleName, { route: route });
     };
 
     self.navigate = function (route) {
