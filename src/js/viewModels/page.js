@@ -274,6 +274,12 @@ define([
     this.branchIfsc = ko.observable('');
     this.accountOpeningEligible = ko.observable(false);
     this.accountOpeningEligibilityMessage = ko.observable('Checking profile and KYC eligibility...');
+    this.selectedAccount = ko.observable(null);
+    this.accountPortfolio = ko.observableArray([]);
+    this.accountMiniStatement = ko.observableArray([]);
+    this.accountDetailLoading = ko.observable(false);
+    this.accountDetailError = ko.observable('');
+    this.accountMiniStatementLimit = ko.observable(10);
     this.goToProfileSetup = function () { params.app.navigate('profile'); };
     this.beneficiaryName = ko.observable('');
     this.beneficiaryAccount = ko.observable('');
@@ -729,6 +735,42 @@ define([
       }).catch(function (error) { self.actionError(error.message || 'Unable to upload the KYC documents.'); self.showActionMessage('error', 'Document upload needs attention', self.actionError()); });
       return false;
     };
+    this.openAccountDetail = function (account) {
+      if (!account || !account.accountId) { return; }
+      const token = params.app.authToken();
+      self.accountDetailLoading(true);
+      self.accountDetailError('');
+      const detailRequest = api.request('/api/accounts/' + encodeURIComponent(account.accountId), {}, token).then(function (response) {
+        self.selectedAccount(responseData(response) || {});
+      });
+      const statementRequest = api.request('/api/accounts/' + encodeURIComponent(account.accountId) + '/mini-statement?limit=' + encodeURIComponent(self.accountMiniStatementLimit()), {}, token).then(function (response) {
+        const statement = responseData(response) || {};
+        self.accountMiniStatement(Array.isArray(statement.transactions) ? statement.transactions : []);
+      });
+      return Promise.all([detailRequest, statementRequest]).catch(function (error) {
+        self.accountDetailError(error.message || 'Unable to load the account detail and mini-statement.');
+      }).then(function () { self.accountDetailLoading(false); });
+    };
+    this.refreshAccountDetail = function () {
+      const account = self.selectedAccount();
+      if (account) { return self.openAccountDetail(account); }
+    };
+    this.accountTransactionAmount = function (transaction) {
+      return (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(Number(transaction.amount || 0));
+    };
+    this.accountMoney = function (value) { return self.currencyConverter.format(Number(value || 0)); };
+    this.accountTypeLabel = function (value) { return String(value || 'Account').replace(/_/g, ' '); };
+    this.accountTransactionIcon = function (value) { return String(value || 'TX').slice(0, 2); };
+    this.accountTransactionDate = function (value) {
+      if (!value || String(value).toLowerCase() === 'null') { return 'Date unavailable'; }
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
+    };
+    this.accountCreatedDate = function (value) {
+      if (!value || String(value).toLowerCase() === 'null') { return 'Not available'; }
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
+    };
     this.loadAccountsData = function () {
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token || !self.isAccounts) { return; }
@@ -746,12 +788,21 @@ define([
         self.accountOpeningEligibilityMessage(!profileComplete ? 'Complete Step 1: personal and address details' : !kycVerified ? 'KYC must be verified before account opening' : 'Profile complete and KYC verified');
         const total = accounts.reduce(function (sum, account) { return sum + Number(account.availableBalance || 0); }, 0);
         self.highlights([{ label: 'Total balance', value: self.currencyConverter.format(total) }, { label: 'Available now', value: self.currencyConverter.format(total) }, { label: 'Active accounts', value: String(accounts.filter(function (account) { return account.status === 'ACTIVE'; }).length) }]);
-        self.items(accounts.map(function (account) {
+        const portfolio = accounts.map(function (account) {
           const number = String(account.accountNumber || '');
-          return { icon: String(account.accountType || 'AC').slice(0, 2), name: String(account.accountType || 'Account').replace(/_/g, ' '), meta: '•••• ' + number.slice(-4) + ' · ' + account.branchIfsc, value: self.currencyConverter.format(Number(account.availableBalance || 0)), status: account.status || '' };
-        }));
+          return { accountId: account.accountId, icon: String(account.accountType || 'AC').slice(0, 2), name: String(account.accountType || 'Account').replace(/_/g, ' '), meta: '•••• ' + number.slice(-4) + ' · ' + account.branchIfsc, value: self.currencyConverter.format(Number(account.availableBalance || 0)), status: account.status || '', primaryAccount: Boolean(account.primaryAccount) };
+        });
+        self.items(portfolio);
+        self.accountPortfolio(portfolio);
         self.branchOptionRows(branches.map(function (branch) { return { value: branch.ifsc, label: branch.branchName + ' · ' + branch.city + ' · ' + branch.ifsc }; }));
         if (!self.branchIfsc() && branches.length) { self.branchIfsc(branches[0].ifsc); }
+        if (accounts.length) {
+          const selectedId = self.selectedAccount() && self.selectedAccount().accountId;
+          const selected = accounts.find(function (account) { return account.accountId === selectedId; }) || accounts[0];
+          self.openAccountDetail(selected);
+        } else {
+          self.accountPortfolio([]); self.selectedAccount(null); self.accountMiniStatement([]);
+        }
       }).catch(function (error) { self.actionError(error.message || 'Unable to load account details.'); });
     };
     this.submitNewAccount = function () {

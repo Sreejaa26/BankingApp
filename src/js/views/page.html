@@ -98,6 +98,37 @@
     <div class="page-action-success" role="status" aria-live="polite" data-bind="visible: actionSuccess, text: actionSuccess"></div>
   </section>
 
+  <section class="account-detail-workspace" data-bind="visible: isAccounts" aria-label="Account portfolio and details">
+    <article class="surface-card account-selector-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Portfolio</p><h3>Your accounts</h3></div><span class="status-chip" data-bind="text: accountPortfolio().length + ' accounts'"></span></div>
+      <div class="account-selector-list" data-bind="foreach: accountPortfolio">
+        <button type="button" data-bind="click: $parent.openAccountDetail, css: {'is-selected': $parent.selectedAccount() && $parent.selectedAccount().accountId === accountId}">
+          <span data-bind="text: icon"></span><div><strong data-bind="text: name"></strong><small data-bind="text: meta"></small></div><div><strong data-bind="text: value"></strong><small data-bind="text: primaryAccount ? 'Primary · ' + status : status"></small></div>
+        </button>
+      </div>
+      <p class="admin-empty-state" data-bind="visible: accountPortfolio().length === 0">No bank accounts are available yet.</p>
+    </article>
+
+    <article class="surface-card account-detail-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Account detail</p><h3>Account information</h3></div><button class="text-button" type="button" data-bind="click: refreshAccountDetail, disable: accountDetailLoading">Refresh</button></div>
+      <p class="account-detail-loading" data-bind="visible: accountDetailLoading">Loading account information…</p>
+      <p class="form-error" role="alert" data-bind="visible: accountDetailError, text: accountDetailError"></p>
+      <div class="account-detail-empty" data-bind="visible: !accountDetailLoading() && !selectedAccount()">Select an account to view its information.</div>
+      <div class="account-detail-body" data-bind="with: selectedAccount">
+        <div class="account-detail-balance"><span data-bind="text: $parent.accountTypeLabel(accountType)"></span><strong data-bind="text: $parent.accountMoney(availableBalance)"></strong><small>Available balance from your account portfolio</small></div>
+        <dl><div><dt>Account number</dt><dd data-bind="text: accountNumber"></dd></div><div><dt>Status</dt><dd data-bind="text: status"></dd></div><div><dt>Branch IFSC</dt><dd data-bind="text: branchIfsc"></dd></div><div><dt>Ledger balance</dt><dd data-bind="text: $parent.accountMoney(ledgerBalance)"></dd></div><div><dt>Primary account</dt><dd data-bind="text: primaryAccount ? 'Yes' : 'No'"></dd></div><div><dt>Opened</dt><dd data-bind="text: $parent.accountCreatedDate(createdAt)"></dd></div></dl>
+      </div>
+    </article>
+
+    <article class="surface-card account-mini-statement-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Recent activity</p><h3>Mini-statement</h3></div><span class="status-chip">Latest 10</span></div>
+      <div class="account-mini-list" data-bind="foreach: accountMiniStatement">
+        <div><span data-bind="text: $parent.accountTransactionIcon(transactionType)"></span><div><strong data-bind="text: transactionType"></strong><small data-bind="text: referenceNumber + ' · ' + $parent.accountTransactionDate(transactionDate)"></small></div><strong data-bind="text: $parent.accountTransactionAmount($data), css: {'amount-positive': debitCredit === 'CREDIT'}"></strong><i data-bind="text: status"></i></div>
+      </div>
+      <div class="schedule-empty" data-bind="visible: !accountDetailLoading() && accountMiniStatement().length === 0"><span>MS</span><h4>No recent transactions</h4><p>This account has no entries in its latest mini-statement.</p></div>
+    </article>
+  </section>
+
   <section class="surface-card transaction-table-card" data-bind="visible: isTransactions" aria-label="Transaction table">
     <div class="card-heading"><div><p class="page-eyebrow">Oracle JET table</p><h3>Transaction history</h3></div><span class="status-chip">Latest activity</span></div>
     <oj-table class="transaction-jet-table" aria-label="Transaction history" data="[[pagingTransactions]]" columns="[[transactionColumns]]" display="grid"></oj-table>
@@ -379,7 +410,7 @@
     </article>
   </section>
 
-  <section class="workspace-grid" data-bind="visible: !isSupport">
+  <section class="workspace-grid" data-bind="visible: !isSupport && !isAccounts">
     <article class="surface-card workspace-panel">
       <div class="card-heading"><div><p class="page-eyebrow" data-bind="text: primaryEyebrow"></p><h3 data-bind="text: primaryTitle"></h3></div><button class="text-button" type="button" data-bind="visible: !isNotifications">View all</button></div>
       <div class="workspace-list" data-bind="foreach: items">
