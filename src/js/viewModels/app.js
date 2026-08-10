@@ -47,6 +47,7 @@ define([
     allNavigationItems.splice(5, 0, { route: 'bill-payments', labelKey: 'nav.billPayments', labelFallback: 'Bill Payments', icon: 'BP' });
     allNavigationItems.splice(6, 0, { route: 'scheduled-payments', labelKey: 'nav.scheduledPayments', labelFallback: 'Scheduled Payments', icon: 'SC' });
     allNavigationItems.splice(7, 0, { route: 'reports', labelKey: 'nav.reports', labelFallback: 'Reports', icon: 'RP' });
+    allNavigationItems.splice(8, 0, { route: 'audit', labelKey: 'nav.audit', labelFallback: 'Audit', icon: 'AU' });
     allNavigationItems.forEach(function (item) {
       item.label = ko.pureComputed(function () { return self.t(item.labelKey, item.labelFallback); });
     });
@@ -54,7 +55,7 @@ define([
       if (self.isAdmin()) {
         return allNavigationItems.filter(function (item) { return item.route === 'admin' || item.route === 'reports' || item.route === 'audit'; });
       }
-      return allNavigationItems.filter(function (item) { return item.route !== 'admin' && !item.utility; });
+      return allNavigationItems.filter(function (item) { return item.route !== 'admin' && item.route !== 'audit' && !item.utility; });
     });
     self.primaryNavigationItems = ko.pureComputed(function () { return self.navigationItems().slice(0, 8); });
 
