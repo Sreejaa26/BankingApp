@@ -192,25 +192,28 @@
       <oj-validation-group class="jet-validation-group">
       <oj-input-text label-hint="Beneficiary name" value="{{beneficiaryName}}" required placeholder="Enter full name"></oj-input-text>
       <oj-input-text label-hint="Account number" value="{{beneficiaryAccount}}" validators="[[accountNumberValidators]]" required placeholder="Up to 30 digits"></oj-input-text>
-      <oj-input-text label-hint="IFSC code" value="{{beneficiaryIfsc}}" validators="[[ifscValidators]]" required placeholder="Example: HDFC0001234"></oj-input-text>
+      <oj-select-single label-hint="Branch IFSC" data="[[beneficiaryIfscOptions]]" item-text="label" value="{{beneficiaryIfsc}}" required></oj-select-single>
       <oj-select-single label-hint="Relationship" data="[[beneficiaryRelationshipOptions]]" item-text="label" value="{{beneficiaryRelationship}}" required></oj-select-single>
       <oj-input-text label-hint="Nickname" value="{{beneficiaryNickname}}" maxlength="80" required placeholder="Example: Rent"></oj-input-text>
       </oj-validation-group>
       <label class="page-action-note"><input type="checkbox" data-bind="checked: beneficiaryFavourite"> Save as a favourite</label>
-      <p class="page-action-note">For your security, a cooling period may apply before the first transfer.</p>
+      <p class="page-action-note">Enter an active Northstar account number and its matching branch IFSC. For your security, a cooling period may apply before the first transfer.</p>
       <button class="primary-page-button" type="submit">Add beneficiary securely</button>
     </form>
 
     <form class="page-action-form" data-bind="visible: isTransfer, submit: submitTransfer">
       <oj-validation-group class="jet-validation-group">
-      <oj-select-single label-hint="From account" data="[[transferAccountOptions]]" item-text="label" value="{{transferFrom}}" required></oj-select-single>
-      <oj-select-single label-hint="Verified beneficiary" data="[[transferBeneficiaryOptions]]" item-text="label" value="{{transferBeneficiary}}" required></oj-select-single>
+      <oj-select-single label-hint="From account" data="[[transferAccountOptions]]" item-text="label" value="{{transferFrom}}" placeholder="[[transferAccountPlaceholder]]" disabled="[[transferAccountUnavailable]]" required></oj-select-single>
+      <oj-select-single label-hint="Verified beneficiary" data="[[transferBeneficiaryOptions]]" item-text="label" value="{{transferBeneficiary}}" placeholder="[[transferBeneficiaryPlaceholder]]" disabled="[[transferBeneficiaryUnavailable]]" required></oj-select-single>
       <oj-input-number label-hint="Transfer amount" value="{{transferAmount}}" converter="[[currencyConverter]]" min="1" max="500000" step="100" required></oj-input-number>
       <oj-input-text label-hint="Purpose" value="{{transferPurpose}}" maxlength="160" required></oj-input-text>
       </oj-validation-group>
+      <div class="page-action-summary" data-bind="visible: transferUnavailable"><span>Transfer setup required</span><strong data-bind="text: transferReadinessMessage"></strong></div>
+      <button class="secondary-auth-button" type="button" data-bind="visible: transferAccountUnavailable, click: goToAccounts">Open an account</button>
+      <button class="secondary-auth-button" type="button" data-bind="visible: transferBeneficiaryUnavailable, click: goToBeneficiaries">Manage beneficiaries</button>
       <p class="page-action-note">To protect your money, transfers can only be made to beneficiaries with verified bank details. Add a beneficiary first if they are not listed.</p>
       <div class="page-action-summary"><span>Daily transfer limit</span><strong>₹5,00,000</strong></div>
-      <button class="primary-page-button" type="submit">Review secure transfer</button>
+      <button class="primary-page-button" type="submit" data-bind="disable: transferUnavailable">Review secure transfer</button>
     </form>
 
     <div class="card-centre" data-bind="visible: isCards">
@@ -229,7 +232,7 @@
         <oj-select-single label-hint="Card product" data="[[cardProductOptions]]" item-text="label" value="{{cardProduct}}" required></oj-select-single>
         <oj-input-number label-hint="Monthly income" value="{{cardApplicantIncome}}" min="0" max="10000000" step="5000" required></oj-input-number>
         <oj-input-text label-hint="Occupation" value="{{cardApplicantOccupation}}" maxlength="120" required></oj-input-text>
-        <oj-input-number label-hint="Requested daily limit" value="{{cardRequestedLimit}}" min="1" max="500000" step="1000" required></oj-input-number>
+        <oj-input-number label-hint="Requested daily limit" value="{{cardRequestedLimit}}" min="1" max="500000" step="1000" required="[[!isDebitCardApplication()]]" data-bind="visible: !isDebitCardApplication()"></oj-input-number>
         <oj-input-text label-hint="Delivery address" value="{{cardDeliveryAddress}}" required placeholder="Enter complete address"></oj-input-text>
         <button class="primary-page-button" type="submit">Submit card application</button>
       </form>

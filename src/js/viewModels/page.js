@@ -285,6 +285,31 @@ define([
     this.transferBeneficiary = ko.observable('');
     this.transferAmount = ko.observable(10000);
     this.transferPurpose = ko.observable('Personal transfer');
+    this.transferAccountUnavailable = ko.observable(true);
+    this.transferBeneficiaryUnavailable = ko.observable(true);
+    this.transferUnavailable = ko.pureComputed(function () {
+      return self.transferAccountUnavailable() || self.transferBeneficiaryUnavailable();
+    });
+    this.transferAccountPlaceholder = ko.pureComputed(function () {
+      return self.transferAccountUnavailable() ? 'No active accounts available' : 'Select an active account';
+    });
+    this.transferBeneficiaryPlaceholder = ko.pureComputed(function () {
+      return self.transferBeneficiaryUnavailable() ? 'No verified beneficiaries available' : 'Select a verified beneficiary';
+    });
+    this.transferReadinessMessage = ko.pureComputed(function () {
+      if (self.transferAccountUnavailable() && self.transferBeneficiaryUnavailable()) {
+        return 'Open and activate an account, then add a beneficiary and wait for verification.';
+      }
+      if (self.transferAccountUnavailable()) {
+        return 'Open and activate an account before transferring money.';
+      }
+      if (self.transferBeneficiaryUnavailable()) {
+        return 'Add a beneficiary and wait for bank verification before transferring money.';
+      }
+      return 'Your account and beneficiary are ready for transfer.';
+    });
+    this.goToAccounts = function () { params.app.navigate('accounts'); };
+    this.goToBeneficiaries = function () { params.app.navigate('beneficiaries'); };
     this.cardLocked = ko.observable(false);
     this.activeCardId = ko.observable('');
     this.activeCardName = ko.observable('No card available');
@@ -302,6 +327,7 @@ define([
     this.cardApplicationTypeLabel = ko.pureComputed(function () {
       return self.cardApplicationType() === 'DEBIT' ? 'Debit card' : 'Credit card';
     });
+    this.isDebitCardApplication = ko.pureComputed(function () { return self.cardApplicationType() === 'DEBIT'; });
     this.cardActionLabel = ko.pureComputed(function () {
       if (self.activeCardStatus() === 'INACTIVE' || self.activeCardStatus() === 'ISSUED') { return 'Activate card'; }
       return self.activeCardStatus() === 'BLOCKED' ? 'Unblock card' : 'Block card';
@@ -356,9 +382,18 @@ define([
     this.transferAccountOptions = new ArrayDataProvider(this.transferAccountOptionRows, { keyAttributes: 'value' });
     this.transferBeneficiaryOptions = new ArrayDataProvider(this.transferBeneficiaryOptionRows, { keyAttributes: 'value' });
     this.beneficiaryRelationshipOptions = new ArrayDataProvider([
-      { value: 'FAMILY', label: 'Family' }, { value: 'FRIEND', label: 'Friend' },
+      { value: 'PARENT', label: 'Parent' }, { value: 'SPOUSE', label: 'Spouse' },
+      { value: 'CHILD', label: 'Child' }, { value: 'SIBLING', label: 'Sibling' },
+      { value: 'RELATIVE', label: 'Other relative' }, { value: 'FRIEND', label: 'Friend' },
       { value: 'SELF', label: 'My account' }, { value: 'BUSINESS', label: 'Business' },
       { value: 'OTHER', label: 'Other' }
+    ], { keyAttributes: 'value' });
+    this.beneficiaryIfscOptions = new ArrayDataProvider([
+      { value: 'ORCL0000001', label: 'Bengaluru Main · Bengaluru · ORCL0000001' },
+      { value: 'ORCL0000002', label: 'Mumbai Fort · Mumbai · ORCL0000002' },
+      { value: 'ORCL0000003', label: 'Chennai Central · Chennai · ORCL0000003' },
+      { value: 'ORCL0000004', label: 'Delhi Connaught Place · New Delhi · ORCL0000004' },
+      { value: 'ORCL0000005', label: 'Hyderabad Banjara Hills · Hyderabad · ORCL0000005' }
     ], { keyAttributes: 'value' });
     this.transactionRows = ko.observableArray([]);
     this.transactionTableData = new ArrayDataProvider(this.transactionRows, { keyAttributes: 'id' });
@@ -784,6 +819,8 @@ define([
         }
         const verifiedBeneficiaries = beneficiaries.filter(function (beneficiary) { return beneficiary.status === 'VERIFIED'; });
         const activeAccounts = accounts.filter(function (account) { return account.status === 'ACTIVE'; });
+        self.transferBeneficiaryUnavailable(verifiedBeneficiaries.length === 0);
+        self.transferAccountUnavailable(activeAccounts.length === 0);
         self.transferBeneficiaryOptionRows(verifiedBeneficiaries.map(function (beneficiary) {
           const accountNumber = String(beneficiary.accountNumber || '');
           return { value: beneficiary.beneficiaryId, label: beneficiary.beneficiaryName + ' · •••• ' + accountNumber.slice(-4) };
@@ -792,9 +829,13 @@ define([
           const accountNumber = String(account.accountNumber || '');
           return { value: account.accountId, label: account.accountType + ' · •••• ' + accountNumber.slice(-4) };
         }));
-        if (!self.transferBeneficiary() && verifiedBeneficiaries.length) { self.transferBeneficiary(verifiedBeneficiaries[0].beneficiaryId); }
-        if (!self.transferFrom() && activeAccounts.length) { self.transferFrom(activeAccounts[0].accountId); }
+        const selectedBeneficiaryIsVerified = verifiedBeneficiaries.some(function (beneficiary) { return beneficiary.beneficiaryId === self.transferBeneficiary(); });
+        const selectedAccountIsActive = activeAccounts.some(function (account) { return account.accountId === self.transferFrom(); });
+        self.transferBeneficiary(selectedBeneficiaryIsVerified ? self.transferBeneficiary() : (verifiedBeneficiaries.length ? verifiedBeneficiaries[0].beneficiaryId : ''));
+        self.transferFrom(selectedAccountIsActive ? self.transferFrom() : (activeAccounts.length ? activeAccounts[0].accountId : ''));
       }).catch(function (error) {
+        self.transferBeneficiaryUnavailable(true);
+        self.transferAccountUnavailable(true);
         self.actionError(error.message || 'Unable to load your payment details.');
       });
     };
@@ -815,7 +856,7 @@ define([
     this.submitTransfer = function () {
       const amount = Number(self.transferAmount());
       const beneficiary = self.beneficiaryLookup[self.transferBeneficiary()];
-      if (!self.transferFrom() || !beneficiary) { self.actionError('Choose an active account and a verified beneficiary first.'); self.showActionMessage('error', 'Transfer needs attention', self.actionError()); return false; }
+      if (self.transferUnavailable() || !self.transferFrom() || !beneficiary || beneficiary.status !== 'VERIFIED') { self.actionError(self.transferReadinessMessage()); self.showActionMessage('error', 'Transfer needs attention', self.actionError()); return false; }
       if (!amount || amount < 1 || amount > 500000) { self.actionError('Enter a transfer amount between ₹1 and ₹5,00,000.'); self.showActionMessage('error', 'Transfer amount needs attention', self.actionError()); return false; }
       self.pendingTransfer = { sourceAccountId: self.transferFrom(), destinationAccountNumber: beneficiary.accountNumber, amount: amount, description: self.transferPurpose().trim(), idempotencyKey: api.createIdempotencyKey() };
       self.actionError(''); self.actionMessages([]); self.pendingTransferDestination(beneficiary.beneficiaryName + ' (account ending ' + String(beneficiary.accountNumber).slice(-4) + ')'); self.pendingTransferAmount(amount);
@@ -880,14 +921,15 @@ define([
       self.actionSuccess('');
       const accountId = self.cardApplicationAccountId();
       const monthlyIncome = Number(self.cardApplicantIncome());
-      const requestedLimit = Number(self.cardRequestedLimit());
+      const debitApplication = self.isDebitCardApplication();
+      const requestedLimit = debitApplication ? null : Number(self.cardRequestedLimit());
       const address = self.cardDeliveryAddress().trim();
       if (!accountId || !self.cardApplicationType() || !self.cardProduct()) {
         self.actionError('Choose an account, card type, and card product.');
         return false;
       }
-      if (!monthlyIncome || monthlyIncome < 1 || !requestedLimit || requestedLimit < 1 || !address) {
-        self.actionError('Enter your monthly income, requested daily limit, and complete delivery address.');
+      if (!monthlyIncome || monthlyIncome < 1 || (!debitApplication && (!requestedLimit || requestedLimit < 1)) || !address) {
+        self.actionError(debitApplication ? 'Enter your monthly income and complete delivery address.' : 'Enter your monthly income, requested daily limit, and complete delivery address.');
         return false;
       }
       self.actionError('');
