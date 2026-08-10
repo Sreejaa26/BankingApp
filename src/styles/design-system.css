@@ -1,0 +1,382 @@
+:root {
+  /* Compact theme palette: change these twelve values to retheme the app. */
+  --brand: #1769aa;
+  --brand-light: #eaf3fb;
+  --brand-dark: #071c32;
+  --ink: #172638;
+  --muted: #647488;
+  --line: #dfe7ef;
+  --canvas: #f4f7fa;
+  --white: #ffffff;
+  --success: #12805c;
+  --warning: #c78b2c;
+  --danger: #b42318;
+  --purple: #7356a8;
+
+  /* Derived semantic colours. */
+  --navy-950: var(--brand-dark);
+  --navy-900: color-mix(in srgb, var(--brand-dark) 88%, var(--brand));
+  --navy-800: color-mix(in srgb, var(--brand-dark) 72%, var(--brand));
+  --navy-700: color-mix(in srgb, var(--brand-dark) 42%, var(--brand));
+  --blue-600: var(--brand);
+  --blue-500: color-mix(in srgb, var(--brand) 84%, var(--white));
+  --blue-100: var(--brand-light);
+  --blue-50: color-mix(in srgb, var(--brand-light) 55%, var(--white));
+  --muted-light: color-mix(in srgb, var(--muted) 68%, var(--white));
+  --line-soft: color-mix(in srgb, var(--line) 58%, var(--white));
+  --green: var(--success);
+  --green-dark: color-mix(in srgb, var(--success) 82%, var(--brand-dark));
+  --green-soft: color-mix(in srgb, var(--success) 10%, var(--white));
+  --gold: var(--warning);
+  --gold-dark: color-mix(in srgb, var(--warning) 68%, var(--brand-dark));
+  --gold-soft: color-mix(in srgb, var(--warning) 14%, var(--white));
+  --danger-dark: color-mix(in srgb, var(--danger) 78%, var(--brand-dark));
+  --danger-soft: color-mix(in srgb, var(--danger) 10%, var(--white));
+  --purple-soft: color-mix(in srgb, var(--purple) 11%, var(--white));
+  --surface: var(--white);
+  --surface-subtle: color-mix(in srgb, var(--canvas) 62%, var(--white));
+  --surface-selected: var(--blue-50);
+  --focus-ring: color-mix(in srgb, var(--brand) 24%, transparent);
+
+  /* Typography, spacing, controls and shape. */
+  --font-sans: "Oracle Sans", "Segoe UI", Arial, sans-serif;
+  --text-xs: .75rem;
+  --text-sm: .8125rem;
+  --text-base: .875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-4xl: 2.125rem;
+  --text-3xl: clamp(2rem, 3vw, 2.75rem);
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --radius-sm: .5rem;
+  --radius-md: .75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --control-height-sm: 2.25rem;
+  --control-height: 2.75rem;
+  --control-height-lg: 3rem;
+  --content-width: 90rem;
+  --page-gutter: clamp(1rem, 4vw, 4rem);
+  --shadow-soft: 0 10px 35px color-mix(in srgb, var(--brand-dark) 6%, transparent);
+  --shadow: 0 18px 55px color-mix(in srgb, var(--brand-dark) 11%, transparent);
+  --shadow-hover: 0 20px 48px color-mix(in srgb, var(--brand-dark) 12%, transparent);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #app, #globalBody { max-width: 100%; min-height: 100%; margin: 0; overflow-x: clip; }
+
+body {
+  color: var(--ink);
+  background: radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--brand) 7%, transparent), transparent 28rem), var(--canvas);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  text-rendering: optimizeLegibility;
+}
+
+oj-module { display: block; }
+img, svg { max-width: 100%; }
+button, input, select, textarea { font: inherit; }
+button { color: inherit; }
+a { color: var(--brand); font-weight: 650; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+:where(.surface-card, .workspace-card) {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+:where(.primary-page-button, .secondary-action, .danger-button) {
+  min-height: var(--control-height);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+:where(.page-eyebrow, .navigation-label) {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+:where(.status-chip, .chip) {
+  min-height: 1.75rem;
+  padding: .35rem .65rem;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 750;
+}
+
+@media (max-width: 640px) {
+  :root { --page-gutter: 1rem; }
+  :where(.surface-card, .workspace-card) { border-radius: var(--radius-md); }
+}
+
+/* Shared application rhythm and readable density. */
+.login-story h1 { color: var(--white); }
+.login-story__content > p { font-size: var(--text-md); line-height: var(--leading-relaxed); }
+.login-heading h2 { font-size: var(--text-2xl); line-height: var(--leading-tight); }
+.login-heading > p:last-child { font-size: var(--text-base); }
+.login-card { width: 100%; max-width: 28.75rem; }
+.login-form, .register-form { gap: var(--space-4); }
+.login-form :where(oj-c-input-text, oj-c-input-password, oj-input-text, oj-input-password) { width: 100%; }
+.login-options label, .forgot-password-link, .auth-link { font-size: var(--text-sm); }
+
+.app-shell .page-content {
+  width: min(100%, var(--content-width));
+  margin-inline: auto;
+  padding: var(--space-8) var(--page-gutter) var(--space-10);
+}
+
+.app-shell :where(.page-stack, .page-workspace) { gap: var(--space-6); }
+.app-shell .page-introduction { gap: var(--space-5); }
+.app-shell .page-introduction h2 {
+  margin: 0;
+  color: var(--navy-950);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+
+.app-shell .page-introduction p:last-child {
+  max-width: 64rem;
+  margin-top: var(--space-2);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+.app-shell :where(.section-heading-row, .card-heading) { gap: var(--space-4); }
+.app-shell :where(.section-heading-row h3, .card-heading h3, .workspace-card h3) {
+  margin-block: var(--space-1) 0;
+  color: var(--navy-950);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+}
+
+.app-shell :where(.surface-card, .workspace-card) { padding: var(--space-6); }
+.app-shell .metric-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+.app-shell :where(.metric-grid, .dashboard-grid, .chart-grid, .workspace-grid) { gap: var(--space-5); }
+.app-shell .metric-card { min-height: 9rem; padding: var(--space-5); }
+.app-shell .metric-card > strong { font-size: var(--text-2xl); line-height: var(--leading-tight); }
+.app-shell .metric-card > small,
+.app-shell .metric-card__top > span:first-child { font-size: var(--text-xs); }
+
+.app-shell .dashboard-summary-grid > button { min-height: 8.75rem; padding: var(--space-4); }
+.app-shell .dashboard-summary-grid small { font-size: var(--text-xs); }
+.app-shell .dashboard-summary-grid strong { font-size: var(--text-2xl); }
+.app-shell .dashboard-summary-grid p { font-size: var(--text-xs); line-height: var(--leading-normal); }
+.app-shell .dashboard-summary-grid i { font-size: .6875rem; }
+
+.app-shell :where(.top-navigation button, .nav-utility-actions button, .product-navigation button) {
+  min-height: var(--control-height-sm);
+  padding-inline: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.app-shell :where(.primary-page-button, .secondary-action, .danger-button, .text-button) {
+  font-size: var(--text-sm);
+}
+
+.app-shell :where(
+  .card-menu,
+  .dialog-close,
+  .loan-application__close,
+  .captcha-refresh,
+  .bill-pagination button,
+  .report-history-row button,
+  .schedule-row-actions button,
+  .audit-row-actions button,
+  .beneficiary-row-actions button,
+  .transaction-row-actions button,
+  .admin-approval-actions button
+) {
+  min-height: var(--control-height-sm);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
+.app-shell :where(
+  .workspace-row,
+  .biller-row,
+  .bill-history-row,
+  .schedule-row,
+  .report-history-row,
+  .audit-event-row,
+  .account-mini-list > div,
+  .transaction-search-row,
+  .beneficiary-management-row,
+  .admin-beneficiary-row
+) {
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.app-shell :where(
+  .workspace-row,
+  .biller-row,
+  .bill-history-row,
+  .schedule-row,
+  .report-history-row,
+  .audit-event-row,
+  .account-mini-list,
+  .transaction-search-row,
+  .beneficiary-management-row,
+  .admin-beneficiary-row
+) strong { font-size: var(--text-base); line-height: var(--leading-tight); }
+
+.app-shell :where(
+  .workspace-row,
+  .biller-row,
+  .bill-history-row,
+  .schedule-row,
+  .report-history-row,
+  .audit-event-row,
+  .account-mini-list,
+  .transaction-search-row,
+  .beneficiary-management-row,
+  .admin-beneficiary-row
+) small { font-size: var(--text-xs); line-height: var(--leading-normal); }
+
+.app-shell :where(
+  .status-chip,
+  .chip,
+  .bill-history-row i,
+  .schedule-status,
+  .audit-severity,
+  .transaction-status,
+  .beneficiary-status,
+  .admin-approval-status
+) { font-size: var(--text-xs); }
+
+.app-shell :where(
+  .workspace-panel__description,
+  .bill-empty-note,
+  .schedule-empty p,
+  .report-active-job > p,
+  .account-detail-loading,
+  .account-detail-empty,
+  .integration-note p
+) { font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+
+.app-shell .account-selector-list button { min-height: 4rem; padding: var(--space-3); }
+.app-shell .account-selector-list button strong,
+.app-shell .transaction-result-list strong,
+.app-shell .beneficiary-management-list strong { font-size: var(--text-sm); }
+.app-shell .account-selector-list button small,
+.app-shell .transaction-result-list small,
+.app-shell .beneficiary-management-list small { font-size: var(--text-xs); line-height: var(--leading-normal); }
+.app-shell .account-detail-body dt { font-size: var(--text-xs); }
+.app-shell .account-detail-body dd { font-size: var(--text-sm); }
+.app-shell .account-detail-balance span,
+.app-shell .account-detail-balance small { font-size: var(--text-xs); }
+
+.app-shell .transaction-result-list > div,
+.app-shell .beneficiary-management-list > article { min-height: 3.75rem; padding-block: var(--space-3); }
+.app-shell .transaction-result-list i,
+.app-shell .beneficiary-management-list :where(i, b) { font-size: .6875rem; }
+.app-shell .transaction-result-list button,
+.app-shell .beneficiary-management-list article > div:last-child button,
+.app-shell .beneficiary-delete-button { min-height: var(--control-height-sm); font-size: var(--text-xs); }
+
+.app-shell :where(.report-metrics, .schedule-metrics) { gap: var(--space-5); }
+.app-shell :where(.report-metrics, .schedule-metrics) article { min-height: 8rem; padding: var(--space-5); }
+.app-shell :where(.report-metrics, .schedule-metrics) :where(span, small) { font-size: var(--text-xs); }
+.app-shell :where(.report-metrics, .schedule-metrics) strong { font-size: var(--text-2xl); }
+
+.app-shell .admin-command-centre__header p:not(.page-eyebrow) { font-size: var(--text-base); }
+.app-shell .admin-command-centre__refresh > span,
+.app-shell .admin-empty-state { font-size: var(--text-xs); }
+.app-shell .admin-api-strip strong { font-size: var(--text-sm); }
+.app-shell .admin-api-strip small { font-size: var(--text-xs); }
+.app-shell .admin-api-strip b { font-size: .6875rem; }
+.app-shell .admin-approval-panel { padding: var(--space-5); }
+.app-shell .admin-approval-panel__heading h4 { font-size: var(--text-md); }
+.app-shell .admin-approval-item { gap: var(--space-3); padding: var(--space-4); }
+.app-shell .admin-approval-item__title strong { font-size: var(--text-sm); }
+.app-shell .admin-approval-item__title small,
+.app-shell .admin-approval-item__title b { font-size: .6875rem; }
+.app-shell .admin-approval-item dt { font-size: .6875rem; }
+.app-shell .admin-approval-item dd,
+.app-shell .admin-approval-item > p,
+.app-shell .admin-document-status { font-size: var(--text-xs); }
+.app-shell .admin-document-row strong { font-size: var(--text-xs); }
+.app-shell .admin-document-row small,
+.app-shell .admin-document-row button { font-size: .6875rem; }
+.app-shell .admin-approve-button,
+.app-shell .admin-block-button { min-height: var(--control-height-sm); font-size: var(--text-xs); }
+
+.app-shell :where(
+  .bill-form,
+  .schedule-form,
+  .report-form,
+  .audit-filter-grid,
+  .transaction-search-form,
+  .beneficiary-editor-form
+) { gap: var(--space-4); }
+
+.app-shell :where(input, select, textarea) { min-height: var(--control-height); }
+.app-shell table { width: 100%; border-collapse: collapse; }
+.app-shell :where(th, td) { padding: var(--space-3) var(--space-4); text-align: left; }
+.app-shell th { color: var(--muted); font-size: var(--text-xs); letter-spacing: .05em; text-transform: uppercase; }
+.app-shell td { font-size: var(--text-sm); }
+
+.app-footer { font-size: var(--text-xs); }
+
+@media (max-width: 768px) {
+  .login-panel { width: 100%; min-width: 0; overflow-x: hidden; padding: var(--space-8) var(--space-6); }
+  .mobile-brand { margin-bottom: var(--space-8); }
+  .login-card { min-width: 0; max-width: 100%; padding: 0; }
+  .login-heading h2 { max-width: 100%; overflow-wrap: break-word; }
+  .app-shell .page-content { padding-block: var(--space-6) var(--space-8); }
+  .app-shell .page-introduction { align-items: flex-start; flex-direction: column; }
+  .app-shell :where(.surface-card, .workspace-card) { padding: var(--space-5); }
+  .app-shell :where(.metric-grid, .dashboard-grid, .chart-grid, .workspace-grid) { gap: var(--space-4); }
+}
+
+@media (max-width: 480px) {
+  .login-panel { padding-inline: var(--space-5); }
+  .login-card { width: calc(100vw - (2 * var(--space-5))); }
+  .main-navigation-row { gap: var(--space-2); }
+  .main-navigation-row .menu-toggle { width: 2.5rem; flex: 0 0 2.5rem; }
+  .brand--topnav { gap: var(--space-2); }
+  .brand--topnav .brand-mark { width: 2.25rem; height: 2.25rem; }
+  .brand--topnav strong { font-size: var(--text-base); }
+  .brand--topnav small { font-size: .625rem; }
+  .main-navigation-row .header-actions { gap: var(--space-1); }
+  .main-navigation-row .locale-switcher { padding-inline: .375rem; }
+  .main-navigation-row .locale-switcher select { max-width: 4.5rem; }
+  .app-shell .page-content { padding-block: var(--space-5) var(--space-8); }
+  .app-shell .page-introduction h2 { font-size: var(--text-xl); }
+  .app-shell :where(.surface-card, .workspace-card) { padding: var(--space-4); }
+}
