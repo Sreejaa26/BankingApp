@@ -321,6 +321,13 @@ define([
     });
     this.accountNumberValidators = [new RegExpValidator({ pattern: '^[A-Za-z0-9]{1,30}$', messageSummary: 'Enter a valid account number', messageDetail: 'Use up to 30 letters or digits.' })];
     this.ifscValidators = [new RegExpValidator({ pattern: '^[A-Za-z]{4}0[A-Za-z0-9]{6}$', messageSummary: 'Enter a valid IFSC code', messageDetail: 'Example: HDFC0001234.' })];
+    this.personNameValidators = [new RegExpValidator({ pattern: '^.{2,120}$', messageSummary: 'Enter a complete name', messageDetail: 'Use between 2 and 120 characters.' })];
+    this.nicknameValidators = [new RegExpValidator({ pattern: '^.{2,80}$', messageSummary: 'Enter a useful nickname', messageDetail: 'Use between 2 and 80 characters.' })];
+    this.postalCodeValidators = [new RegExpValidator({ pattern: '^[A-Za-z0-9][A-Za-z0-9 -]{2,19}$', messageSummary: 'Enter a valid postal code', messageDetail: 'Use 3 to 20 letters, numbers, spaces, or hyphens.' })];
+    this.aadhaarValidators = [new RegExpValidator({ pattern: '^\\d{12}$', messageSummary: 'Enter a valid Aadhaar number', messageDetail: 'Aadhaar must contain exactly 12 digits.' })];
+    this.panValidators = [new RegExpValidator({ pattern: '^[A-Za-z]{5}\\d{4}[A-Za-z]$', messageSummary: 'Enter a valid PAN', messageDetail: 'Use the format ABCDE1234F.' })];
+    this.purposeValidators = [new RegExpValidator({ pattern: '^.{3,160}$', messageSummary: 'Describe the payment purpose', messageDetail: 'Use between 3 and 160 characters.' })];
+    this.occupationValidators = [new RegExpValidator({ pattern: '^.{2,120}$', messageSummary: 'Enter your occupation', messageDetail: 'Use between 2 and 120 characters.' })];
     this.currencyConverter = new NumberConverters.IntlNumberConverter({ style: 'currency', currency: 'INR', currencyDisplay: 'symbol' });
     this.transactionDateConverter = new DateTimeConverters.IntlDateTimeConverter({ dateStyle: 'medium' });
     this.adminEnumLabel = function (value) {
@@ -985,8 +992,8 @@ define([
     this.submitBeneficiary = function () {
       const accountNumber = self.beneficiaryAccount().replace(/\s/g, '');
       const ifscCode = self.beneficiaryIfsc().trim().toUpperCase();
-      if (!self.beneficiaryName().trim() || !self.beneficiaryNickname().trim() || !/^[A-Za-z0-9]{1,30}$/.test(accountNumber) || !/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/.test(ifscCode)) {
-        self.actionError('Enter the beneficiary name, nickname, account number, and an 11-character IFSC code.');
+      if (self.beneficiaryName().trim().length < 2 || self.beneficiaryNickname().trim().length < 2 || !self.beneficiaryRelationship() || !/^[A-Za-z0-9]{1,30}$/.test(accountNumber) || !/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/.test(ifscCode)) {
+        self.actionError('Enter a complete name and nickname, choose a relationship, and provide a valid account number and 11-character IFSC code.');
         return false;
       }
       const token = params.app && params.app.authToken && params.app.authToken();
@@ -1003,6 +1010,7 @@ define([
       const beneficiary = self.beneficiaryLookup[self.transferBeneficiary()];
       if (!self.transferFrom() || !beneficiary) { self.actionError('Choose an active account and a verified beneficiary first.'); self.showActionMessage('error', 'Transfer needs attention', self.actionError()); return false; }
       if (!amount || amount < 1 || amount > 500000) { self.actionError('Enter a transfer amount between ₹1 and ₹5,00,000.'); self.showActionMessage('error', 'Transfer amount needs attention', self.actionError()); return false; }
+      if (self.transferPurpose().trim().length < 3) { self.actionError('Describe the purpose in at least 3 characters.'); self.showActionMessage('error', 'Transfer purpose needs attention', self.actionError()); return false; }
       self.pendingTransfer = { sourceAccountId: self.transferFrom(), destinationAccountNumber: beneficiary.accountNumber, amount: amount, description: self.transferPurpose().trim(), idempotencyKey: api.createIdempotencyKey() };
       self.actionError(''); self.actionMessages([]); self.pendingTransferDestination(beneficiary.beneficiaryName + ' (account ending ' + String(beneficiary.accountNumber).slice(-4) + ')'); self.pendingTransferAmount(amount);
       requestAnimationFrame(function () { const dialog = document.getElementById('transfer-confirmation-dialog'); if (dialog) { dialog.open(); } });
@@ -1068,12 +1076,13 @@ define([
       const monthlyIncome = Number(self.cardApplicantIncome());
       const requestedLimit = Number(self.cardRequestedLimit());
       const address = self.cardDeliveryAddress().trim();
+      const occupation = self.cardApplicantOccupation().trim();
       if (!accountId || !self.cardApplicationType() || !self.cardProduct()) {
         self.actionError('Choose an account, card type, and card product.');
         return false;
       }
-      if (!monthlyIncome || monthlyIncome < 1 || !requestedLimit || requestedLimit < 1 || !address) {
-        self.actionError('Enter your monthly income, requested daily limit, and complete delivery address.');
+      if (!monthlyIncome || monthlyIncome < 1 || !requestedLimit || requestedLimit < 1 || occupation.length < 2 || address.length < 10) {
+        self.actionError('Enter your income, occupation, requested daily limit, and a complete delivery address of at least 10 characters.');
         return false;
       }
       self.actionError('');
@@ -1083,7 +1092,7 @@ define([
         cardType: self.cardApplicationType(),
         cardProduct: self.cardProduct(),
         annualIncome: monthlyIncome * 12,
-        occupation: self.cardApplicantOccupation().trim() || 'Not specified',
+        occupation: occupation,
         deliveryAddress: address,
         requestedDailyLimit: requestedLimit
       }) }, params.app.authToken()).then(function (response) {

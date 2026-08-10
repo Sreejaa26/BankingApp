@@ -140,6 +140,7 @@ define([
       }
       if (payload.endAt && new Date(payload.endAt) <= new Date(payload.startAt)) { return 'The end date must be after the first payment date.'; }
       if (!Number.isInteger(payload.maxRetries) || payload.maxRetries < 0 || payload.maxRetries > 10) { return 'Maximum retries must be a whole number from 0 to 10.'; }
+      if (payload.description && payload.description.length < 3) { return 'Use at least 3 characters for the payment description, or leave it blank.'; }
       return '';
     };
     self.saveSchedule = function () {

@@ -39,6 +39,18 @@
   --ease-out: cubic-bezier(.22,1,.36,1);
   --font-ui: "Segoe UI Variable", "Oracle Sans", "Segoe UI", Arial, sans-serif;
   --page-gutter: clamp(20px,4vw,60px);
+  --form-control-height: 48px;
+  --form-gap: 18px;
+
+  /* Oracle JET form tokens: one geometry for every input and select. */
+  --oj-text-field-height: var(--form-control-height);
+  --oj-text-field-inside-edge-height: var(--form-control-height);
+  --oj-text-field-text-to-edge-padding: 14px;
+  --oj-text-field-icon-to-edge-padding: 12px;
+  --oj-text-field-icon-to-text-padding: 8px;
+  --oj-text-field-inside-edge-padding-top: 8px;
+  --oj-text-field-font-size: 14px;
+  --oj-text-field-border-radius: 10px;
   font-family: var(--font-ui);
   color: var(--ink);
   background: var(--canvas);
@@ -49,6 +61,39 @@ html, body { max-width: 100%; overflow-x: clip; }
 body { font-family: var(--font-ui); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 button, input, select, textarea { font-family: inherit; }
 :where(button,a,input,select,textarea,[tabindex]):focus-visible { outline: 3px solid color-mix(in srgb,var(--blue-600) 24%,transparent); outline-offset: 2px; }
+
+/* Forms: consistent control width, rhythm, messages, and action alignment. */
+:where(.login-form,.forgot-password-form,.registration-form,.page-action-form,.card-application-form,.loan-form-grid,.bill-form,.bill-history-filters,.audit-filter-grid,.transaction-filter-grid,.report-form,.schedule-form) {
+  align-items: start;
+}
+
+:where(.login-form,.forgot-password-form,.registration-form,.page-action-form,.card-application-form,.loan-form-grid,.bill-form,.bill-history-filters,.audit-filter-grid,.transaction-filter-grid,.report-form,.schedule-form)
+:where(oj-input-text,oj-input-password,oj-input-number,oj-input-date,oj-input-date-time,oj-select-single,oj-text-area) {
+  width: 100%;
+  min-width: 0;
+  align-self: start;
+}
+
+.jet-validation-group {
+  display: block;
+  grid-column: 1 / -1;
+}
+
+.jet-validation-group > div {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  align-items: start;
+  gap: var(--form-gap);
+}
+
+.page-action-form { gap: var(--form-gap); }
+.beneficiary-form-actions { grid-column: 1 / -1; align-items: center; padding-top: 2px; }
+.bill-form--registration > button { align-self: start; min-height: var(--form-control-height); }
+.schedule-form-actions,.loan-form-actions,.audit-filter-actions,.transaction-filter-actions { align-items: center; padding-top: 2px; }
+
+:where(.page-action-form,.bill-form,.schedule-form,.report-form,.transaction-filter-grid,.audit-filter-grid) :where(.oj-message,.oj-message-detail) {
+  line-height: 1.4;
+}
 
 /* Shell */
 .banking-header { border-bottom: 1px solid color-mix(in srgb,var(--line) 82%,transparent); background: color-mix(in srgb,var(--white) 92%,transparent); box-shadow: 0 10px 34px color-mix(in srgb,var(--navy-950) 5%,transparent); backdrop-filter: blur(18px); }
@@ -134,4 +179,7 @@ button, input, select, textarea { font-family: inherit; }
   .page-introduction { padding: 20px; border-radius: 16px; }
   .surface-card,.workspace-card { border-radius: 16px; }
   .report-metrics,.schedule-metrics { grid-template-columns: 1fr; }
+  .jet-validation-group > div { grid-template-columns: 1fr; }
+  .beneficiary-form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .beneficiary-form-actions button { width: 100%; }
 }
