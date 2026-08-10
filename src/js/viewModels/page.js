@@ -369,6 +369,39 @@ define([
     this.transactionRows = ko.observableArray([]);
     this.transactionTableData = new ArrayDataProvider(this.transactionRows, { keyAttributes: 'id' });
     this.pagingTransactions = new PagingDataProviderView(this.transactionTableData);
+    this.transactionPage = ko.observable(0);
+    this.transactionTotalPages = ko.observable(0);
+    this.transactionTotalElements = ko.observable(0);
+    this.transactionLoading = ko.observable(false);
+    this.transactionMode = ko.observable('All transactions');
+    this.transactionSelected = ko.observable(null);
+    this.transactionStatement = ko.observable(null);
+    this.transactionAccountId = ko.observable('');
+    this.transactionAccountNumber = ko.observable('');
+    this.transactionTypeFilter = ko.observable('');
+    this.transactionStatusFilter = ko.observable('');
+    this.transactionMinAmount = ko.observable(null);
+    this.transactionMaxAmount = ko.observable(null);
+    this.transactionReference = ko.observable('');
+    this.transactionFromDate = ko.observable('');
+    this.transactionToDate = ko.observable('');
+    this.transactionSortBy = ko.observable('transactionDate');
+    this.transactionDirection = ko.observable('desc');
+    this.transactionAccountOptionRows = ko.observableArray([]);
+    this.transactionAccountOptions = new ArrayDataProvider(this.transactionAccountOptionRows, { keyAttributes: 'value' });
+    this.transactionTypeOptions = new ArrayDataProvider([
+      { value: '', label: 'All transaction types' }, { value: 'DEPOSIT', label: 'Deposit' }, { value: 'WITHDRAWAL', label: 'Withdrawal' },
+      { value: 'TRANSFER', label: 'Transfer' }, { value: 'BILL_PAYMENT', label: 'Bill payment' }, { value: 'LOAN_REPAYMENT', label: 'Loan repayment' }
+    ], { keyAttributes: 'value' });
+    this.transactionStatusOptions = new ArrayDataProvider([
+      { value: '', label: 'All statuses' }, { value: 'SUCCESS', label: 'Success' }, { value: 'PENDING', label: 'Pending' },
+      { value: 'FAILED', label: 'Failed' }, { value: 'REVERSED', label: 'Reversed' }
+    ], { keyAttributes: 'value' });
+    this.transactionSortOptions = new ArrayDataProvider([
+      { value: 'transactionDate', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'status', label: 'Status' },
+      { value: 'transactionType', label: 'Transaction type' }, { value: 'referenceNumber', label: 'Reference number' }
+    ], { keyAttributes: 'value' });
+    this.transactionDirectionOptions = new ArrayDataProvider([{ value: 'desc', label: 'Descending' }, { value: 'asc', label: 'Ascending' }], { keyAttributes: 'value' });
     this.transactionColumns = [
       { headerText: 'Type', field: 'type', width: '70px' },
       { headerText: 'Description', field: 'description' },
@@ -580,24 +613,87 @@ define([
         self.highlights([{ label: 'Outstanding', value: self.currencyConverter.format(outstanding) }, { label: 'Active loans', value: String(loans.filter(function (loan) { return loan.status === 'ACTIVE'; }).length) }, { label: 'Applications', value: String(applications.length) }]);
       }).catch(function (error) { self.loanError(error.message || 'Unable to load loan details.'); });
     };
+    this.transactionDate = function (value) {
+      if (!value || String(value).trim().toLowerCase() === 'null') { return 'Date unavailable'; }
+      const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
+    };
+    this.transactionAmount = function (transaction) {
+      return (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(Number(transaction.amount || 0));
+    };
+    this.transactionIcon = function (value) { return String(value || 'TX').slice(0, 2); };
+    this.transactionEnum = function (value) { return String(value || 'Not provided').replace(/_/g, ' '); };
+    this.transactionAddQuery = function (parts, name, value) {
+      if (value !== null && value !== undefined && String(value).trim() !== '') { parts.push(encodeURIComponent(name) + '=' + encodeURIComponent(String(value).trim())); }
+    };
+    this.transactionInstant = function (value, endOfDay) { return value ? value + (endOfDay ? 'T23:59:59.999Z' : 'T00:00:00.000Z') : ''; };
+    this.applyTransactionPage = function (response, label) {
+      const page = responseData(response) || {};
+      const transactions = Array.isArray(page.content) ? page.content : [];
+      self.transactionRows(transactions);
+      self.transactionPage(Number(page.number || 0)); self.transactionTotalPages(Number(page.totalPages || 0)); self.transactionTotalElements(Number(page.totalElements == null ? transactions.length : page.totalElements));
+      self.transactionMode(label);
+      const incoming = transactions.filter(function (item) { return item.debitCredit === 'CREDIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
+      const outgoing = transactions.filter(function (item) { return item.debitCredit === 'DEBIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
+      self.highlights([{ label: 'Outgoing on page', value: self.currencyConverter.format(outgoing) }, { label: 'Incoming on page', value: self.currencyConverter.format(incoming) }, { label: 'Matching transactions', value: String(self.transactionTotalElements()) }]);
+    };
+    this.fetchTransactions = function (mode, pageNumber) {
+      const token = params.app.authToken(); const parts = []; const page = pageNumber == null ? self.transactionPage() : pageNumber;
+      self.transactionAddQuery(parts, 'page', page); self.transactionAddQuery(parts, 'size', 20);
+      let path = '/api/transactions'; let label = 'All transactions';
+      if (mode === 'account') {
+        if (!self.transactionAccountId()) { self.statementDownloadStatus('Choose an account first.'); return Promise.resolve(); }
+        path = '/api/transactions/account/' + encodeURIComponent(self.transactionAccountId()); label = 'Selected account';
+      } else if (mode === 'search') {
+        path = '/api/transactions/search'; label = 'Filtered search';
+        self.transactionAddQuery(parts, 'accountId', self.transactionAccountId()); self.transactionAddQuery(parts, 'accountNumber', self.transactionAccountNumber());
+        self.transactionAddQuery(parts, 'transactionType', self.transactionTypeFilter()); self.transactionAddQuery(parts, 'status', self.transactionStatusFilter());
+        self.transactionAddQuery(parts, 'minAmount', self.transactionMinAmount()); self.transactionAddQuery(parts, 'maxAmount', self.transactionMaxAmount());
+        self.transactionAddQuery(parts, 'referenceNumber', self.transactionReference()); self.transactionAddQuery(parts, 'fromDate', self.transactionInstant(self.transactionFromDate(), false));
+        self.transactionAddQuery(parts, 'toDate', self.transactionInstant(self.transactionToDate(), true)); self.transactionAddQuery(parts, 'sortBy', self.transactionSortBy()); self.transactionAddQuery(parts, 'direction', self.transactionDirection());
+      }
+      self.transactionLoading(true); self.statementDownloadStatus(''); self.transactionPage(page);
+      return api.request(path + '?' + parts.join('&'), {}, token).then(function (response) { self.applyTransactionPage(response, label); })
+        .catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to load transactions.'); })
+        .then(function () { self.transactionLoading(false); });
+    };
     this.loadTransactionData = function () {
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token || !self.isTransactions) { return; }
-      api.request('/api/transactions?page=0&size=100', {}, token).then(function (response) {
-        const page = responseData(response) || {};
-        const transactions = page.content || [];
-        self.transactionRows(transactions.map(function (transaction) {
-          const amount = Number(transaction.amount || 0);
-          const signedAmount = (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(amount);
-          return { id: transaction.transactionId, type: transaction.transactionType, description: transaction.description || transaction.referenceNumber || transaction.transactionType, date: self.transactionDateConverter.format(new Date(transaction.transactionDate)), amount: signedAmount, status: transaction.status };
-        }));
-        self.items(transactions.slice(0, 6).map(function (transaction) {
-          return { icon: String(transaction.transactionType || 'TX').slice(0, 2), name: transaction.description || transaction.transactionType, meta: self.transactionDateConverter.format(new Date(transaction.transactionDate)), value: (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(Number(transaction.amount || 0)), status: transaction.status, positive: transaction.debitCredit === 'CREDIT' };
-        }));
-        const incoming = transactions.filter(function (item) { return item.debitCredit === 'CREDIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
-        const outgoing = transactions.filter(function (item) { return item.debitCredit === 'DEBIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
-        self.highlights([{ label: 'Outgoing', value: self.currencyConverter.format(outgoing) }, { label: 'Incoming', value: self.currencyConverter.format(incoming) }, { label: 'Transactions', value: String(page.totalElements == null ? transactions.length : page.totalElements) }]);
-      }).catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to load transactions.'); });
+      self.transactionLoading(true);
+      return Promise.all([
+        api.request('/api/accounts', {}, token).then(function (response) {
+          const accounts = responseData(response) || [];
+          self.transactionAccountOptionRows(accounts.map(function (account) { return { value: account.accountId, label: self.accountTypeLabel(account.accountType) + ' · ending ' + String(account.accountNumber || '').slice(-4) }; }));
+          if (!self.transactionAccountId() && accounts.length) { self.transactionAccountId(accounts[0].accountId); }
+        }),
+        self.fetchTransactions('all', 0)
+      ]).catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to initialize transaction history.'); }).then(function () { self.transactionLoading(false); });
+    };
+    this.searchTransactions = function () {
+      if (self.transactionFromDate() && self.transactionToDate() && self.transactionFromDate() > self.transactionToDate()) { self.statementDownloadStatus('The transaction start date must be before the end date.'); return false; }
+      if (self.transactionMinAmount() != null && self.transactionMaxAmount() != null && Number(self.transactionMinAmount()) > Number(self.transactionMaxAmount())) { self.statementDownloadStatus('Minimum amount cannot exceed maximum amount.'); return false; }
+      self.transactionStatement(null); self.transactionPage(0); self.fetchTransactions('search', 0); return false;
+    };
+    this.showAllTransactions = function () { self.transactionStatement(null); self.transactionPage(0); return self.fetchTransactions('all', 0); };
+    this.showAccountTransactions = function () { self.transactionStatement(null); self.transactionPage(0); return self.fetchTransactions('account', 0); };
+    this.clearTransactionFilters = function () {
+      self.transactionAccountNumber(''); self.transactionTypeFilter(''); self.transactionStatusFilter(''); self.transactionMinAmount(null); self.transactionMaxAmount(null); self.transactionReference(''); self.transactionFromDate(''); self.transactionToDate(''); self.transactionSortBy('transactionDate'); self.transactionDirection('desc');
+      return self.showAllTransactions();
+    };
+    this.previousTransactionPage = function () { if (self.transactionPage() > 0) { const mode = self.transactionMode() === 'Filtered search' ? 'search' : self.transactionMode() === 'Selected account' ? 'account' : 'all'; return self.fetchTransactions(mode, self.transactionPage() - 1); } };
+    this.nextTransactionPage = function () { if (self.transactionPage() + 1 < self.transactionTotalPages()) { const mode = self.transactionMode() === 'Filtered search' ? 'search' : self.transactionMode() === 'Selected account' ? 'account' : 'all'; return self.fetchTransactions(mode, self.transactionPage() + 1); } };
+    this.openTransactionDetail = function (row) {
+      self.statementDownloadStatus('');
+      return api.request('/api/transactions/' + encodeURIComponent(row.transactionId), {}, params.app.authToken()).then(function (response) { self.transactionSelected(responseData(response)); })
+        .catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to open transaction detail.'); });
+    };
+    this.closeTransactionDetail = function () { self.transactionSelected(null); };
+    this.loadStatementData = function () {
+      if (!self.transactionAccountId()) { self.statementDownloadStatus('Choose an account before loading statement data.'); return; }
+      const parts = []; self.transactionAddQuery(parts, 'accountId', self.transactionAccountId()); self.transactionAddQuery(parts, 'fromDate', self.transactionInstant(self.transactionFromDate(), false)); self.transactionAddQuery(parts, 'toDate', self.transactionInstant(self.transactionToDate(), true));
+      self.transactionLoading(true); self.statementDownloadStatus('');
+      return api.request('/api/transactions/statement?' + parts.join('&'), {}, params.app.authToken()).then(function (response) { self.transactionStatement(responseData(response)); self.transactionMode('Statement data'); })
+        .catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to load statement data.'); }).then(function () { self.transactionLoading(false); });
     };
     this.pollReport = function (jobId, attempt) {
       const token = params.app.authToken();
@@ -762,12 +858,12 @@ define([
     this.accountTypeLabel = function (value) { return String(value || 'Account').replace(/_/g, ' '); };
     this.accountTransactionIcon = function (value) { return String(value || 'TX').slice(0, 2); };
     this.accountTransactionDate = function (value) {
-      if (!value || String(value).toLowerCase() === 'null') { return 'Date unavailable'; }
+      if (!value || String(value).trim().toLowerCase() === 'null') { return 'Date unavailable'; }
       const date = new Date(value);
       return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
     };
     this.accountCreatedDate = function (value) {
-      if (!value || String(value).toLowerCase() === 'null') { return 'Not available'; }
+      if (!value || String(value).trim().toLowerCase() === 'null') { return 'Not available'; }
       const date = new Date(value);
       return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
     };
