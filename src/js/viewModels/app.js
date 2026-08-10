@@ -46,16 +46,17 @@ define([
     ];
     allNavigationItems.splice(5, 0, { route: 'bill-payments', labelKey: 'nav.billPayments', labelFallback: 'Bill Payments', icon: 'BP' });
     allNavigationItems.splice(6, 0, { route: 'scheduled-payments', labelKey: 'nav.scheduledPayments', labelFallback: 'Scheduled Payments', icon: 'SC' });
+    allNavigationItems.splice(7, 0, { route: 'reports', labelKey: 'nav.reports', labelFallback: 'Reports', icon: 'RP' });
     allNavigationItems.forEach(function (item) {
       item.label = ko.pureComputed(function () { return self.t(item.labelKey, item.labelFallback); });
     });
     self.navigationItems = ko.pureComputed(function () {
       if (self.isAdmin()) {
-        return allNavigationItems.filter(function (item) { return item.route === 'admin'; });
+        return allNavigationItems.filter(function (item) { return item.route === 'admin' || item.route === 'reports' || item.route === 'audit'; });
       }
       return allNavigationItems.filter(function (item) { return item.route !== 'admin' && !item.utility; });
     });
-    self.primaryNavigationItems = ko.pureComputed(function () { return self.navigationItems().slice(0, 7); });
+    self.primaryNavigationItems = ko.pureComputed(function () { return self.navigationItems().slice(0, 8); });
 
     const validRoutes = allNavigationItems.map(function (item) { return item.route; });
 
@@ -92,8 +93,8 @@ define([
       }
 
       let route = validRoutes.indexOf(candidate) >= 0 ? candidate : 'dashboard';
-      if (self.isAdmin()) { route = 'admin'; }
-      else if (route === 'admin') { route = 'dashboard'; }
+      if (self.isAdmin() && ['admin', 'reports', 'audit'].indexOf(route) < 0) { route = 'admin'; }
+      else if (!self.isAdmin() && (route === 'admin' || route === 'audit')) { route = 'dashboard'; }
       self.activeRoute(route);
       self.navigationOpen(false);
       const dedicatedModules = ['bill-payments', 'scheduled-payments', 'reports', 'audit'];
