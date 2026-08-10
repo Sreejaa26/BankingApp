@@ -3739,6 +3739,25 @@ a:hover { text-decoration: underline; }
 .admin-block-button { min-height:38px; border:1px solid #efcaca; border-radius:10px; color:#a93030; background:#fff7f7; cursor:pointer; font-size:9px; font-weight:800; }
 .admin-block-button:disabled { cursor:not-allowed; opacity:.55; }
 
+/* Optional connected-service dashboard summaries */
+.dashboard-optional-summary { display:grid; gap:13px; }
+.dashboard-summary-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:11px; }
+.dashboard-summary-grid > button { position:relative; display:grid; grid-template-columns:38px minmax(0,1fr); gap:10px; min-height:126px; padding:15px; overflow:hidden; border:1px solid var(--line); border-radius:15px; color:inherit; background:var(--white); box-shadow:0 8px 22px rgba(7,41,72,.06); cursor:pointer; text-align:left; }
+.dashboard-summary-grid > button::after { position:absolute; right:-22px; bottom:-30px; width:86px; height:86px; border-radius:50%; background:var(--summary-accent,#1769aa); content:''; opacity:.07; }
+.dashboard-summary-grid > button:hover { transform:translateY(-2px); border-color:#a9cddd; box-shadow:0 12px 26px rgba(7,41,72,.1); }
+.dashboard-summary-grid > button > span { display:grid; width:36px; height:36px; place-items:center; border-radius:11px; color:var(--summary-accent,#1769aa); background:color-mix(in srgb,var(--summary-accent,#1769aa) 12%,white); font-size:8px; font-weight:850; }
+.dashboard-summary-grid small,.dashboard-summary-grid strong,.dashboard-summary-grid p { display:block; }
+.dashboard-summary-grid small { color:var(--muted); font-size:8px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.dashboard-summary-grid strong { margin:5px 0 3px; color:var(--navy-950); font-size:23px; }
+.dashboard-summary-grid p { margin:0; color:var(--muted); font-size:8px; line-height:1.45; }
+.dashboard-summary-grid i { grid-column:1/-1; justify-self:start; padding:4px 7px; border-radius:999px; color:var(--summary-accent,#1769aa); background:var(--blue-50); font-size:7px; font-style:normal; font-weight:850; }
+.dashboard-summary-grid b { position:absolute; right:13px; top:13px; color:var(--summary-accent,#1769aa); font-size:12px; }
+.dashboard-summary--bills { --summary-accent:#d87308; }.dashboard-summary--schedules { --summary-accent:#12805c; }.dashboard-summary--reports { --summary-accent:#1769aa; }.dashboard-summary--loans { --summary-accent:#7957a8; }.dashboard-summary--cards { --summary-accent:#aa7a16; }
+.dashboard-summary-grid > button.dashboard-summary--unavailable { cursor:not-allowed; filter:grayscale(.7); opacity:.68; }
+@media (max-width:1100px) { .dashboard-summary-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (max-width:700px) { .dashboard-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:460px) { .dashboard-summary-grid { grid-template-columns:1fr; } }
+
 /* Unified primary navigation */
 
 /* Reports centre */

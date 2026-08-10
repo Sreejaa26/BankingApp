@@ -36,6 +36,15 @@
     </article>
   </section>
 
+  <section class="dashboard-optional-summary" aria-labelledby="connected-services-title">
+    <div class="section-heading-row"><div><p class="page-eyebrow">Connected banking</p><h3 id="connected-services-title">Payments and products at a glance</h3></div><span class="status-chip" data-bind="text: optionalSummariesLoading() ? 'Refreshing…' : 'Live summaries'"></span></div>
+    <div class="dashboard-summary-grid" data-bind="foreach: optionalSummaries">
+      <button type="button" data-bind="click: $parent.go.bind($parent, route), css: accent, disable: available === false">
+        <span data-bind="text: icon"></span><div><small data-bind="text: label"></small><strong data-bind="text: value"></strong><p data-bind="text: meta"></p></div><i data-bind="text: status"></i><b aria-hidden="true">→</b>
+      </button>
+    </div>
+  </section>
+
   <section class="quick-action-bar" data-bind="visible: hasAccounts" aria-label="Quick actions">
     <div class="quick-action-intro"><p class="page-eyebrow">Quick actions</p><strong>What would you like to do?</strong></div>
     <button data-bind="click: go.bind($data, 'transfer')"><span>↗</span> Send money</button>
