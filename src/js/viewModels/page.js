@@ -55,7 +55,7 @@ define([
       secondary: [['AS','Ananya Sharma','02 Aug · Monthly rent','₹22,000','Scheduled'],['MF','Mutual Fund SIP','05 Aug · Auto transfer','₹10,000','Scheduled']]
     },
     loans: {
-      eyebrow: 'Borrowing', title: 'Loans', description: 'Track existing loans and calculate repayment estimates from the loan service.', action: 'Calculate a new loan', endpoint: 'GET /api/loans',
+      eyebrow: 'Borrowing', title: 'Loans', description: 'Track existing loans, compare repayment estimates, and submit a new loan application.', action: 'Apply for a new loan', endpoint: 'GET /api/loans',
       heroImage: 'styles/images/northstar-loan-planning.png', heroAlt: 'Couple reviewing their financing options together on a laptop',
       highlights: [['Outstanding','₹8,42,000'],['Next EMI','₹24,600'],['Due date','05 Aug']],
       primaryEyebrow: 'Repayment overview', primaryTitle: 'Active loans', secondaryEyebrow: 'Next payment', secondaryTitle: 'Upcoming EMI', secondaryCopy: 'Your next instalment is scheduled for automatic payment from Savings •••• 4821.',
@@ -165,15 +165,21 @@ define([
     this.activeCardName = ko.observable('No card available');
     this.activeCardStatus = ko.observable('UNAVAILABLE');
     this.cardLimit = ko.observable(200000);
-    this.cardApplicationType = ko.observable('Credit card');
-    this.cardProduct = ko.observable('Northstar Signature');
+    this.cardApplicationAccountId = ko.observable('');
+    this.cardApplicationType = ko.observable('CREDIT');
+    this.cardProduct = ko.observable('GOLD');
     this.cardApplicantIncome = ko.observable(85000);
+    this.cardApplicantOccupation = ko.observable('Salaried professional');
+    this.cardRequestedLimit = ko.observable(30000);
     this.cardDeliveryAddress = ko.observable('');
     this.cardApplicationSubmitted = ko.observable(false);
     this.cardApplicationReference = ko.observable('Not submitted');
-    this.cardApplicationStatus = ko.observable('Backend support pending');
+    this.cardApplicationStatus = ko.observable('Not submitted');
+    this.cardApplicationTypeLabel = ko.pureComputed(function () {
+      return self.cardApplicationType() === 'DEBIT' ? 'Debit card' : 'Credit card';
+    });
     this.cardActionLabel = ko.pureComputed(function () {
-      if (self.activeCardStatus() === 'ISSUED') { return 'Activate card'; }
+      if (self.activeCardStatus() === 'INACTIVE' || self.activeCardStatus() === 'ISSUED') { return 'Activate card'; }
       return self.activeCardStatus() === 'BLOCKED' ? 'Unblock card' : 'Block card';
     });
     this.accountNumberValidators = [new RegExpValidator({ pattern: '^\\d{1,30}$', messageSummary: 'Enter a valid account number', messageDetail: 'Use up to 30 digits.' })];
@@ -186,10 +192,13 @@ define([
       { value: 'CURRENT', label: 'Current account' },
       { value: 'SALARY', label: 'Salary account' }
     ], { keyAttributes: 'value' });
-    this.branchOptions = ko.observable(new ArrayDataProvider([], { keyAttributes: 'value' }));
+    this.branchOptionRows = ko.observableArray([]);
+    this.branchOptions = new ArrayDataProvider(this.branchOptionRows, { keyAttributes: 'value' });
     this.kycDocumentTypeOptions = new ArrayDataProvider([{ value: 'AADHAAR', label: 'Aadhaar document' }, { value: 'PAN', label: 'PAN document' }, { value: 'ADDRESS_PROOF', label: 'Address proof' }], { keyAttributes: 'value' });
-    this.transferAccountOptions = ko.observable(new ArrayDataProvider([], { keyAttributes: 'value' }));
-    this.transferBeneficiaryOptions = ko.observable(new ArrayDataProvider([], { keyAttributes: 'value' }));
+    this.transferAccountOptionRows = ko.observableArray([]);
+    this.transferBeneficiaryOptionRows = ko.observableArray([]);
+    this.transferAccountOptions = new ArrayDataProvider(this.transferAccountOptionRows, { keyAttributes: 'value' });
+    this.transferBeneficiaryOptions = new ArrayDataProvider(this.transferBeneficiaryOptionRows, { keyAttributes: 'value' });
     this.beneficiaryRelationshipOptions = new ArrayDataProvider([
       { value: 'FAMILY', label: 'Family' }, { value: 'FRIEND', label: 'Friend' },
       { value: 'SELF', label: 'My account' }, { value: 'BUSINESS', label: 'Business' },
@@ -206,14 +215,16 @@ define([
       { headerText: 'Status', field: 'status' }
     ];
     this.cardTypeOptions = new ArrayDataProvider([
-      { value: 'Credit card', label: 'Credit card' },
-      { value: 'Debit card', label: 'Debit card' }
+      { value: 'CREDIT', label: 'Credit card' },
+      { value: 'DEBIT', label: 'Debit card' }
     ], { keyAttributes: 'value' });
     this.cardProductOptions = new ArrayDataProvider([
-      { value: 'Northstar Signature', label: 'Northstar Signature - rewards' },
-      { value: 'Northstar Everyday', label: 'Northstar Everyday - no annual fee' },
-      { value: 'Northstar Travel', label: 'Northstar Travel - lounge benefits' }
+      { value: 'CLASSIC', label: 'Northstar Classic' },
+      { value: 'GOLD', label: 'Northstar Gold - rewards' },
+      { value: 'PLATINUM', label: 'Northstar Platinum - premium benefits' }
     ], { keyAttributes: 'value' });
+    this.cardAccountOptionRows = ko.observableArray([]);
+    this.cardAccountOptions = new ArrayDataProvider(this.cardAccountOptionRows, { keyAttributes: 'value' });
     this.loanApplicationOpen = ko.observable(false);
     this.loanApplicationSubmitted = ko.observable(false);
     this.loanError = ko.observable('');
@@ -225,6 +236,9 @@ define([
     this.employmentType = ko.observable('Salaried');
     this.monthlyIncome = ko.observable(85000);
     this.applicationReference = ko.observable('');
+    this.loanAccountId = ko.observable('');
+    this.loanAccountOptionRows = ko.observableArray([]);
+    this.loanAccountOptions = new ArrayDataProvider(this.loanAccountOptionRows, { keyAttributes: 'value' });
 
     this.loanProducts = ko.observableArray([
       { icon: 'PL', type: 'Personal loan', rate: 10.4, limit: 'Up to ₹20 lakh', copy: 'Flexible funds for planned or unexpected personal expenses.', accent: 'loan-product--blue' },
@@ -310,6 +324,24 @@ define([
     this.submitLoanApplication = function () {
       const amount = Number(self.loanAmount());
       const income = Number(self.monthlyIncome());
+      const accountId = self.loanAccountId();
+      const loanTypeMap = {
+        'Personal loan': 'PERSONAL',
+        'Home loan': 'HOME',
+        'Vehicle loan': 'VEHICLE',
+        'Education loan': 'EDUCATION',
+        'Gold loan': 'PERSONAL',
+        'Custom loan': 'BUSINESS'
+      };
+      const employmentMap = {
+        'Salaried': 'SALARIED',
+        'Self-employed': 'SELF_EMPLOYED',
+        'Business owner': 'BUSINESS_OWNER'
+      };
+      if (!accountId) {
+        self.loanError('Choose the bank account that should be linked to this loan.');
+        return false;
+      }
       if (!amount || amount < 50000) {
         self.loanError('Enter a loan amount of at least ₹50,000.');
         return false;
@@ -322,11 +354,26 @@ define([
         self.loanError('Choose a lower amount or longer tenure so the estimated EMI stays within 50% of monthly income.');
         return false;
       }
-      self.loanError(''); self.loanInfo('Calculating with the loan service…');
+      self.loanError(''); self.loanInfo('Checking the estimate and submitting your application...');
       api.request('/api/loans/calculate', { method: 'POST', body: JSON.stringify({ loanAmount: amount, annualInterestRate: self.selectedLoanRate(), tenureMonths: Number(self.loanTenure()), startDate: null }) }, params.app.authToken()).then(function (response) {
         const estimate = responseData(response) || {};
-        self.loanInfo('Backend EMI estimate: ' + self.currencyConverter.format(Number(estimate.monthlyEmi || 0)) + ' per month. Customer loan applications are not yet exposed by the backend.');
-      }).catch(function (error) { self.loanInfo(''); self.loanError(error.message || 'Unable to calculate the loan estimate.'); });
+        self.loanInfo('Estimated EMI: ' + self.currencyConverter.format(Number(estimate.monthlyEmi || 0)) + ' per month. Submitting application...');
+        return api.request('/api/loans/applications', { method: 'POST', body: JSON.stringify({
+          linkedAccountId: accountId,
+          loanType: loanTypeMap[self.loanType()] || 'PERSONAL',
+          requestedAmount: amount,
+          tenureMonths: Number(self.loanTenure()),
+          monthlyIncome: income,
+          employmentType: employmentMap[self.employmentType()] || 'OTHER',
+          purpose: self.loanPurpose()
+        }) }, params.app.authToken());
+      }).then(function (response) {
+        const application = responseData(response) || {};
+        self.applicationReference(application.applicationId || 'Submitted');
+        self.loanApplicationSubmitted(true);
+        self.loanInfo('Your loan application was submitted and is awaiting bank review.');
+        self.loadLoanData();
+      }).catch(function (error) { self.loanInfo(''); self.loanError(error.message || 'Unable to submit the loan application.'); });
       return false;
     };
     this.startAnotherApplication = function () {
@@ -336,11 +383,31 @@ define([
     };
     this.loadLoanData = function () {
       if (!self.isLoans) { return; }
-      api.request('/api/loans', {}, params.app.authToken()).then(function (response) {
-        const loans = responseData(response) || [];
-        self.items(loans.map(function (loan) { return { icon: String(loan.loanType || 'LN').slice(0, 2), name: String(loan.loanType || 'Loan').replace(/_/g, ' '), meta: 'Loan •••• ' + String(loan.loanNumber || '').slice(-4) + ' · EMI ' + self.currencyConverter.format(Number(loan.emiAmount || 0)), value: self.currencyConverter.format(Number(loan.outstandingBalance || 0)), status: loan.status }; }));
+      const token = params.app.authToken();
+      api.request('/api/accounts', {}, token).then(function (response) {
+        const accounts = responseData(response) || [];
+        const activeAccounts = accounts.filter(function (account) { return account.status === 'ACTIVE'; });
+        self.loanAccountOptionRows(activeAccounts.map(function (account) {
+          const number = String(account.accountNumber || '');
+          return { value: account.accountId, label: String(account.accountType || 'Account').replace(/_/g, ' ') + ' - ending ' + number.slice(-4) };
+        }));
+        if (activeAccounts.length && !activeAccounts.some(function (account) { return account.accountId === self.loanAccountId(); })) {
+          self.loanAccountId(activeAccounts[0].accountId);
+        }
+      }).catch(function (error) {
+        self.loanError(error.message || 'Unable to load active accounts for the loan application.');
+      });
+      Promise.all([
+        api.request('/api/loans', {}, token),
+        api.request('/api/loans/applications', {}, token)
+      ]).then(function (responses) {
+        const loans = responseData(responses[0]) || [];
+        const applications = responseData(responses[1]) || [];
+        const loanRows = loans.map(function (loan) { return { icon: String(loan.loanType || 'LN').slice(0, 2), name: String(loan.loanType || 'Loan').replace(/_/g, ' '), meta: 'Loan ending ' + String(loan.loanNumber || '').slice(-4) + ' - EMI ' + self.currencyConverter.format(Number(loan.emiAmount || 0)), value: self.currencyConverter.format(Number(loan.outstandingBalance || 0)), status: loan.status }; });
+        const applicationRows = applications.map(function (application) { return { icon: 'AP', name: String(application.loanType || 'Loan').replace(/_/g, ' ') + ' application', meta: 'Reference ' + String(application.applicationId || '').slice(0, 8), value: self.currencyConverter.format(Number(application.requestedAmount || 0)), status: application.status }; });
+        self.items(loanRows.concat(applicationRows));
         const outstanding = loans.reduce(function (sum, loan) { return sum + Number(loan.outstandingBalance || 0); }, 0);
-        self.highlights([{ label: 'Outstanding', value: self.currencyConverter.format(outstanding) }, { label: 'Active loans', value: String(loans.filter(function (loan) { return loan.status === 'ACTIVE'; }).length) }, { label: 'Total loans', value: String(loans.length) }]);
+        self.highlights([{ label: 'Outstanding', value: self.currencyConverter.format(outstanding) }, { label: 'Active loans', value: String(loans.filter(function (loan) { return loan.status === 'ACTIVE'; }).length) }, { label: 'Applications', value: String(applications.length) }]);
       }).catch(function (error) { self.loanError(error.message || 'Unable to load loan details.'); });
     };
     this.loadTransactionData = function () {
@@ -476,7 +543,8 @@ define([
           const number = String(account.accountNumber || '');
           return { icon: String(account.accountType || 'AC').slice(0, 2), name: String(account.accountType || 'Account').replace(/_/g, ' '), meta: '•••• ' + number.slice(-4) + ' · ' + account.branchIfsc, value: self.currencyConverter.format(Number(account.availableBalance || 0)), status: account.status || '' };
         }));
-        self.branchOptions(new ArrayDataProvider(branches.map(function (branch) { return { value: branch.ifsc, label: branch.branchName + ' · ' + branch.city + ' · ' + branch.ifsc }; }), { keyAttributes: 'value' }));
+        self.branchOptionRows(branches.map(function (branch) { return { value: branch.ifsc, label: branch.branchName + ' · ' + branch.city + ' · ' + branch.ifsc }; }));
+        if (!self.branchIfsc() && branches.length) { self.branchIfsc(branches[0].ifsc); }
       }).catch(function (error) { self.actionError(error.message || 'Unable to load account details.'); });
     };
     this.submitNewAccount = function () {
@@ -506,14 +574,18 @@ define([
             return { icon: (beneficiary.beneficiaryName || '?').slice(0, 2).toUpperCase(), name: beneficiary.beneficiaryName, meta: (beneficiary.ifscCode || '') + ' · •••• ' + accountNumber.slice(-4), value: beneficiary.relationship || 'OTHER', status: beneficiary.status || '' };
           }));
         }
-        self.transferBeneficiaryOptions(new ArrayDataProvider(beneficiaries.filter(function (beneficiary) { return beneficiary.status === 'VERIFIED'; }).map(function (beneficiary) {
+        const verifiedBeneficiaries = beneficiaries.filter(function (beneficiary) { return beneficiary.status === 'VERIFIED'; });
+        const activeAccounts = accounts.filter(function (account) { return account.status === 'ACTIVE'; });
+        self.transferBeneficiaryOptionRows(verifiedBeneficiaries.map(function (beneficiary) {
           const accountNumber = String(beneficiary.accountNumber || '');
           return { value: beneficiary.beneficiaryId, label: beneficiary.beneficiaryName + ' · •••• ' + accountNumber.slice(-4) };
-        }), { keyAttributes: 'value' }));
-        self.transferAccountOptions(new ArrayDataProvider(accounts.filter(function (account) { return account.status === 'ACTIVE'; }).map(function (account) {
+        }));
+        self.transferAccountOptionRows(activeAccounts.map(function (account) {
           const accountNumber = String(account.accountNumber || '');
           return { value: account.accountId, label: account.accountType + ' · •••• ' + accountNumber.slice(-4) };
-        }), { keyAttributes: 'value' }));
+        }));
+        if (!self.transferBeneficiary() && verifiedBeneficiaries.length) { self.transferBeneficiary(verifiedBeneficiaries[0].beneficiaryId); }
+        if (!self.transferFrom() && activeAccounts.length) { self.transferFrom(activeAccounts[0].accountId); }
       }).catch(function (error) {
         self.actionError(error.message || 'Unable to load your payment details.');
       });
@@ -555,12 +627,33 @@ define([
     };
     this.loadCardData = function () {
       if (!self.isCards) { return; }
-      api.request('/api/cards', {}, params.app.authToken()).then(function (response) {
-        const cards = responseData(response) || [];
+      const token = params.app.authToken();
+      Promise.all([
+        api.request('/api/cards', {}, token),
+        api.request('/api/accounts', {}, token),
+        api.request('/api/cards/applications', {}, token)
+      ]).then(function (responses) {
+        const cards = responseData(responses[0]) || [];
+        const accounts = responseData(responses[1]) || [];
+        const applications = responseData(responses[2]) || [];
+        const activeAccounts = accounts.filter(function (account) { return account.status === 'ACTIVE'; });
+        self.cardAccountOptionRows(activeAccounts.map(function (account) {
+          const number = String(account.accountNumber || '');
+          return { value: account.accountId, label: String(account.accountType || 'Account').replace(/_/g, ' ') + ' - ending ' + number.slice(-4) };
+        }));
+        if (!self.cardApplicationAccountId() && activeAccounts.length) { self.cardApplicationAccountId(activeAccounts[0].accountId); }
         self.items(cards.map(function (card) { return { icon: String(card.cardType || 'DC').slice(0, 2), name: String(card.cardType || 'Debit') + ' card', meta: card.maskedCardNumber + ' · expires ' + card.expiryMonth + '/' + card.expiryYear, value: self.currencyConverter.format(Number(card.dailyTransactionLimit || 0)), status: card.status }; }));
         self.highlights([{ label: 'Cards', value: String(cards.length) }, { label: 'Active', value: String(cards.filter(function (card) { return card.status === 'ACTIVE'; }).length) }, { label: 'Blocked', value: String(cards.filter(function (card) { return card.status === 'BLOCKED'; }).length) }]);
         if (cards.length) {
           const card = cards[0]; self.activeCardId(card.cardId); self.activeCardName(String(card.cardType || 'Debit') + ' card ' + card.maskedCardNumber); self.activeCardStatus(card.status); self.cardLocked(card.status === 'BLOCKED'); self.cardLimit(Number(card.dailyTransactionLimit || 0));
+        }
+        if (applications.length) {
+          const latest = applications[0];
+          self.cardApplicationType(latest.cardType || self.cardApplicationType());
+          self.cardProduct(latest.cardProduct || self.cardProduct());
+          self.cardApplicationReference(latest.applicationId || 'Submitted');
+          self.cardApplicationStatus(latest.status || 'PENDING');
+          self.cardApplicationSubmitted(true);
         }
       }).catch(function (error) { self.actionError(error.message || 'Unable to load your cards.'); });
     };
@@ -568,7 +661,7 @@ define([
       if (!self.activeCardId()) { self.actionError('No card is available for this action.'); return; }
       let endpoint = '/block';
       if (self.activeCardStatus() === 'BLOCKED') { endpoint = '/unblock'; }
-      if (self.activeCardStatus() === 'ISSUED') { endpoint = '/activate'; }
+      if (self.activeCardStatus() === 'INACTIVE' || self.activeCardStatus() === 'ISSUED') { endpoint = '/activate'; }
       const options = { method: 'POST' };
       if (endpoint === '/block') { options.body = JSON.stringify({ reason: 'Customer requested temporary block' }); }
       api.request('/api/cards/' + encodeURIComponent(self.activeCardId()) + endpoint, options, params.app.authToken()).then(function (response) {
@@ -581,7 +674,41 @@ define([
     };
     this.submitCardApplication = function () {
       self.actionSuccess('');
-      self.actionError('The current backend can list and manage existing debit cards, but it does not yet provide a customer credit/debit card application endpoint.');
+      const accountId = self.cardApplicationAccountId();
+      const monthlyIncome = Number(self.cardApplicantIncome());
+      const requestedLimit = Number(self.cardRequestedLimit());
+      const address = self.cardDeliveryAddress().trim();
+      if (!accountId || !self.cardApplicationType() || !self.cardProduct()) {
+        self.actionError('Choose an account, card type, and card product.');
+        return false;
+      }
+      if (!monthlyIncome || monthlyIncome < 1 || !requestedLimit || requestedLimit < 1 || !address) {
+        self.actionError('Enter your monthly income, requested daily limit, and complete delivery address.');
+        return false;
+      }
+      self.actionError('');
+      self.cardApplicationStatus('Submitting...');
+      api.request('/api/cards/applications', { method: 'POST', body: JSON.stringify({
+        accountId: accountId,
+        cardType: self.cardApplicationType(),
+        cardProduct: self.cardProduct(),
+        annualIncome: monthlyIncome * 12,
+        occupation: self.cardApplicantOccupation().trim() || 'Not specified',
+        deliveryAddress: address,
+        requestedDailyLimit: requestedLimit
+      }) }, params.app.authToken()).then(function (response) {
+        const application = responseData(response) || {};
+        self.cardApplicationReference(application.applicationId || 'Submitted');
+        self.cardApplicationStatus(application.status || 'PENDING');
+        self.cardApplicationSubmitted(true);
+        self.actionSuccess('Your card application was submitted successfully for bank review.');
+        self.showActionMessage('confirmation', 'Card application submitted', self.actionSuccess());
+        self.loadCardData();
+      }).catch(function (error) {
+        self.cardApplicationStatus('Needs attention');
+        self.actionError(error.message || 'Unable to submit the card application.');
+        self.showActionMessage('error', 'Card application needs attention', self.actionError());
+      });
       return false;
     };
     this.loadNotificationData = function () {

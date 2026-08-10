@@ -206,38 +206,21 @@ define([
     };
 
     self.verifyTwoFactorSetup = function (otpCode) {
-      const temporaryToken = self.authToken();
-      const credentials = self.pendingLoginCredentials;
       return api.request('/api/2fa/verify-setup', {
         method: 'POST',
         body: JSON.stringify({ otpCode: otpCode })
       }, self.authToken()).then(function (response) {
         const status = api.unwrap(response) || {};
-        if (!credentials) {
-          if (self.pendingSession) { self.applySession(Object.assign({}, self.pendingSession, { twoFactorEnabled: true })); }
-          self.navigate('dashboard');
-          return status;
+        if (!self.pendingSession) {
+          throw new Error('Your secure setup session has expired. Please sign in again.');
         }
 
-        // Complete a real OTP-protected login after enrolment. This is the
-        // point at which the backend sends the login alert email.
-        return api.request('/api/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({
-            username: credentials.username,
-            password: credentials.password,
-            otpCode: otpCode
-          })
-        }).then(function (loginResponse) {
-          const completedSession = api.unwrap(loginResponse);
-          return api.request('/api/auth/logout', { method: 'POST' }, temporaryToken)
-            .catch(function () { return null; })
-            .then(function () {
-              self.applySession(completedSession);
-              self.navigate('dashboard');
-              return status;
-            });
-        });
+        // Prakriti's backend creates the setup session and its login alert
+        // before 2FA enrolment. Once the OTP proves enrolment, keep that same
+        // session instead of issuing a duplicate login and duplicate alert.
+        self.applySession(Object.assign({}, self.pendingSession, { twoFactorEnabled: true }));
+        self.navigate('dashboard');
+        return status;
       });
     };
 
