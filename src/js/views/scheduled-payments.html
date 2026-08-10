@@ -1,0 +1,52 @@
+<div class="scheduled-payments-page page-stack">
+  <section class="page-introduction page-introduction--visual">
+    <div><p class="page-eyebrow">Automation</p><h2>Scheduled Payments</h2><p>Plan recurring bill payments, pause them when needed, and review every execution.</p></div>
+    <div class="bill-page-actions"><button class="secondary-auth-button" type="button" data-bind="click: refresh, disable: loading">Refresh</button><button class="primary-page-button" type="button" data-bind="click: openCreate">Create schedule</button></div>
+  </section>
+  <oj-messages messages="[[messages]]" display="general"></oj-messages>
+  <div class="bill-loading" data-bind="visible: loading">Loading schedules, accounts, and billers…</div>
+
+  <section class="schedule-metrics" data-bind="visible: !loading()">
+    <article><span>Active schedules</span><strong data-bind="text: activeCount"></strong><small>Currently running</small></article>
+    <article><span>Paused</span><strong data-bind="text: pausedCount"></strong><small>Waiting for you</small></article>
+    <article><span>Next payment</span><strong class="schedule-next-date" data-bind="text: nextSchedule"></strong><small>Based on active schedules</small></article>
+  </section>
+
+  <section class="surface-card schedule-editor" data-bind="visible: editorOpen">
+    <div class="card-heading"><div><p class="page-eyebrow">Schedule details</p><h3 data-bind="text: editorMode() === 'edit' ? 'Update scheduled payment' : 'Create a scheduled payment'"></h3></div><button class="dialog-close" type="button" data-bind="click: closeEditor">×</button></div>
+    <form class="schedule-form" data-bind="submit: saveSchedule">
+      <oj-select-single label-hint="Frequency" data="[[scheduleTypeOptions]]" value="{{scheduleType}}" required></oj-select-single>
+      <oj-select-single label-hint="Pay from" data="[[accountOptions]]" value="{{sourceAccountId}}" required></oj-select-single>
+      <oj-select-single label-hint="Registered biller" data="[[billerOptions]]" value="{{customerBillerId}}" required></oj-select-single>
+      <oj-input-number label-hint="Amount" value="{{amount}}" min="0.01" step="0.01" required></oj-input-number>
+      <oj-input-text label-hint="Description" value="{{description}}" maxlength="160"></oj-input-text>
+      <oj-select-single label-hint="Timezone" data="[[timezoneOptions]]" value="{{timezone}}" required></oj-select-single>
+      <oj-input-date-time label-hint="First payment" value="{{startAt}}" required></oj-input-date-time>
+      <oj-input-date-time label-hint="End after (optional)" value="{{endAt}}"></oj-input-date-time>
+      <oj-input-number label-hint="Maximum retries" value="{{maxRetries}}" min="0" max="10" step="1" required></oj-input-number>
+      <div class="schedule-form-actions"><button class="secondary-auth-button" type="button" data-bind="click: closeEditor">Cancel</button><button class="primary-page-button" type="submit" data-bind="disable: busyAction() === 'save', text: busyAction() === 'save' ? 'Saving…' : editorMode() === 'edit' ? 'Save schedule' : 'Create schedule'"></button></div>
+    </form>
+  </section>
+
+  <section class="surface-card schedule-list-card" data-bind="visible: !loading()">
+    <div class="schedule-list-heading"><div><p class="page-eyebrow">Payment plans</p><h3>Your schedules</h3></div><oj-select-single class="schedule-filter" label-hint="Status" data="[[statusOptions]]" value="{{statusFilter}}" on-value-changed="[[applyStatusFilter]]"></oj-select-single></div>
+    <div class="schedule-list" data-bind="foreach: schedules">
+      <article class="schedule-row">
+        <span data-bind="text: $parent.scheduleInitials($data)"></span>
+        <div class="schedule-row-copy"><strong data-bind="text: description || 'Scheduled bill payment'"></strong><small data-bind="text: scheduleType.replace('_', ' ') + ' · ' + timezone"></small><em data-bind="text: 'Next: ' + $parent.formatDate(nextExecutionAt)"></em></div>
+        <div class="schedule-row-amount"><strong data-bind="text: $parent.formatMoney(amount)"></strong><i data-bind="text: status, css: $parent.statusClass(status)"></i></div>
+        <div class="schedule-row-actions"><button type="button" data-bind="click: $parent.openSchedule">Activity</button><button type="button" data-bind="visible: status === 'ACTIVE', click: $parent.pauseSchedule">Pause</button><button type="button" data-bind="visible: status === 'PAUSED', click: $parent.resumeSchedule">Resume</button><button type="button" data-bind="visible: status === 'ACTIVE' || status === 'PAUSED', click: $parent.editSchedule">Edit</button><button class="danger-text-button" type="button" data-bind="visible: status !== 'CANCELLED' && status !== 'COMPLETED', click: $parent.requestCancellation">Cancel</button></div>
+      </article>
+    </div>
+    <div class="schedule-empty" data-bind="visible: schedules().length === 0"><span>SC</span><h4>No schedules found</h4><p>Create a scheduled payment or change the status filter.</p><button class="primary-page-button" type="button" data-bind="click: openCreate">Create your first schedule</button></div>
+  </section>
+
+  <aside class="schedule-detail-drawer" data-bind="visible: selectedSchedule, with: selectedSchedule">
+    <div class="card-heading"><div><p class="page-eyebrow">Schedule activity</p><h3 data-bind="text: description || 'Scheduled payment'"></h3></div><button class="dialog-close" type="button" data-bind="click: $parent.closeSchedule">×</button></div>
+    <div class="schedule-detail-status"><i data-bind="text: status, css: $parent.statusClass(status)"></i><strong data-bind="text: $parent.formatMoney(amount)"></strong></div>
+    <dl><div><dt>Frequency</dt><dd data-bind="text: scheduleType"></dd></div><div><dt>Timezone</dt><dd data-bind="text: timezone"></dd></div><div><dt>First payment</dt><dd data-bind="text: $parent.formatDate(startAt)"></dd></div><div><dt>Next execution</dt><dd data-bind="text: $parent.formatDate(nextExecutionAt)"></dd></div><div><dt>Ends</dt><dd data-bind="text: $parent.formatDate(endAt)"></dd></div><div><dt>Maximum retries</dt><dd data-bind="text: maxRetries"></dd></div></dl>
+    <div class="schedule-executions"><div><p class="page-eyebrow">Execution history</p><strong data-bind="text: $parent.executions().length"></strong></div><div data-bind="foreach: $parent.executions"><article><span data-bind="text: status"></span><div><strong data-bind="text: $parents[1].formatDate(scheduledFor)"></strong><small data-bind="text: workflowReference || responseSummary || 'Awaiting execution'"></small><em data-bind="visible: failureReason, text: failureReason"></em></div><b data-bind="text: 'Attempt ' + attemptCount"></b></article></div><p data-bind="visible: $parent.executions().length === 0">No executions have run yet.</p></div>
+  </aside>
+
+  <div class="bill-modal-backdrop" data-bind="visible: pendingCancellation"><section class="bill-confirm-card" role="dialog" aria-modal="true" aria-labelledby="cancel-schedule-title" data-bind="with: pendingCancellation"><span class="bill-confirm-icon bill-confirm-icon--warning">!</span><p class="page-eyebrow">Cancel schedule</p><h3 id="cancel-schedule-title" data-bind="text: description || 'Scheduled payment'"></h3><p>This permanently stops future executions. Existing payment records will remain available.</p><div><button class="secondary-auth-button" type="button" data-bind="click: $parent.cancelCancellation">Keep schedule</button><button class="danger-button" type="button" data-bind="click: $parent.confirmCancellation, disable: $parent.busyAction() !== ''">Cancel schedule</button></div></section></div>
+</div>

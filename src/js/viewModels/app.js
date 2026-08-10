@@ -45,6 +45,7 @@ define([
       { route: 'support', labelKey: 'shell.helpSupport', labelFallback: 'Help & support', icon: '?', utility: true }
     ];
     allNavigationItems.splice(5, 0, { route: 'bill-payments', labelKey: 'nav.billPayments', labelFallback: 'Bill Payments', icon: 'BP' });
+    allNavigationItems.splice(6, 0, { route: 'scheduled-payments', labelKey: 'nav.scheduledPayments', labelFallback: 'Scheduled Payments', icon: 'SC' });
     allNavigationItems.forEach(function (item) {
       item.label = ko.pureComputed(function () { return self.t(item.labelKey, item.labelFallback); });
     });
