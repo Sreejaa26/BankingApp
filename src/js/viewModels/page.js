@@ -287,6 +287,13 @@ define([
     this.beneficiaryNickname = ko.observable('');
     this.beneficiaryRelationship = ko.observable('OTHER');
     this.beneficiaryFavourite = ko.observable(false);
+    this.beneficiaries = ko.observableArray([]);
+    this.beneficiaryFavouritesOnly = ko.observable(false);
+    this.selectedBeneficiary = ko.observable(null);
+    this.editingBeneficiaryId = ko.observable('');
+    this.pendingBeneficiaryDelete = ko.observable(null);
+    this.beneficiaryBusy = ko.observable('');
+    this.beneficiarySubmitLabel = ko.pureComputed(function () { return self.editingBeneficiaryId() ? 'Save beneficiary changes' : 'Add beneficiary securely'; });
     this.transferFrom = ko.observable('');
     this.transferBeneficiary = ko.observable('');
     this.transferAmount = ko.observable(10000);
@@ -312,7 +319,7 @@ define([
       if (self.activeCardStatus() === 'INACTIVE' || self.activeCardStatus() === 'ISSUED') { return 'Activate card'; }
       return self.activeCardStatus() === 'BLOCKED' ? 'Unblock card' : 'Block card';
     });
-    this.accountNumberValidators = [new RegExpValidator({ pattern: '^\\d{1,30}$', messageSummary: 'Enter a valid account number', messageDetail: 'Use up to 30 digits.' })];
+    this.accountNumberValidators = [new RegExpValidator({ pattern: '^[A-Za-z0-9]{1,30}$', messageSummary: 'Enter a valid account number', messageDetail: 'Use up to 30 letters or digits.' })];
     this.ifscValidators = [new RegExpValidator({ pattern: '^[A-Za-z]{4}0[A-Za-z0-9]{6}$', messageSummary: 'Enter a valid IFSC code', messageDetail: 'Example: HDFC0001234.' })];
     this.currencyConverter = new NumberConverters.IntlNumberConverter({ style: 'currency', currency: 'INR', currencyDisplay: 'symbol' });
     this.transactionDateConverter = new DateTimeConverters.IntlDateTimeConverter({ dateStyle: 'medium' });
@@ -362,9 +369,9 @@ define([
     this.transferAccountOptions = new ArrayDataProvider(this.transferAccountOptionRows, { keyAttributes: 'value' });
     this.transferBeneficiaryOptions = new ArrayDataProvider(this.transferBeneficiaryOptionRows, { keyAttributes: 'value' });
     this.beneficiaryRelationshipOptions = new ArrayDataProvider([
-      { value: 'FAMILY', label: 'Family' }, { value: 'FRIEND', label: 'Friend' },
-      { value: 'SELF', label: 'My account' }, { value: 'BUSINESS', label: 'Business' },
-      { value: 'OTHER', label: 'Other' }
+      { value: 'SELF', label: 'My account' }, { value: 'PARENT', label: 'Parent' }, { value: 'SPOUSE', label: 'Spouse' },
+      { value: 'CHILD', label: 'Child' }, { value: 'SIBLING', label: 'Sibling' }, { value: 'RELATIVE', label: 'Relative' },
+      { value: 'FRIEND', label: 'Friend' }, { value: 'BUSINESS', label: 'Business' }, { value: 'OTHER', label: 'Other' }
     ], { keyAttributes: 'value' });
     this.transactionRows = ko.observableArray([]);
     this.transactionTableData = new ArrayDataProvider(this.transactionRows, { keyAttributes: 'id' });
@@ -916,7 +923,7 @@ define([
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token || (!self.isBeneficiaries && !self.isTransfer)) { return; }
       Promise.all([
-        api.request('/api/beneficiaries?favouritesOnly=false', {}, token),
+        api.request('/api/beneficiaries?favouritesOnly=' + (self.isBeneficiaries && self.beneficiaryFavouritesOnly() ? 'true' : 'false'), {}, token),
         api.request('/api/accounts', {}, token)
       ]).then(function (responses) {
         const beneficiaries = responseData(responses[0]) || [];
@@ -924,6 +931,7 @@ define([
         self.beneficiaryLookup = {};
         beneficiaries.forEach(function (beneficiary) { self.beneficiaryLookup[beneficiary.beneficiaryId] = beneficiary; });
         if (self.isBeneficiaries) {
+          self.beneficiaries(beneficiaries);
           self.items(beneficiaries.map(function (beneficiary) {
             const accountNumber = String(beneficiary.accountNumber || '');
             return { icon: (beneficiary.beneficiaryName || '?').slice(0, 2).toUpperCase(), name: beneficiary.beneficiaryName, meta: (beneficiary.ifscCode || '') + ' · •••• ' + accountNumber.slice(-4), value: beneficiary.relationship || 'OTHER', status: beneficiary.status || '' };
@@ -945,18 +953,48 @@ define([
         self.actionError(error.message || 'Unable to load your payment details.');
       });
     };
+    this.toggleFavouriteBeneficiaries = function () { self.beneficiaryFavouritesOnly(!self.beneficiaryFavouritesOnly()); self.selectedBeneficiary(null); return self.loadPaymentData(); };
+    this.openBeneficiaryDetail = function (beneficiary) {
+      self.beneficiaryBusy('detail-' + beneficiary.beneficiaryId); self.actionError('');
+      return api.request('/api/beneficiaries/' + encodeURIComponent(beneficiary.beneficiaryId), {}, params.app.authToken()).then(function (response) {
+        self.selectedBeneficiary(responseData(response));
+      }).catch(function (error) { self.actionError(error.message || 'Unable to load beneficiary detail.'); }).then(function () { self.beneficiaryBusy(''); });
+    };
+    this.closeBeneficiaryDetail = function () { self.selectedBeneficiary(null); };
+    this.editBeneficiary = function (beneficiary) {
+      return self.openBeneficiaryDetail(beneficiary).then(function () {
+        const detail = self.selectedBeneficiary(); if (!detail) { return; }
+        self.editingBeneficiaryId(detail.beneficiaryId); self.beneficiaryName(detail.beneficiaryName || ''); self.beneficiaryAccount(detail.accountNumber || ''); self.beneficiaryIfsc(detail.ifscCode || ''); self.beneficiaryNickname(detail.nickname || ''); self.beneficiaryRelationship(detail.relationship || 'OTHER'); self.beneficiaryFavourite(Boolean(detail.favourite));
+        self.selectedBeneficiary(null); self.openPageAction();
+      });
+    };
+    this.resetBeneficiaryForm = function () {
+      self.editingBeneficiaryId(''); self.beneficiaryName(''); self.beneficiaryAccount(''); self.beneficiaryIfsc(''); self.beneficiaryNickname(''); self.beneficiaryRelationship('OTHER'); self.beneficiaryFavourite(false);
+    };
+    this.cancelBeneficiaryEdit = function () { self.resetBeneficiaryForm(); self.closePageAction(); };
+    this.requestBeneficiaryDelete = function (beneficiary) { self.pendingBeneficiaryDelete(beneficiary); };
+    this.cancelBeneficiaryDelete = function () { self.pendingBeneficiaryDelete(null); };
+    this.confirmBeneficiaryDelete = function () {
+      const beneficiary = self.pendingBeneficiaryDelete(); if (!beneficiary) { return; }
+      self.beneficiaryBusy('delete-' + beneficiary.beneficiaryId);
+      return api.request('/api/beneficiaries/' + encodeURIComponent(beneficiary.beneficiaryId), { method: 'DELETE' }, params.app.authToken()).then(function () {
+        self.actionSuccess('Beneficiary deleted successfully.'); self.pendingBeneficiaryDelete(null); self.selectedBeneficiary(null); return self.loadPaymentData();
+      }).catch(function (error) { self.actionError(error.message || 'Unable to delete the beneficiary.'); }).then(function () { self.beneficiaryBusy(''); });
+    };
     this.submitBeneficiary = function () {
       const accountNumber = self.beneficiaryAccount().replace(/\s/g, '');
       const ifscCode = self.beneficiaryIfsc().trim().toUpperCase();
-      if (!self.beneficiaryName().trim() || !self.beneficiaryNickname().trim() || !/^\d{1,30}$/.test(accountNumber) || !/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/.test(ifscCode)) {
+      if (!self.beneficiaryName().trim() || !self.beneficiaryNickname().trim() || !/^[A-Za-z0-9]{1,30}$/.test(accountNumber) || !/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/.test(ifscCode)) {
         self.actionError('Enter the beneficiary name, nickname, account number, and an 11-character IFSC code.');
         return false;
       }
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token) { self.actionError('Please sign in again before adding a beneficiary.'); return false; }
-      api.request('/api/beneficiaries', { method: 'POST', body: JSON.stringify({ nickname: self.beneficiaryNickname().trim(), beneficiaryName: self.beneficiaryName().trim(), relationship: self.beneficiaryRelationship(), accountNumber: accountNumber, ifscCode: ifscCode, favourite: self.beneficiaryFavourite() }) }, token).then(function () {
-        self.actionError(''); self.actionSuccess('Beneficiary added for verification. A cooling period may apply.'); self.showActionMessage('confirmation', 'Beneficiary added', self.actionSuccess()); self.loadPaymentData();
-      }).catch(function (error) { self.actionError(error.message || 'Unable to add the beneficiary.'); self.showActionMessage('error', 'Beneficiary needs attention', self.actionError()); });
+      const editingId = self.editingBeneficiaryId(); const payload = { nickname: self.beneficiaryNickname().trim(), beneficiaryName: self.beneficiaryName().trim(), relationship: self.beneficiaryRelationship(), accountNumber: accountNumber, ifscCode: ifscCode, favourite: self.beneficiaryFavourite() };
+      self.beneficiaryBusy(editingId ? 'update-' + editingId : 'create');
+      api.request('/api/beneficiaries' + (editingId ? '/' + encodeURIComponent(editingId) : ''), { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(payload) }, token).then(function () {
+        self.actionError(''); self.actionSuccess(editingId ? 'Beneficiary updated successfully.' : 'Beneficiary added for verification. A cooling period may apply.'); self.showActionMessage('confirmation', editingId ? 'Beneficiary updated' : 'Beneficiary added', self.actionSuccess()); self.resetBeneficiaryForm(); self.loadPaymentData();
+      }).catch(function (error) { self.actionError(error.message || (editingId ? 'Unable to update the beneficiary.' : 'Unable to add the beneficiary.')); self.showActionMessage('error', 'Beneficiary needs attention', self.actionError()); }).then(function () { self.beneficiaryBusy(''); });
       return false;
     };
     this.submitTransfer = function () {

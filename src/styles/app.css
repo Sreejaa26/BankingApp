@@ -3714,6 +3714,27 @@ a:hover { text-decoration: underline; }
 @media (max-width:1050px) { .transaction-centre { grid-template-columns:1fr; } }
 @media (max-width:640px) { .transaction-filter-grid { grid-template-columns:1fr; } .transaction-filter-actions { flex-direction:column; } .transaction-result-list > div { grid-template-columns:34px 1fr auto; } .transaction-result-list > div > i { grid-column:2; justify-self:start; } }
 
+/* Beneficiary management */
+.beneficiary-list-card { padding:20px; }
+.beneficiary-list-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.beneficiary-list-heading h3 { margin:2px 0 0; color:var(--navy-950); }
+.beneficiary-list-heading > div:last-child,.beneficiary-detail-actions,.beneficiary-form-actions { display:flex; gap:8px; }
+.beneficiary-management-list { display:grid; margin-top:14px; }
+.beneficiary-management-list > article { display:grid; grid-template-columns:38px minmax(180px,1fr) 90px 70px auto; align-items:center; gap:11px; padding:13px 3px; border-bottom:1px solid var(--line); }
+.beneficiary-management-list > article > span { display:grid; width:36px; height:36px; place-items:center; border-radius:11px; color:var(--green); background:#e0f3ec; font-size:8px; font-weight:850; }
+.beneficiary-management-list strong,.beneficiary-management-list small { display:block; }
+.beneficiary-management-list strong { color:var(--navy-900); font-size:10px; }
+.beneficiary-management-list small { margin-top:3px; color:var(--muted); font-size:8px; }
+.beneficiary-management-list i,.beneficiary-management-list b { padding:5px 6px; border-radius:999px; font-size:7px; font-style:normal; font-weight:850; text-align:center; }
+.beneficiary-management-list i { color:#8a5900; background:#fff0c7; }.beneficiary-management-list b { color:#1769aa; background:#e4f1fa; }
+.beneficiary-management-list article > div:last-child { display:flex; gap:5px; }
+.beneficiary-management-list article > div:last-child button,.beneficiary-delete-button { padding:7px 9px; border:1px solid var(--line); border-radius:8px; color:var(--blue-600); background:var(--white); cursor:pointer; font-size:8px; font-weight:800; }
+.beneficiary-delete-button { color:#a93030 !important; border-color:#efcaca !important; background:#fff7f7 !important; }
+.beneficiary-form-heading { grid-column:1/-1; }.beneficiary-form-heading h4 { margin:2px 0 3px; color:var(--navy-950); }
+.beneficiary-form-actions { justify-content:flex-end; }
+.beneficiary-detail-actions { margin-top:18px; }
+@media (max-width:800px) { .beneficiary-list-heading { align-items:flex-start; flex-direction:column; } .beneficiary-management-list > article { grid-template-columns:38px 1fr auto; } .beneficiary-management-list > article > i,.beneficiary-management-list > article > b { grid-column:2; justify-self:start; } .beneficiary-management-list article > div:last-child { grid-column:2/-1; } }
+
 /* Unified primary navigation */
 
 /* Reports centre */
