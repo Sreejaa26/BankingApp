@@ -1,21 +1,88 @@
-define(['knockout', 'utils/statementDownload', 'ojs/ojchart'], function (ko, downloadStatementFile) {
+define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/ojdialog'], function (ko, api, downloadStatementFile) {
   'use strict';
+
+  function istMonthKey(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) { return ''; }
+    const parts = new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit'
+    }).formatToParts(date);
+    const year = parts.find(function (part) { return part.type === 'year'; });
+    const month = parts.find(function (part) { return part.type === 'month'; });
+    return year && month ? year.value + '-' + month.value : '';
+  }
+
+  function loadTransactionHistory(token, pageNumber, collectedRows) {
+    return api.request('/api/transactions?page=' + pageNumber + '&size=100', {}, token).then(function (response) {
+      const transactionPage = api.unwrap(response) || {};
+      const pageRows = Array.isArray(transactionPage.content) ? transactionPage.content : [];
+      const rows = collectedRows.concat(pageRows);
+      const totalPages = Number(transactionPage.totalPages || 0);
+      if (pageNumber + 1 < totalPages) {
+        return loadTransactionHistory(token, pageNumber + 1, rows);
+      }
+      return { content: rows, totalElements: transactionPage.totalElements == null ? rows.length : transactionPage.totalElements };
+    });
+  }
+
+  function maskedCurrency(value) {
+    const digits = String(value || '').replace(/[^0-9]/g, '');
+    return '₹ ******' + (digits.slice(-3) || '0');
+  }
+
+  function isCustomerProfileComplete(profile) {
+    if (!profile) { return false; }
+    return [
+      profile.fullName,
+      profile.fatherOrSpouseName,
+      profile.dateOfBirth,
+      profile.addressLine1,
+      profile.city,
+      profile.state,
+      profile.country,
+      profile.postalCode
+    ].every(function (value) { return Boolean(String(value || '').trim()); });
+  }
 
   function DashboardViewModel(params) {
     const self = this;
     self.app = params.app;
     self.statementDownloadStatus = ko.observable('');
+    self.dashboardLoading = ko.observable(true);
+    self.dashboardError = ko.observable('');
+    self.onboardingRequired = ko.observable(false);
+    self.onboardingStep = ko.observable(1);
+    self.onboardingCopy = ko.observable('Complete your personal and address details to continue.');
+    self.onboardingDestination = ko.observable('profile');
+    self.onboardingActionLabel = ko.observable('Continue account setup');
+    self.dashboardNow = ko.observable(new Date());
     self.dashboardDate = ko.pureComputed(function () {
-      return self.app.formatDate(new Date(2026, 7, 4), { weekday: 'long', day: 'numeric', month: 'long' });
+      return new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short'
+      }).format(self.dashboardNow());
+    });
+    self.dashboardMonth = ko.pureComputed(function () {
+      return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'long', year: 'numeric' }).format(self.dashboardNow());
     });
     self.greeting = ko.pureComputed(function () {
       const hour = new Date().getHours();
       const salutation = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
       return salutation + ', ' + self.app.customerName() + '.';
     });
-    self.totalBalance = ko.pureComputed(function () { return self.app.formatCurrency(482650.20); });
-    self.monthlyIncome = ko.pureComputed(function () { return self.app.formatCurrency(104500); });
-    self.monthlySpending = ko.pureComputed(function () { return self.app.formatCurrency(48730); });
+    self.totalBalance = ko.observable(self.app.formatCurrency(0));
+    self.monthlyIncome = ko.observable(self.app.formatCurrency(0));
+    self.monthlySpending = ko.observable(self.app.formatCurrency(0));
+    self.revealedMetric = ko.observable('');
+    self.totalBalanceDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'balance' ? self.totalBalance() : maskedCurrency(self.totalBalance()); });
+    self.monthlyIncomeDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'income' ? self.monthlyIncome() : maskedCurrency(self.monthlyIncome()); });
+    self.monthlySpendingDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'spending' ? self.monthlySpending() : maskedCurrency(self.monthlySpending()); });
+    self.revealTotalBalance = function () { self.revealedMetric('balance'); };
+    self.revealMonthlyIncome = function () { self.revealedMetric('income'); };
+    self.revealMonthlySpending = function () { self.revealedMetric('spending'); };
+    self.hideRevealedMetric = function () { self.revealedMetric(''); };
+    self.monthlySpendingShare = ko.observable('0% of monthly income');
+    self.monthlySpendingShareWidth = ko.observable('0%');
 
     self.cashFlowGroups = ko.observableArray(['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']);
     self.cashFlowSeries = ko.observableArray([
@@ -33,17 +100,11 @@ define(['knockout', 'utils/statementDownload', 'ojs/ojchart'], function (ko, dow
       return context.value + '%';
     };
 
-    self.accounts = ko.observableArray([
-      { icon: 'SA', iconClass: '', name: 'Everyday Savings', meta: '•• 4721 · Savings', amount: '₹2,84,100.20' },
-      { icon: 'CA', iconClass: 'account-icon--gold', name: 'Current Account', meta: '•• 8490 · Current', amount: '₹1,52,550.00' },
-      { icon: 'FD', iconClass: 'account-icon--green', name: 'Fixed Deposit', meta: '•• 1337 · Deposit', amount: '₹46,000.00' }
-    ]);
+    self.accounts = ko.observableArray([]);
+    self.needsOnboarding = ko.pureComputed(function () { return !self.dashboardLoading() && self.onboardingRequired(); });
+    self.hasAccounts = ko.pureComputed(function () { return !self.dashboardLoading() && !self.onboardingRequired() && self.accounts().length > 0; });
 
-    self.transactions = ko.observableArray([
-      { icon: 'FM', name: 'Fresh Market', meta: 'Today, 10:42 AM', amount: '− ₹1,240', positive: false },
-      { icon: 'SC', name: 'Salary credit', meta: 'Yesterday', amount: '+ ₹82,500', positive: true },
-      { icon: 'NU', name: 'Northstar Utilities', meta: '26 Jul 2026', amount: '− ₹3,860', positive: false }
-    ]);
+    self.transactions = ko.observableArray([]);
 
     self.offers = ko.observableArray([
       { icon: '◇', tag: 'Pre-approved', eyebrow: 'Personal loan', title: 'Funds when plans cannot wait', copy: 'Borrow up to ₹8 lakh with a simple digital journey.', action: 'View your offer', route: 'loans', accentClass: 'offer-card--blue' },
@@ -52,10 +113,111 @@ define(['knockout', 'utils/statementDownload', 'ojs/ojchart'], function (ko, dow
     ]);
 
     self.go = function (route) { self.app.navigate(route); };
+    self.startOnboarding = function () {
+      const dialog = document.getElementById('dashboard-onboarding-dialog');
+      if (dialog && dialog.isOpen && dialog.isOpen()) { dialog.close(); }
+      self.app.navigate(self.onboardingDestination());
+    };
+    self.openOnboardingPrompt = function () {
+      requestAnimationFrame(function () {
+        const dialog = document.getElementById('dashboard-onboarding-dialog');
+        if (dialog && dialog.open && (!dialog.isOpen || !dialog.isOpen())) { dialog.open(); }
+      });
+    };
+    self.loadDashboardAccounts = function () {
+      const token = self.app.authToken();
+      Promise.all([
+        api.request('/api/accounts', {}, token),
+        loadTransactionHistory(token, 0, []).catch(function () { return { content: [] }; }),
+        api.request('/api/customers/me', {}, token).catch(function () { return { data: null }; }),
+        api.request('/api/customers/me/kyc', {}, token).catch(function () { return { data: null }; }),
+        api.request('/api/customers/me/kyc/documents', {}, token).catch(function () { return { data: [] }; })
+      ]).then(function (responses) {
+        const accountRows = api.unwrap(responses[0]) || [];
+        const transactionPage = api.unwrap(responses[1]) || {};
+        const profile = api.unwrap(responses[2]);
+        const kyc = api.unwrap(responses[3]);
+        const kycDocuments = api.unwrap(responses[4]) || [];
+        const accounts = Array.isArray(accountRows) ? accountRows : [];
+        const transactionRows = Array.isArray(transactionPage.content) ? transactionPage.content : [];
+        const profileComplete = isCustomerProfileComplete(profile);
+        const identityComplete = Boolean(kyc);
+        const uploadedDocumentTypes = Array.isArray(kycDocuments) ? kycDocuments.map(function (document) { return document.documentType; }) : [];
+        const documentComplete = (uploadedDocumentTypes.indexOf('AADHAAR') >= 0 && uploadedDocumentTypes.indexOf('PAN') >= 0) || Boolean(kyc && kyc.status === 'VERIFIED');
+        let requiresOnboarding = true;
+        self.onboardingDestination('profile'); self.onboardingActionLabel('Continue account setup');
+        if (!profileComplete) {
+          self.onboardingStep(1); self.onboardingCopy('Add your personal information and complete address details.');
+        } else if (!identityComplete) {
+          self.onboardingStep(2); self.onboardingCopy('Your profile is saved. Add your Aadhaar and PAN details next.');
+        } else if (!documentComplete) {
+          self.onboardingStep(3); self.onboardingCopy('Your identity details are saved. Upload a KYC document to finish.');
+        } else if (kyc.status !== 'VERIFIED') {
+          self.onboardingStep(3); self.onboardingCopy('Your KYC was submitted and is waiting for bank approval.'); self.onboardingActionLabel('View KYC status');
+        } else if (!accounts.length) {
+          self.onboardingStep(3); self.onboardingCopy('Your profile and KYC are verified. Open your first bank account.'); self.onboardingDestination('accounts'); self.onboardingActionLabel('Open first account');
+        } else {
+          requiresOnboarding = false;
+        }
+        self.onboardingRequired(requiresOnboarding);
+        const total = accounts.reduce(function (sum, account) { return sum + Number(account.availableBalance || 0); }, 0);
+        const currentMonth = istMonthKey(self.dashboardNow());
+        const monthlyTransactions = transactionRows.filter(function (transaction) {
+          return String(transaction.status || '').toUpperCase() === 'SUCCESS' && istMonthKey(transaction.transactionDate) === currentMonth;
+        });
+        const incoming = monthlyTransactions.filter(function (transaction) { return transaction.debitCredit === 'CREDIT'; }).reduce(function (sum, transaction) { return sum + Number(transaction.amount || 0); }, 0);
+        const outgoing = monthlyTransactions.filter(function (transaction) { return transaction.debitCredit === 'DEBIT'; }).reduce(function (sum, transaction) { return sum + Number(transaction.amount || 0); }, 0);
+        const spendingPercentage = incoming > 0 ? Math.round((outgoing / incoming) * 100) : 0;
+        self.totalBalance(self.app.formatCurrency(total));
+        self.monthlyIncome(self.app.formatCurrency(accounts.length ? incoming : 0));
+        self.monthlySpending(self.app.formatCurrency(accounts.length ? outgoing : 0));
+        self.monthlySpendingShare(accounts.length ? spendingPercentage + '% of monthly income' : '0% of monthly income');
+        self.monthlySpendingShareWidth(accounts.length ? Math.min(spendingPercentage, 100) + '%' : '0%');
+        self.transactions(accounts.length ? transactionRows.slice(0, 5).map(function (transaction) {
+          const positive = transaction.debitCredit === 'CREDIT';
+          return {
+            icon: String(transaction.transactionType || 'TX').slice(0, 2),
+            name: transaction.description || transaction.transactionType || 'Banking transaction',
+            meta: self.app.formatDate(new Date(transaction.transactionDate)),
+            amount: (positive ? '+ ' : '− ') + self.app.formatCurrency(Number(transaction.amount || 0)),
+            positive: positive
+          };
+        }) : []);
+        self.accounts(accounts.map(function (account, index) {
+          const number = String(account.accountNumber || '');
+          return {
+            icon: String(account.accountType || 'AC').slice(0, 2),
+            iconClass: index % 2 ? 'account-icon--gold' : '',
+            name: String(account.accountType || 'Account').replace(/_/g, ' ') + ' account',
+            meta: '•• ' + number.slice(-4) + ' · ' + (account.status || 'Pending'),
+            amount: self.app.formatCurrency(Number(account.availableBalance || 0))
+          };
+        }));
+        if (requiresOnboarding) {
+          self.totalBalance(self.app.formatCurrency(0));
+          self.monthlyIncome(self.app.formatCurrency(0));
+          self.monthlySpending(self.app.formatCurrency(0));
+          self.monthlySpendingShare('0% of monthly income');
+          self.monthlySpendingShareWidth('0%');
+          self.transactions([]);
+          self.openOnboardingPrompt();
+        }
+      }).catch(function (error) {
+        self.dashboardError(error.message || 'Unable to load your account summary.');
+        self.accounts([]);
+        self.totalBalance(self.app.formatCurrency(0));
+        self.monthlyIncome(self.app.formatCurrency(0));
+        self.monthlySpending(self.app.formatCurrency(0));
+        self.monthlySpendingShare('0% of monthly income');
+        self.monthlySpendingShareWidth('0%');
+        self.transactions([]);
+      }).finally(function () { self.dashboardLoading(false); });
+    };
     self.downloadStatement = function () {
       const fileName = downloadStatementFile();
       self.statementDownloadStatus(fileName + ' downloaded successfully.');
     };
+    self.loadDashboardAccounts();
   }
 
   return DashboardViewModel;

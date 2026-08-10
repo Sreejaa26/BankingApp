@@ -5,30 +5,38 @@
       <h2 data-bind="text: greeting"></h2>
       <p data-bind="text: app.t('dashboard.overview')"></p>
     </div>
-    <div class="hero-actions">
+    <div class="hero-actions" data-bind="visible: hasAccounts">
       <button class="secondary-action" type="button" data-bind="click: downloadStatement, text: app.t('dashboard.download')"></button>
       <button class="primary-page-button" data-bind="click: go.bind($data, 'transfer')"><span class="button-icon">↗</span><span data-bind="text: app.t('dashboard.transfer')"></span></button>
     </div>
     <p class="download-status" role="status" aria-live="polite" data-bind="visible: statementDownloadStatus, text: statementDownloadStatus"></p>
   </section>
 
+  <section class="dashboard-onboarding" data-bind="visible: needsOnboarding" aria-labelledby="dashboard-onboarding-title">
+    <span class="dashboard-onboarding__number">1</span>
+    <div><p class="page-eyebrow">First step</p><h3 id="dashboard-onboarding-title">Complete your profile to open your first account</h3><p>Add your personal and address details, verify Aadhaar and PAN, then upload a KYC document.</p></div>
+    <button class="primary-page-button" type="button" data-bind="click: startOnboarding, text: onboardingActionLabel"></button>
+  </section>
+  <p class="form-error" role="alert" data-bind="visible: dashboardError, text: dashboardError"></p>
+
   <section class="metric-grid" aria-label="Account summary">
-    <article class="metric-card metric-card--primary">
+    <article class="metric-card metric-card--primary metric-card--private" title="Double-click to reveal amount" data-bind="event: {dblclick: revealTotalBalance, mouseleave: hideRevealedMetric}">
       <div class="metric-card__top"><span data-bind="text: app.t('dashboard.totalBalance')"></span><span class="metric-icon">₹</span></div>
-      <strong data-bind="text: totalBalance"></strong><small data-bind="text: app.t('dashboard.acrossAccounts')"></small>
+      <strong data-bind="text: totalBalanceDisplay"></strong><small data-bind="text: app.t('dashboard.acrossAccounts')"></small>
+      <span class="metric-card__privacy-hint">Double-click to reveal</span>
       <div class="balance-card__footer"><div class="mini-sparkline" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="trend trend--light">↑ 4.8%</span></div>
     </article>
-    <article class="metric-card">
+    <article class="metric-card metric-card--private" title="Double-click to reveal amount" data-bind="event: {dblclick: revealMonthlyIncome, mouseleave: hideRevealedMetric}">
       <div class="metric-card__top"><span data-bind="text: app.t('dashboard.monthlyIncome')"></span><span class="metric-icon metric-icon--green">↓</span></div>
-      <strong data-bind="text: monthlyIncome"></strong><small>August 2026</small><div class="trend">↑ ₹8,200 vs July</div>
+      <strong data-bind="text: monthlyIncomeDisplay"></strong><small data-bind="text: dashboardMonth"></small><span class="metric-card__privacy-hint">Double-click to reveal</span><div class="trend">Current credited transactions</div>
     </article>
-    <article class="metric-card">
+    <article class="metric-card metric-card--private" title="Double-click to reveal amount" data-bind="event: {dblclick: revealMonthlySpending, mouseleave: hideRevealedMetric}">
       <div class="metric-card__top"><span data-bind="text: app.t('dashboard.monthlySpending')"></span><span class="metric-icon metric-icon--gold">↗</span></div>
-      <strong data-bind="text: monthlySpending"></strong><small data-bind="text: app.t('dashboard.incomeShare')"></small><div class="progress-track"><span style="width:46%"></span></div>
+      <strong data-bind="text: monthlySpendingDisplay"></strong><small data-bind="text: monthlySpendingShare"></small><span class="metric-card__privacy-hint">Double-click to reveal</span><div class="progress-track"><span data-bind="style: {width: monthlySpendingShareWidth}"></span></div>
     </article>
   </section>
 
-  <section class="quick-action-bar" aria-label="Quick actions">
+  <section class="quick-action-bar" data-bind="visible: hasAccounts" aria-label="Quick actions">
     <div class="quick-action-intro"><p class="page-eyebrow">Quick actions</p><strong>What would you like to do?</strong></div>
     <button data-bind="click: go.bind($data, 'transfer')"><span>↗</span> Send money</button>
     <button data-bind="click: go.bind($data, 'beneficiaries')"><span>＋</span> Add beneficiary</button>
@@ -36,7 +44,7 @@
     <button data-bind="click: go.bind($data, 'loans')"><span>◇</span> View loans</button>
   </section>
 
-  <section class="lifestyle-banner" aria-label="Digital banking from anywhere">
+  <section class="lifestyle-banner" data-bind="visible: hasAccounts" aria-label="Digital banking from anywhere">
     <div class="lifestyle-banner__copy">
       <p class="page-eyebrow">Bank around your life</p>
       <h3>Simple money management, wherever the day takes you.</h3>
@@ -46,7 +54,7 @@
     <figure><img src="styles/images/northstar-digital-life.png" alt="Customer securely managing finances on a smartphone"></figure>
   </section>
 
-  <section class="discovery-section" aria-labelledby="offers-title">
+  <section class="discovery-section" data-bind="visible: hasAccounts" aria-labelledby="offers-title">
     <div class="section-heading-row">
       <div><p class="page-eyebrow">Selected for you</p><h3 id="offers-title">Make more of your money</h3></div>
       <button class="text-button" type="button" data-bind="click: go.bind($data, 'accounts')">Explore all products →</button>
@@ -60,7 +68,7 @@
     </div>
   </section>
 
-  <section class="chart-grid" aria-label="Financial charts">
+  <section class="chart-grid" data-bind="visible: hasAccounts" aria-label="Financial charts">
     <article class="surface-card chart-card">
       <div class="card-heading"><div><p class="page-eyebrow">Six-month overview</p><h3>Cash flow</h3></div><div class="chart-heading-actions"><span class="status-chip status-chip--positive">● Healthy</span><button class="period-select">Last 6 months⌄</button></div></div>
       <oj-chart class="banking-chart" type="line" series="[[cashFlowSeries]]" groups="[[cashFlowGroups]]" animation-on-display="auto" hover-behavior="dim" style-defaults.line-type="curved" style-defaults.line-width="3" legend.position="bottom"></oj-chart>
@@ -71,7 +79,7 @@
     </article>
   </section>
 
-  <section class="dashboard-grid">
+  <section class="dashboard-grid" data-bind="visible: hasAccounts">
     <article class="surface-card">
       <div class="card-heading"><div><p class="page-eyebrow">Portfolio</p><h3>Your accounts</h3></div><button class="text-button" data-bind="click: go.bind($data, 'accounts')">View all →</button></div>
       <div class="account-list" data-bind="foreach: accounts">
@@ -85,4 +93,14 @@
       </div>
     </article>
   </section>
+
+  <oj-dialog id="dashboard-onboarding-dialog" class="dashboard-onboarding-dialog" modality="modal" cancel-behavior="none" aria-labelledby="dashboard-onboarding-dialog-title">
+    <div slot="header" class="dashboard-onboarding-dialog__header"><p class="page-eyebrow">Account setup required</p><h2 id="dashboard-onboarding-dialog-title">Complete your banking profile</h2></div>
+    <div slot="body" class="dashboard-onboarding-dialog__body">
+      <div class="dashboard-onboarding-dialog__step"><span data-bind="text: onboardingStep"></span><div><strong data-bind="text: 'Step ' + onboardingStep() + ' of 3'"></strong><small data-bind="text: onboardingCopy"></small></div></div>
+      <div class="dashboard-onboarding-dialog__progress"><i class="is-complete"></i><i data-bind="css: {'is-complete': onboardingStep() > 1}"></i><i data-bind="css: {'is-complete': onboardingStep() > 2}"></i></div>
+      <p>Finish the three verification steps before using accounts, transfers, cards, or loans.</p>
+      <button class="primary-page-button" type="button" data-bind="click: startOnboarding, text: onboardingActionLabel"></button>
+    </div>
+  </oj-dialog>
 </div>

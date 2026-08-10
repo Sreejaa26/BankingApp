@@ -50,7 +50,7 @@
 
         <div class="login-options">
           <label><input type="checkbox" data-bind="checked: rememberUsername"> Remember username</label>
-          <a href="#/forgot-password">Forgot password?</a>
+          <button class="forgot-password-link" type="button" data-bind="click: openForgotPassword">Forgot password?</button>
         </div>
 
         <oj-messages class="jet-inline-messages oj-messages-outlined" messages="[[messages]]"></oj-messages>
@@ -89,4 +89,44 @@
       </div>
     </div>
   </section>
+
+  <oj-dialog id="forgot-password-dialog" class="forgot-password-dialog" modality="modal" cancel-behavior="icon" aria-labelledby="forgot-password-title">
+    <div slot="header" class="forgot-password-dialog__header">
+      <div><p class="page-eyebrow">Secure account recovery</p><h2 id="forgot-password-title">Reset your password</h2></div>
+    </div>
+    <div slot="body" class="forgot-password-dialog__body">
+      <div class="forgot-password-progress" aria-label="Password reset progress">
+        <span data-bind="css: {'is-active': forgotPasswordStep() >= 1}">1</span><i></i>
+        <span data-bind="css: {'is-active': forgotPasswordStep() >= 2}">2</span><i></i>
+        <span data-bind="css: {'is-active': forgotPasswordStep() >= 3}">3</span>
+      </div>
+
+      <form class="forgot-password-form" data-bind="submit: requestPasswordReset, visible: forgotPasswordStep() === 1">
+        <h3>Find your account</h3>
+        <p>Enter the email registered with Northstar Banking. We’ll send a six-digit verification code.</p>
+        <oj-input-text label-hint="Registered email" value="{{forgotPasswordEmail}}" on-raw-value-changed="[[forgotPasswordEmailInput]]" required autocomplete="email" placeholder="name@example.com"></oj-input-text>
+        <button class="primary-auth-button" type="submit" data-bind="disable: forgotPasswordBusy, text: forgotPasswordBusy() ? 'Sending code…' : 'Send reset code'"></button>
+      </form>
+
+      <form class="forgot-password-form" data-bind="submit: verifyPasswordResetCode, visible: forgotPasswordStep() === 2">
+        <h3>Verify your email</h3>
+        <p data-bind="text: 'Enter the code sent for ' + forgotPasswordEmail()"></p>
+        <oj-input-text label-hint="Six-digit reset code" value="{{forgotPasswordOtp}}" on-raw-value-changed="[[forgotPasswordOtpInput]]" required maxlength="6" autocomplete="one-time-code" virtual-keyboard="number" placeholder="000000"></oj-input-text>
+        <button class="primary-auth-button" type="submit" data-bind="disable: forgotPasswordBusy, text: forgotPasswordBusy() ? 'Verifying…' : 'Verify code'"></button>
+        <button class="secondary-auth-button" type="button" data-bind="click: requestPasswordReset, disable: forgotPasswordBusy">Resend code</button>
+      </form>
+
+      <form class="forgot-password-form" data-bind="submit: confirmPasswordReset, visible: forgotPasswordStep() === 3">
+        <h3>Create a new password</h3>
+        <p>Use at least 8 characters with upper-case, lower-case, number, and special character.</p>
+        <oj-input-password label-hint="New password" value="{{forgotPasswordNew}}" on-raw-value-changed="[[forgotPasswordNewInput]]" required autocomplete="new-password" mask-icon="visible"></oj-input-password>
+        <oj-input-password label-hint="Confirm new password" value="{{forgotPasswordConfirm}}" on-raw-value-changed="[[forgotPasswordConfirmInput]]" required autocomplete="new-password" mask-icon="visible"></oj-input-password>
+        <button class="primary-auth-button" type="submit" data-bind="disable: forgotPasswordBusy, text: forgotPasswordBusy() ? 'Updating password…' : 'Reset password'"></button>
+      </form>
+
+      <p class="forgot-password-info" role="status" data-bind="visible: forgotPasswordInfo, text: forgotPasswordInfo"></p>
+      <p class="form-error" role="alert" data-bind="visible: forgotPasswordError, text: forgotPasswordError"></p>
+    </div>
+    <div slot="footer" class="forgot-password-dialog__footer"><button class="secondary-auth-button" type="button" data-bind="click: closeForgotPassword">Cancel</button></div>
+  </oj-dialog>
 </main>

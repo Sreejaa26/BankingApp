@@ -26,7 +26,7 @@
               <span><strong>Northstar</strong><small>Digital Banking</small></span>
             </div>
 
-            <div class="sidebar-account">
+            <div class="sidebar-account" data-bind="visible: !isAdmin()">
               <span class="sidebar-account__icon">₹</span>
               <div><small>Personal banking</small><strong>Northstar Premier</strong></div>
               <span class="sidebar-account__chevron">⌄</span>
@@ -41,7 +41,7 @@
               </button>
             </nav>
 
-            <div class="sidebar-help">
+            <div class="sidebar-help" role="button" tabindex="0" data-bind="visible: !isAdmin(), click: navigate.bind($data, 'support')">
               <span class="sidebar-help__icon">?</span>
               <div><strong data-bind="text: t('shell.needHelp')"></strong><small data-bind="text: t('shell.helpCopy')"></small></div>
               <span class="sidebar-help__arrow">›</span>
@@ -63,9 +63,8 @@
                     <span data-bind="text: label"></span>
                   </button>
                 </nav>
-                <nav class="nav-utility-actions" aria-label="Support navigation">
-                  <button type="button" data-bind="visible: currentRole() === 'ADMIN', click: navigate.bind($data, 'admin'), css: {'is-active': activeRoute() === 'admin'}, text: t('shell.admin')"></button>
-                  <button type="button" data-bind="text: t('shell.helpSupport')"></button>
+                <nav class="nav-utility-actions" aria-label="Support navigation" data-bind="visible: !isAdmin()">
+                  <button type="button" data-bind="click: navigate.bind($data, 'support'), css: {'is-active': activeRoute() === 'support'}, text: t('shell.helpSupport')"></button>
                 </nav>
                 <div class="header-actions">
                   <label class="locale-switcher">
@@ -73,10 +72,13 @@
                     <select data-bind="options: languageOptions, optionsText: 'label', optionsValue: 'value', value: locale" aria-label="Language / भाषा"></select>
                   </label>
                   <label class="header-search"><span aria-hidden="true">⌕</span><input type="search" data-bind="attr: {placeholder: t('shell.search'), 'aria-label': t('shell.search')}"><kbd>⌘ K</kbd></label>
-                  <button class="header-icon-button" type="button" aria-label="View notifications" data-bind="click: navigate.bind($data, 'notifications')"><span aria-hidden="true">◌</span><i></i></button>
-                  <button class="customer-summary" type="button" aria-label="Open profile" data-bind="click: navigate.bind($data, 'profile')">
+                  <button class="header-icon-button" type="button" aria-label="View notifications" data-bind="visible: !isAdmin(), click: navigate.bind($data, 'notifications')"><span aria-hidden="true">◌</span><i></i></button>
+                  <button class="customer-summary" type="button" aria-label="Open profile" data-bind="visible: !isAdmin(), click: navigate.bind($data, 'profile')">
                     <span class="customer-copy"><strong data-bind="text: customerName"></strong><small data-bind="text: t('shell.primaryCustomer')"></small></span>
                   </button>
+                  <div class="customer-summary" data-bind="visible: isAdmin">
+                    <span class="customer-copy"><strong data-bind="text: customerName"></strong><small>Administrator</small></span>
+                  </div>
                   <button class="signout-button" type="button" data-bind="click: logout" aria-label="Sign out">↪</button>
                 </div>
               </div>

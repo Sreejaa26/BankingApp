@@ -21,6 +21,7 @@ define([
     self.customerName = ko.observable('Sreeja Pamu');
     self.authToken = ko.observable('');
     self.currentRole = ko.observable('CUSTOMER');
+    self.isAdmin = ko.pureComputed(function () { return self.currentRole() === 'ADMIN'; });
     self.pendingSession = null;
     self.pendingLoginCredentials = null;
     self.locale = ko.observable(i18n.initialLocale());
@@ -40,13 +41,17 @@ define([
       { route: 'cards', labelKey: 'nav.cards', icon: '▱' },
       { route: 'notifications', labelKey: 'nav.notifications', icon: '◌' },
       { route: 'admin', labelKey: 'nav.admin', icon: '⌘' },
-      { route: 'profile', labelKey: 'nav.profile', labelFallback: 'Profile', icon: 'P' }
+      { route: 'profile', labelKey: 'nav.profile', labelFallback: 'Profile', icon: 'P' },
+      { route: 'support', labelKey: 'shell.helpSupport', labelFallback: 'Help & support', icon: '?', utility: true }
     ];
     allNavigationItems.forEach(function (item) {
       item.label = ko.pureComputed(function () { return self.t(item.labelKey, item.labelFallback); });
     });
     self.navigationItems = ko.pureComputed(function () {
-      return allNavigationItems.filter(function (item) { return item.route !== 'admin' || self.currentRole() === 'ADMIN'; });
+      if (self.isAdmin()) {
+        return allNavigationItems.filter(function (item) { return item.route === 'admin'; });
+      }
+      return allNavigationItems.filter(function (item) { return item.route !== 'admin' && !item.utility; });
     });
     self.primaryNavigationItems = ko.pureComputed(function () { return self.navigationItems().slice(0, 7); });
 
@@ -85,7 +90,8 @@ define([
       }
 
       let route = validRoutes.indexOf(candidate) >= 0 ? candidate : 'dashboard';
-      if (route === 'admin' && self.currentRole() !== 'ADMIN') { route = 'dashboard'; }
+      if (self.isAdmin()) { route = 'admin'; }
+      else if (route === 'admin') { route = 'dashboard'; }
       self.activeRoute(route);
       self.navigationOpen(false);
       return self.loadModule(route === 'dashboard' ? 'dashboard' : 'page', { route: route });
@@ -181,7 +187,7 @@ define([
           self.applyTemporarySession(session);
         } else {
           self.applySession(session);
-          self.navigate('dashboard');
+          self.navigate(session.role === 'ADMIN' ? 'admin' : 'dashboard');
         }
         return session;
       });
@@ -219,7 +225,7 @@ define([
         // before 2FA enrolment. Once the OTP proves enrolment, keep that same
         // session instead of issuing a duplicate login and duplicate alert.
         self.applySession(Object.assign({}, self.pendingSession, { twoFactorEnabled: true }));
-        self.navigate('dashboard');
+        self.navigate(self.currentRole() === 'ADMIN' ? 'admin' : 'dashboard');
         return status;
       });
     };
