@@ -22,7 +22,7 @@
         <p>Operational APIs and pending customer decisions load automatically when this dashboard opens.</p>
       </div>
       <div class="admin-command-centre__refresh">
-        <span data-bind="text: 'Last updated: ' + adminLastUpdated()"></span>
+        <span data-bind="text: 'Last updated: ' + (adminLastUpdated() || 'Waiting for refresh')"></span>
         <button class="primary-page-button" type="button" data-bind="click: loadAdminData, disable: adminLoading, text: adminLoading() ? 'Refreshing...' : 'Refresh all data'"></button>
       </div>
     </div>
@@ -210,15 +210,15 @@
     <form class="page-action-form profile-step-form" data-bind="visible: isProfile && !profileOnboardingLoading() && profileOnboardingStep() === 1, submit: submitProfile">
       <div class="profile-step-form__heading"><span>Step 1 of 3</span><div><p class="page-eyebrow">Personal details</p><h4>Tell us about yourself and your address</h4></div></div>
       <oj-validation-group class="jet-validation-group">
-        <oj-input-text label-hint="Full name" value="{{profileFullName}}" maxlength="120" required></oj-input-text>
-        <oj-input-text label-hint="Father or spouse name" value="{{profileFatherOrSpouseName}}" maxlength="120" required></oj-input-text>
+        <oj-input-text label-hint="Full name" value="{{profileFullName}}" validators="[[personNameValidators]]" maxlength="120" required></oj-input-text>
+        <oj-input-text label-hint="Father or spouse name" value="{{profileFatherOrSpouseName}}" validators="[[personNameValidators]]" maxlength="120" required></oj-input-text>
         <oj-input-date label-hint="Date of birth" value="{{profileDateOfBirth}}" max="[[profileDobMax]]" required></oj-input-date>
         <oj-input-text label-hint="Address line 1" value="{{profileAddressLine1}}" maxlength="160" required></oj-input-text>
         <oj-input-text label-hint="Address line 2 (optional)" value="{{profileAddressLine2}}" maxlength="160"></oj-input-text>
         <oj-input-text label-hint="City" value="{{profileCity}}" maxlength="80" required></oj-input-text>
         <oj-select-single label-hint="State or union territory" data="[[indiaStateOptions]]" item-text="label" value="{{profileState}}" required></oj-select-single>
         <oj-input-text label-hint="Country" value="{{profileCountry}}" maxlength="80" required></oj-input-text>
-        <oj-input-text label-hint="Postal code" value="{{profilePostalCode}}" maxlength="20" required></oj-input-text>
+        <oj-input-text label-hint="Postal code" value="{{profilePostalCode}}" validators="[[postalCodeValidators]]" maxlength="20" required></oj-input-text>
       </oj-validation-group>
       <p class="page-action-note">These details must be complete before you can request a new account.</p>
       <button class="primary-page-button" type="submit">Save details & continue</button>
@@ -227,8 +227,8 @@
     <form class="page-action-form profile-step-form" data-bind="visible: isProfile && !profileOnboardingLoading() && profileOnboardingStep() === 2, submit: submitKycIdentity">
       <div class="profile-step-form__heading"><span>Step 2 of 3</span><div><p class="page-eyebrow">Identity verification</p><h4>Add your Aadhaar and PAN details</h4></div></div>
       <oj-validation-group class="jet-validation-group">
-        <oj-input-text label-hint="Aadhaar number" value="{{kycAadhaar}}" maxlength="12" virtual-keyboard="number" required placeholder="12 digits"></oj-input-text>
-        <oj-input-text label-hint="PAN number" value="{{kycPan}}" maxlength="10" required placeholder="ABCDE1234F"></oj-input-text>
+        <oj-input-text label-hint="Aadhaar number" value="{{kycAadhaar}}" validators="[[aadhaarValidators]]" maxlength="12" virtual-keyboard="number" required placeholder="12 digits"></oj-input-text>
+        <oj-input-text label-hint="PAN number" value="{{kycPan}}" validators="[[panValidators]]" maxlength="10" required placeholder="ABCDE1234F"></oj-input-text>
       </oj-validation-group>
       <p class="page-action-note">Your Aadhaar and PAN are stored securely and displayed only in masked form afterward.</p>
       <button class="primary-page-button" type="submit">Save identity & continue</button>
@@ -275,11 +275,11 @@
     <form class="page-action-form page-action-form--beneficiary" data-bind="visible: isBeneficiaries, submit: submitBeneficiary">
       <div class="beneficiary-form-heading"><p class="page-eyebrow" data-bind="text: editingBeneficiaryId() ? 'Edit trusted contact' : 'New trusted contact'"></p><h4 data-bind="text: editingBeneficiaryId() ? 'Update beneficiary details' : 'Add a beneficiary'"></h4></div>
       <oj-validation-group class="jet-validation-group">
-      <oj-input-text label-hint="Beneficiary name" value="{{beneficiaryName}}" required placeholder="Enter full name"></oj-input-text>
-      <oj-input-text label-hint="Account number" value="{{beneficiaryAccount}}" validators="[[accountNumberValidators]]" required placeholder="Up to 30 digits"></oj-input-text>
-      <oj-input-text label-hint="IFSC code" value="{{beneficiaryIfsc}}" validators="[[ifscValidators]]" required placeholder="Example: HDFC0001234"></oj-input-text>
+      <oj-input-text label-hint="Beneficiary name" value="{{beneficiaryName}}" validators="[[personNameValidators]]" maxlength="120" required placeholder="Enter full name"></oj-input-text>
+      <oj-input-text label-hint="Account number" value="{{beneficiaryAccount}}" validators="[[accountNumberValidators]]" maxlength="30" required placeholder="Up to 30 letters or digits"></oj-input-text>
+      <oj-input-text label-hint="IFSC code" value="{{beneficiaryIfsc}}" validators="[[ifscValidators]]" maxlength="11" required placeholder="Example: HDFC0001234"></oj-input-text>
       <oj-select-single label-hint="Relationship" data="[[beneficiaryRelationshipOptions]]" item-text="label" value="{{beneficiaryRelationship}}" required></oj-select-single>
-      <oj-input-text label-hint="Nickname" value="{{beneficiaryNickname}}" maxlength="80" required placeholder="Example: Rent"></oj-input-text>
+      <oj-input-text label-hint="Nickname" value="{{beneficiaryNickname}}" validators="[[nicknameValidators]]" maxlength="80" required placeholder="Example: Rent"></oj-input-text>
       </oj-validation-group>
       <label class="page-action-note"><input type="checkbox" data-bind="checked: beneficiaryFavourite"> Save as a favourite</label>
       <p class="page-action-note">For your security, a cooling period may apply before the first transfer.</p>
@@ -291,7 +291,7 @@
       <oj-select-single label-hint="From account" data="[[transferAccountOptions]]" item-text="label" value="{{transferFrom}}" required></oj-select-single>
       <oj-select-single label-hint="Verified beneficiary" data="[[transferBeneficiaryOptions]]" item-text="label" value="{{transferBeneficiary}}" required></oj-select-single>
       <oj-input-number label-hint="Transfer amount" value="{{transferAmount}}" converter="[[currencyConverter]]" min="1" max="500000" step="100" required></oj-input-number>
-      <oj-input-text label-hint="Purpose" value="{{transferPurpose}}" maxlength="160" required></oj-input-text>
+      <oj-input-text label-hint="Purpose" value="{{transferPurpose}}" validators="[[purposeValidators]]" maxlength="160" required></oj-input-text>
       </oj-validation-group>
       <p class="page-action-note">To protect your money, transfers can only be made to beneficiaries with verified bank details. Add a beneficiary first if they are not listed.</p>
       <div class="page-action-summary"><span>Daily transfer limit</span><strong>₹5,00,000</strong></div>
@@ -313,7 +313,7 @@
         <oj-select-single label-hint="Card type" data="[[cardTypeOptions]]" item-text="label" value="{{cardApplicationType}}" required></oj-select-single>
         <oj-select-single label-hint="Card product" data="[[cardProductOptions]]" item-text="label" value="{{cardProduct}}" required></oj-select-single>
         <oj-input-number label-hint="Monthly income" value="{{cardApplicantIncome}}" min="0" max="10000000" step="5000" required></oj-input-number>
-        <oj-input-text label-hint="Occupation" value="{{cardApplicantOccupation}}" maxlength="120" required></oj-input-text>
+        <oj-input-text label-hint="Occupation" value="{{cardApplicantOccupation}}" validators="[[occupationValidators]]" maxlength="120" required></oj-input-text>
         <oj-input-number label-hint="Requested daily limit" value="{{cardRequestedLimit}}" min="1" max="500000" step="1000" required></oj-input-number>
         <oj-input-text label-hint="Delivery address" value="{{cardDeliveryAddress}}" required placeholder="Enter complete address"></oj-input-text>
         <button class="primary-page-button" type="submit">Submit card application</button>
