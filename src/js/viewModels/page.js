@@ -274,6 +274,12 @@ define([
     this.branchIfsc = ko.observable('');
     this.accountOpeningEligible = ko.observable(false);
     this.accountOpeningEligibilityMessage = ko.observable('Checking profile and KYC eligibility...');
+    this.selectedAccount = ko.observable(null);
+    this.accountPortfolio = ko.observableArray([]);
+    this.accountMiniStatement = ko.observableArray([]);
+    this.accountDetailLoading = ko.observable(false);
+    this.accountDetailError = ko.observable('');
+    this.accountMiniStatementLimit = ko.observable(10);
     this.goToProfileSetup = function () { params.app.navigate('profile'); };
     this.beneficiaryName = ko.observable('');
     this.beneficiaryAccount = ko.observable('');
@@ -281,6 +287,13 @@ define([
     this.beneficiaryNickname = ko.observable('');
     this.beneficiaryRelationship = ko.observable('OTHER');
     this.beneficiaryFavourite = ko.observable(false);
+    this.beneficiaries = ko.observableArray([]);
+    this.beneficiaryFavouritesOnly = ko.observable(false);
+    this.selectedBeneficiary = ko.observable(null);
+    this.editingBeneficiaryId = ko.observable('');
+    this.pendingBeneficiaryDelete = ko.observable(null);
+    this.beneficiaryBusy = ko.observable('');
+    this.beneficiarySubmitLabel = ko.pureComputed(function () { return self.editingBeneficiaryId() ? 'Save beneficiary changes' : 'Add beneficiary securely'; });
     this.transferFrom = ko.observable('');
     this.transferBeneficiary = ko.observable('');
     this.transferAmount = ko.observable(10000);
@@ -332,8 +345,15 @@ define([
       if (self.activeCardStatus() === 'INACTIVE' || self.activeCardStatus() === 'ISSUED') { return 'Activate card'; }
       return self.activeCardStatus() === 'BLOCKED' ? 'Unblock card' : 'Block card';
     });
-    this.accountNumberValidators = [new RegExpValidator({ pattern: '^\\d{1,30}$', messageSummary: 'Enter a valid account number', messageDetail: 'Use up to 30 digits.' })];
+    this.accountNumberValidators = [new RegExpValidator({ pattern: '^[A-Za-z0-9]{1,30}$', messageSummary: 'Enter a valid account number', messageDetail: 'Use up to 30 letters or digits.' })];
     this.ifscValidators = [new RegExpValidator({ pattern: '^[A-Za-z]{4}0[A-Za-z0-9]{6}$', messageSummary: 'Enter a valid IFSC code', messageDetail: 'Example: HDFC0001234.' })];
+    this.personNameValidators = [new RegExpValidator({ pattern: '^.{2,120}$', messageSummary: 'Enter a complete name', messageDetail: 'Use between 2 and 120 characters.' })];
+    this.nicknameValidators = [new RegExpValidator({ pattern: '^.{2,80}$', messageSummary: 'Enter a useful nickname', messageDetail: 'Use between 2 and 80 characters.' })];
+    this.postalCodeValidators = [new RegExpValidator({ pattern: '^[A-Za-z0-9][A-Za-z0-9 -]{2,19}$', messageSummary: 'Enter a valid postal code', messageDetail: 'Use 3 to 20 letters, numbers, spaces, or hyphens.' })];
+    this.aadhaarValidators = [new RegExpValidator({ pattern: '^\\d{12}$', messageSummary: 'Enter a valid Aadhaar number', messageDetail: 'Aadhaar must contain exactly 12 digits.' })];
+    this.panValidators = [new RegExpValidator({ pattern: '^[A-Za-z]{5}\\d{4}[A-Za-z]$', messageSummary: 'Enter a valid PAN', messageDetail: 'Use the format ABCDE1234F.' })];
+    this.purposeValidators = [new RegExpValidator({ pattern: '^.{3,160}$', messageSummary: 'Describe the payment purpose', messageDetail: 'Use between 3 and 160 characters.' })];
+    this.occupationValidators = [new RegExpValidator({ pattern: '^.{2,120}$', messageSummary: 'Enter your occupation', messageDetail: 'Use between 2 and 120 characters.' })];
     this.currencyConverter = new NumberConverters.IntlNumberConverter({ style: 'currency', currency: 'INR', currencyDisplay: 'symbol' });
     this.transactionDateConverter = new DateTimeConverters.IntlDateTimeConverter({ dateStyle: 'medium' });
     this.adminEnumLabel = function (value) {
@@ -398,6 +418,39 @@ define([
     this.transactionRows = ko.observableArray([]);
     this.transactionTableData = new ArrayDataProvider(this.transactionRows, { keyAttributes: 'id' });
     this.pagingTransactions = new PagingDataProviderView(this.transactionTableData);
+    this.transactionPage = ko.observable(0);
+    this.transactionTotalPages = ko.observable(0);
+    this.transactionTotalElements = ko.observable(0);
+    this.transactionLoading = ko.observable(false);
+    this.transactionMode = ko.observable('All transactions');
+    this.transactionSelected = ko.observable(null);
+    this.transactionStatement = ko.observable(null);
+    this.transactionAccountId = ko.observable('');
+    this.transactionAccountNumber = ko.observable('');
+    this.transactionTypeFilter = ko.observable('');
+    this.transactionStatusFilter = ko.observable('');
+    this.transactionMinAmount = ko.observable(null);
+    this.transactionMaxAmount = ko.observable(null);
+    this.transactionReference = ko.observable('');
+    this.transactionFromDate = ko.observable('');
+    this.transactionToDate = ko.observable('');
+    this.transactionSortBy = ko.observable('transactionDate');
+    this.transactionDirection = ko.observable('desc');
+    this.transactionAccountOptionRows = ko.observableArray([]);
+    this.transactionAccountOptions = new ArrayDataProvider(this.transactionAccountOptionRows, { keyAttributes: 'value' });
+    this.transactionTypeOptions = new ArrayDataProvider([
+      { value: '', label: 'All transaction types' }, { value: 'DEPOSIT', label: 'Deposit' }, { value: 'WITHDRAWAL', label: 'Withdrawal' },
+      { value: 'TRANSFER', label: 'Transfer' }, { value: 'BILL_PAYMENT', label: 'Bill payment' }, { value: 'LOAN_REPAYMENT', label: 'Loan repayment' }
+    ], { keyAttributes: 'value' });
+    this.transactionStatusOptions = new ArrayDataProvider([
+      { value: '', label: 'All statuses' }, { value: 'SUCCESS', label: 'Success' }, { value: 'PENDING', label: 'Pending' },
+      { value: 'FAILED', label: 'Failed' }, { value: 'REVERSED', label: 'Reversed' }
+    ], { keyAttributes: 'value' });
+    this.transactionSortOptions = new ArrayDataProvider([
+      { value: 'transactionDate', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'status', label: 'Status' },
+      { value: 'transactionType', label: 'Transaction type' }, { value: 'referenceNumber', label: 'Reference number' }
+    ], { keyAttributes: 'value' });
+    this.transactionDirectionOptions = new ArrayDataProvider([{ value: 'desc', label: 'Descending' }, { value: 'asc', label: 'Ascending' }], { keyAttributes: 'value' });
     this.transactionColumns = [
       { headerText: 'Type', field: 'type', width: '70px' },
       { headerText: 'Description', field: 'description' },
@@ -438,6 +491,7 @@ define([
     this.adminCardApplications = ko.observableArray([]);
     this.adminLoanApplications = ko.observableArray([]);
     this.adminKycReviews = ko.observableArray([]);
+    this.adminBeneficiaryApprovals = ko.observableArray([]);
 
     this.loanProducts = ko.observableArray([
       { icon: 'PL', type: 'Personal loan', rate: 10.4, limit: 'Up to ₹20 lakh', copy: 'Flexible funds for planned or unexpected personal expenses.', accent: 'loan-product--blue' },
@@ -609,24 +663,87 @@ define([
         self.highlights([{ label: 'Outstanding', value: self.currencyConverter.format(outstanding) }, { label: 'Active loans', value: String(loans.filter(function (loan) { return loan.status === 'ACTIVE'; }).length) }, { label: 'Applications', value: String(applications.length) }]);
       }).catch(function (error) { self.loanError(error.message || 'Unable to load loan details.'); });
     };
+    this.transactionDate = function (value) {
+      if (!value || String(value).trim().toLowerCase() === 'null') { return 'Date unavailable'; }
+      const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
+    };
+    this.transactionAmount = function (transaction) {
+      return (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(Number(transaction.amount || 0));
+    };
+    this.transactionIcon = function (value) { return String(value || 'TX').slice(0, 2); };
+    this.transactionEnum = function (value) { return String(value || 'Not provided').replace(/_/g, ' '); };
+    this.transactionAddQuery = function (parts, name, value) {
+      if (value !== null && value !== undefined && String(value).trim() !== '') { parts.push(encodeURIComponent(name) + '=' + encodeURIComponent(String(value).trim())); }
+    };
+    this.transactionInstant = function (value, endOfDay) { return value ? value + (endOfDay ? 'T23:59:59.999Z' : 'T00:00:00.000Z') : ''; };
+    this.applyTransactionPage = function (response, label) {
+      const page = responseData(response) || {};
+      const transactions = Array.isArray(page.content) ? page.content : [];
+      self.transactionRows(transactions);
+      self.transactionPage(Number(page.number || 0)); self.transactionTotalPages(Number(page.totalPages || 0)); self.transactionTotalElements(Number(page.totalElements == null ? transactions.length : page.totalElements));
+      self.transactionMode(label);
+      const incoming = transactions.filter(function (item) { return item.debitCredit === 'CREDIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
+      const outgoing = transactions.filter(function (item) { return item.debitCredit === 'DEBIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
+      self.highlights([{ label: 'Outgoing on page', value: self.currencyConverter.format(outgoing) }, { label: 'Incoming on page', value: self.currencyConverter.format(incoming) }, { label: 'Matching transactions', value: String(self.transactionTotalElements()) }]);
+    };
+    this.fetchTransactions = function (mode, pageNumber) {
+      const token = params.app.authToken(); const parts = []; const page = pageNumber == null ? self.transactionPage() : pageNumber;
+      self.transactionAddQuery(parts, 'page', page); self.transactionAddQuery(parts, 'size', 20);
+      let path = '/api/transactions'; let label = 'All transactions';
+      if (mode === 'account') {
+        if (!self.transactionAccountId()) { self.statementDownloadStatus('Choose an account first.'); return Promise.resolve(); }
+        path = '/api/transactions/account/' + encodeURIComponent(self.transactionAccountId()); label = 'Selected account';
+      } else if (mode === 'search') {
+        path = '/api/transactions/search'; label = 'Filtered search';
+        self.transactionAddQuery(parts, 'accountId', self.transactionAccountId()); self.transactionAddQuery(parts, 'accountNumber', self.transactionAccountNumber());
+        self.transactionAddQuery(parts, 'transactionType', self.transactionTypeFilter()); self.transactionAddQuery(parts, 'status', self.transactionStatusFilter());
+        self.transactionAddQuery(parts, 'minAmount', self.transactionMinAmount()); self.transactionAddQuery(parts, 'maxAmount', self.transactionMaxAmount());
+        self.transactionAddQuery(parts, 'referenceNumber', self.transactionReference()); self.transactionAddQuery(parts, 'fromDate', self.transactionInstant(self.transactionFromDate(), false));
+        self.transactionAddQuery(parts, 'toDate', self.transactionInstant(self.transactionToDate(), true)); self.transactionAddQuery(parts, 'sortBy', self.transactionSortBy()); self.transactionAddQuery(parts, 'direction', self.transactionDirection());
+      }
+      self.transactionLoading(true); self.statementDownloadStatus(''); self.transactionPage(page);
+      return api.request(path + '?' + parts.join('&'), {}, token).then(function (response) { self.applyTransactionPage(response, label); })
+        .catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to load transactions.'); })
+        .then(function () { self.transactionLoading(false); });
+    };
     this.loadTransactionData = function () {
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token || !self.isTransactions) { return; }
-      api.request('/api/transactions?page=0&size=100', {}, token).then(function (response) {
-        const page = responseData(response) || {};
-        const transactions = page.content || [];
-        self.transactionRows(transactions.map(function (transaction) {
-          const amount = Number(transaction.amount || 0);
-          const signedAmount = (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(amount);
-          return { id: transaction.transactionId, type: transaction.transactionType, description: transaction.description || transaction.referenceNumber || transaction.transactionType, date: self.transactionDateConverter.format(new Date(transaction.transactionDate)), amount: signedAmount, status: transaction.status };
-        }));
-        self.items(transactions.slice(0, 6).map(function (transaction) {
-          return { icon: String(transaction.transactionType || 'TX').slice(0, 2), name: transaction.description || transaction.transactionType, meta: self.transactionDateConverter.format(new Date(transaction.transactionDate)), value: (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(Number(transaction.amount || 0)), status: transaction.status, positive: transaction.debitCredit === 'CREDIT' };
-        }));
-        const incoming = transactions.filter(function (item) { return item.debitCredit === 'CREDIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
-        const outgoing = transactions.filter(function (item) { return item.debitCredit === 'DEBIT'; }).reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0);
-        self.highlights([{ label: 'Outgoing', value: self.currencyConverter.format(outgoing) }, { label: 'Incoming', value: self.currencyConverter.format(incoming) }, { label: 'Transactions', value: String(page.totalElements == null ? transactions.length : page.totalElements) }]);
-      }).catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to load transactions.'); });
+      self.transactionLoading(true);
+      return Promise.all([
+        api.request('/api/accounts', {}, token).then(function (response) {
+          const accounts = responseData(response) || [];
+          self.transactionAccountOptionRows(accounts.map(function (account) { return { value: account.accountId, label: self.accountTypeLabel(account.accountType) + ' · ending ' + String(account.accountNumber || '').slice(-4) }; }));
+          if (!self.transactionAccountId() && accounts.length) { self.transactionAccountId(accounts[0].accountId); }
+        }),
+        self.fetchTransactions('all', 0)
+      ]).catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to initialize transaction history.'); }).then(function () { self.transactionLoading(false); });
+    };
+    this.searchTransactions = function () {
+      if (self.transactionFromDate() && self.transactionToDate() && self.transactionFromDate() > self.transactionToDate()) { self.statementDownloadStatus('The transaction start date must be before the end date.'); return false; }
+      if (self.transactionMinAmount() != null && self.transactionMaxAmount() != null && Number(self.transactionMinAmount()) > Number(self.transactionMaxAmount())) { self.statementDownloadStatus('Minimum amount cannot exceed maximum amount.'); return false; }
+      self.transactionStatement(null); self.transactionPage(0); self.fetchTransactions('search', 0); return false;
+    };
+    this.showAllTransactions = function () { self.transactionStatement(null); self.transactionPage(0); return self.fetchTransactions('all', 0); };
+    this.showAccountTransactions = function () { self.transactionStatement(null); self.transactionPage(0); return self.fetchTransactions('account', 0); };
+    this.clearTransactionFilters = function () {
+      self.transactionAccountNumber(''); self.transactionTypeFilter(''); self.transactionStatusFilter(''); self.transactionMinAmount(null); self.transactionMaxAmount(null); self.transactionReference(''); self.transactionFromDate(''); self.transactionToDate(''); self.transactionSortBy('transactionDate'); self.transactionDirection('desc');
+      return self.showAllTransactions();
+    };
+    this.previousTransactionPage = function () { if (self.transactionPage() > 0) { const mode = self.transactionMode() === 'Filtered search' ? 'search' : self.transactionMode() === 'Selected account' ? 'account' : 'all'; return self.fetchTransactions(mode, self.transactionPage() - 1); } };
+    this.nextTransactionPage = function () { if (self.transactionPage() + 1 < self.transactionTotalPages()) { const mode = self.transactionMode() === 'Filtered search' ? 'search' : self.transactionMode() === 'Selected account' ? 'account' : 'all'; return self.fetchTransactions(mode, self.transactionPage() + 1); } };
+    this.openTransactionDetail = function (row) {
+      self.statementDownloadStatus('');
+      return api.request('/api/transactions/' + encodeURIComponent(row.transactionId), {}, params.app.authToken()).then(function (response) { self.transactionSelected(responseData(response)); })
+        .catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to open transaction detail.'); });
+    };
+    this.closeTransactionDetail = function () { self.transactionSelected(null); };
+    this.loadStatementData = function () {
+      if (!self.transactionAccountId()) { self.statementDownloadStatus('Choose an account before loading statement data.'); return; }
+      const parts = []; self.transactionAddQuery(parts, 'accountId', self.transactionAccountId()); self.transactionAddQuery(parts, 'fromDate', self.transactionInstant(self.transactionFromDate(), false)); self.transactionAddQuery(parts, 'toDate', self.transactionInstant(self.transactionToDate(), true));
+      self.transactionLoading(true); self.statementDownloadStatus('');
+      return api.request('/api/transactions/statement?' + parts.join('&'), {}, params.app.authToken()).then(function (response) { self.transactionStatement(responseData(response)); self.transactionMode('Statement data'); })
+        .catch(function (error) { self.statementDownloadStatus(error.message || 'Unable to load statement data.'); }).then(function () { self.transactionLoading(false); });
     };
     this.pollReport = function (jobId, attempt) {
       const token = params.app.authToken();
@@ -764,6 +881,42 @@ define([
       }).catch(function (error) { self.actionError(error.message || 'Unable to upload the KYC documents.'); self.showActionMessage('error', 'Document upload needs attention', self.actionError()); });
       return false;
     };
+    this.openAccountDetail = function (account) {
+      if (!account || !account.accountId) { return; }
+      const token = params.app.authToken();
+      self.accountDetailLoading(true);
+      self.accountDetailError('');
+      const detailRequest = api.request('/api/accounts/' + encodeURIComponent(account.accountId), {}, token).then(function (response) {
+        self.selectedAccount(responseData(response) || {});
+      });
+      const statementRequest = api.request('/api/accounts/' + encodeURIComponent(account.accountId) + '/mini-statement?limit=' + encodeURIComponent(self.accountMiniStatementLimit()), {}, token).then(function (response) {
+        const statement = responseData(response) || {};
+        self.accountMiniStatement(Array.isArray(statement.transactions) ? statement.transactions : []);
+      });
+      return Promise.all([detailRequest, statementRequest]).catch(function (error) {
+        self.accountDetailError(error.message || 'Unable to load the account detail and mini-statement.');
+      }).then(function () { self.accountDetailLoading(false); });
+    };
+    this.refreshAccountDetail = function () {
+      const account = self.selectedAccount();
+      if (account) { return self.openAccountDetail(account); }
+    };
+    this.accountTransactionAmount = function (transaction) {
+      return (transaction.debitCredit === 'DEBIT' ? '-' : '+') + self.currencyConverter.format(Number(transaction.amount || 0));
+    };
+    this.accountMoney = function (value) { return self.currencyConverter.format(Number(value || 0)); };
+    this.accountTypeLabel = function (value) { return String(value || 'Account').replace(/_/g, ' '); };
+    this.accountTransactionIcon = function (value) { return String(value || 'TX').slice(0, 2); };
+    this.accountTransactionDate = function (value) {
+      if (!value || String(value).trim().toLowerCase() === 'null') { return 'Date unavailable'; }
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
+    };
+    this.accountCreatedDate = function (value) {
+      if (!value || String(value).trim().toLowerCase() === 'null') { return 'Not available'; }
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : self.transactionDateConverter.format(date);
+    };
     this.loadAccountsData = function () {
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token || !self.isAccounts) { return; }
@@ -781,12 +934,21 @@ define([
         self.accountOpeningEligibilityMessage(!profileComplete ? 'Complete Step 1: personal and address details' : !kycVerified ? 'KYC must be verified before account opening' : 'Profile complete and KYC verified');
         const total = accounts.reduce(function (sum, account) { return sum + Number(account.availableBalance || 0); }, 0);
         self.highlights([{ label: 'Total balance', value: self.currencyConverter.format(total) }, { label: 'Available now', value: self.currencyConverter.format(total) }, { label: 'Active accounts', value: String(accounts.filter(function (account) { return account.status === 'ACTIVE'; }).length) }]);
-        self.items(accounts.map(function (account) {
+        const portfolio = accounts.map(function (account) {
           const number = String(account.accountNumber || '');
-          return { icon: String(account.accountType || 'AC').slice(0, 2), name: String(account.accountType || 'Account').replace(/_/g, ' '), meta: '•••• ' + number.slice(-4) + ' · ' + account.branchIfsc, value: self.currencyConverter.format(Number(account.availableBalance || 0)), status: account.status || '' };
-        }));
+          return { accountId: account.accountId, icon: String(account.accountType || 'AC').slice(0, 2), name: String(account.accountType || 'Account').replace(/_/g, ' '), meta: '•••• ' + number.slice(-4) + ' · ' + account.branchIfsc, value: self.currencyConverter.format(Number(account.availableBalance || 0)), status: account.status || '', primaryAccount: Boolean(account.primaryAccount) };
+        });
+        self.items(portfolio);
+        self.accountPortfolio(portfolio);
         self.branchOptionRows(branches.map(function (branch) { return { value: branch.ifsc, label: branch.branchName + ' · ' + branch.city + ' · ' + branch.ifsc }; }));
         if (!self.branchIfsc() && branches.length) { self.branchIfsc(branches[0].ifsc); }
+        if (accounts.length) {
+          const selectedId = self.selectedAccount() && self.selectedAccount().accountId;
+          const selected = accounts.find(function (account) { return account.accountId === selectedId; }) || accounts[0];
+          self.openAccountDetail(selected);
+        } else {
+          self.accountPortfolio([]); self.selectedAccount(null); self.accountMiniStatement([]);
+        }
       }).catch(function (error) { self.actionError(error.message || 'Unable to load account details.'); });
     };
     this.submitNewAccount = function () {
@@ -804,7 +966,7 @@ define([
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token || (!self.isBeneficiaries && !self.isTransfer)) { return; }
       Promise.all([
-        api.request('/api/beneficiaries?favouritesOnly=false', {}, token),
+        api.request('/api/beneficiaries?favouritesOnly=' + (self.isBeneficiaries && self.beneficiaryFavouritesOnly() ? 'true' : 'false'), {}, token),
         api.request('/api/accounts', {}, token)
       ]).then(function (responses) {
         const beneficiaries = responseData(responses[0]) || [];
@@ -812,6 +974,7 @@ define([
         self.beneficiaryLookup = {};
         beneficiaries.forEach(function (beneficiary) { self.beneficiaryLookup[beneficiary.beneficiaryId] = beneficiary; });
         if (self.isBeneficiaries) {
+          self.beneficiaries(beneficiaries);
           self.items(beneficiaries.map(function (beneficiary) {
             const accountNumber = String(beneficiary.accountNumber || '');
             return { icon: (beneficiary.beneficiaryName || '?').slice(0, 2).toUpperCase(), name: beneficiary.beneficiaryName, meta: (beneficiary.ifscCode || '') + ' · •••• ' + accountNumber.slice(-4), value: beneficiary.relationship || 'OTHER', status: beneficiary.status || '' };
@@ -839,18 +1002,48 @@ define([
         self.actionError(error.message || 'Unable to load your payment details.');
       });
     };
+    this.toggleFavouriteBeneficiaries = function () { self.beneficiaryFavouritesOnly(!self.beneficiaryFavouritesOnly()); self.selectedBeneficiary(null); return self.loadPaymentData(); };
+    this.openBeneficiaryDetail = function (beneficiary) {
+      self.beneficiaryBusy('detail-' + beneficiary.beneficiaryId); self.actionError('');
+      return api.request('/api/beneficiaries/' + encodeURIComponent(beneficiary.beneficiaryId), {}, params.app.authToken()).then(function (response) {
+        self.selectedBeneficiary(responseData(response));
+      }).catch(function (error) { self.actionError(error.message || 'Unable to load beneficiary detail.'); }).then(function () { self.beneficiaryBusy(''); });
+    };
+    this.closeBeneficiaryDetail = function () { self.selectedBeneficiary(null); };
+    this.editBeneficiary = function (beneficiary) {
+      return self.openBeneficiaryDetail(beneficiary).then(function () {
+        const detail = self.selectedBeneficiary(); if (!detail) { return; }
+        self.editingBeneficiaryId(detail.beneficiaryId); self.beneficiaryName(detail.beneficiaryName || ''); self.beneficiaryAccount(detail.accountNumber || ''); self.beneficiaryIfsc(detail.ifscCode || ''); self.beneficiaryNickname(detail.nickname || ''); self.beneficiaryRelationship(detail.relationship || 'OTHER'); self.beneficiaryFavourite(Boolean(detail.favourite));
+        self.selectedBeneficiary(null); self.openPageAction();
+      });
+    };
+    this.resetBeneficiaryForm = function () {
+      self.editingBeneficiaryId(''); self.beneficiaryName(''); self.beneficiaryAccount(''); self.beneficiaryIfsc(''); self.beneficiaryNickname(''); self.beneficiaryRelationship('OTHER'); self.beneficiaryFavourite(false);
+    };
+    this.cancelBeneficiaryEdit = function () { self.resetBeneficiaryForm(); self.closePageAction(); };
+    this.requestBeneficiaryDelete = function (beneficiary) { self.pendingBeneficiaryDelete(beneficiary); };
+    this.cancelBeneficiaryDelete = function () { self.pendingBeneficiaryDelete(null); };
+    this.confirmBeneficiaryDelete = function () {
+      const beneficiary = self.pendingBeneficiaryDelete(); if (!beneficiary) { return; }
+      self.beneficiaryBusy('delete-' + beneficiary.beneficiaryId);
+      return api.request('/api/beneficiaries/' + encodeURIComponent(beneficiary.beneficiaryId), { method: 'DELETE' }, params.app.authToken()).then(function () {
+        self.actionSuccess('Beneficiary deleted successfully.'); self.pendingBeneficiaryDelete(null); self.selectedBeneficiary(null); return self.loadPaymentData();
+      }).catch(function (error) { self.actionError(error.message || 'Unable to delete the beneficiary.'); }).then(function () { self.beneficiaryBusy(''); });
+    };
     this.submitBeneficiary = function () {
       const accountNumber = self.beneficiaryAccount().replace(/\s/g, '');
       const ifscCode = self.beneficiaryIfsc().trim().toUpperCase();
-      if (!self.beneficiaryName().trim() || !self.beneficiaryNickname().trim() || !/^\d{1,30}$/.test(accountNumber) || !/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/.test(ifscCode)) {
-        self.actionError('Enter the beneficiary name, nickname, account number, and an 11-character IFSC code.');
+      if (self.beneficiaryName().trim().length < 2 || self.beneficiaryNickname().trim().length < 2 || !self.beneficiaryRelationship() || !/^[A-Za-z0-9]{1,30}$/.test(accountNumber) || !/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/.test(ifscCode)) {
+        self.actionError('Enter a complete name and nickname, choose a relationship, and provide a valid account number and 11-character IFSC code.');
         return false;
       }
       const token = params.app && params.app.authToken && params.app.authToken();
       if (!token) { self.actionError('Please sign in again before adding a beneficiary.'); return false; }
-      api.request('/api/beneficiaries', { method: 'POST', body: JSON.stringify({ nickname: self.beneficiaryNickname().trim(), beneficiaryName: self.beneficiaryName().trim(), relationship: self.beneficiaryRelationship(), accountNumber: accountNumber, ifscCode: ifscCode, favourite: self.beneficiaryFavourite() }) }, token).then(function () {
-        self.actionError(''); self.actionSuccess('Beneficiary added for verification. A cooling period may apply.'); self.showActionMessage('confirmation', 'Beneficiary added', self.actionSuccess()); self.loadPaymentData();
-      }).catch(function (error) { self.actionError(error.message || 'Unable to add the beneficiary.'); self.showActionMessage('error', 'Beneficiary needs attention', self.actionError()); });
+      const editingId = self.editingBeneficiaryId(); const payload = { nickname: self.beneficiaryNickname().trim(), beneficiaryName: self.beneficiaryName().trim(), relationship: self.beneficiaryRelationship(), accountNumber: accountNumber, ifscCode: ifscCode, favourite: self.beneficiaryFavourite() };
+      self.beneficiaryBusy(editingId ? 'update-' + editingId : 'create');
+      api.request('/api/beneficiaries' + (editingId ? '/' + encodeURIComponent(editingId) : ''), { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(payload) }, token).then(function () {
+        self.actionError(''); self.actionSuccess(editingId ? 'Beneficiary updated successfully.' : 'Beneficiary added for verification. A cooling period may apply.'); self.showActionMessage('confirmation', editingId ? 'Beneficiary updated' : 'Beneficiary added', self.actionSuccess()); self.resetBeneficiaryForm(); self.loadPaymentData();
+      }).catch(function (error) { self.actionError(error.message || (editingId ? 'Unable to update the beneficiary.' : 'Unable to add the beneficiary.')); self.showActionMessage('error', 'Beneficiary needs attention', self.actionError()); }).then(function () { self.beneficiaryBusy(''); });
       return false;
     };
     this.submitTransfer = function () {
@@ -858,6 +1051,7 @@ define([
       const beneficiary = self.beneficiaryLookup[self.transferBeneficiary()];
       if (self.transferUnavailable() || !self.transferFrom() || !beneficiary || beneficiary.status !== 'VERIFIED') { self.actionError(self.transferReadinessMessage()); self.showActionMessage('error', 'Transfer needs attention', self.actionError()); return false; }
       if (!amount || amount < 1 || amount > 500000) { self.actionError('Enter a transfer amount between ₹1 and ₹5,00,000.'); self.showActionMessage('error', 'Transfer amount needs attention', self.actionError()); return false; }
+      if (self.transferPurpose().trim().length < 3) { self.actionError('Describe the purpose in at least 3 characters.'); self.showActionMessage('error', 'Transfer purpose needs attention', self.actionError()); return false; }
       self.pendingTransfer = { sourceAccountId: self.transferFrom(), destinationAccountNumber: beneficiary.accountNumber, amount: amount, description: self.transferPurpose().trim(), idempotencyKey: api.createIdempotencyKey() };
       self.actionError(''); self.actionMessages([]); self.pendingTransferDestination(beneficiary.beneficiaryName + ' (account ending ' + String(beneficiary.accountNumber).slice(-4) + ')'); self.pendingTransferAmount(amount);
       requestAnimationFrame(function () { const dialog = document.getElementById('transfer-confirmation-dialog'); if (dialog) { dialog.open(); } });
@@ -924,12 +1118,15 @@ define([
       const debitApplication = self.isDebitCardApplication();
       const requestedLimit = debitApplication ? null : Number(self.cardRequestedLimit());
       const address = self.cardDeliveryAddress().trim();
+      const occupation = self.cardApplicantOccupation().trim();
       if (!accountId || !self.cardApplicationType() || !self.cardProduct()) {
         self.actionError('Choose an account, card type, and card product.');
         return false;
       }
-      if (!monthlyIncome || monthlyIncome < 1 || (!debitApplication && (!requestedLimit || requestedLimit < 1)) || !address) {
-        self.actionError(debitApplication ? 'Enter your monthly income and complete delivery address.' : 'Enter your monthly income, requested daily limit, and complete delivery address.');
+      if (!monthlyIncome || monthlyIncome < 1 || occupation.length < 2 || address.length < 10 || (!debitApplication && (!requestedLimit || requestedLimit < 1))) {
+        self.actionError(debitApplication
+          ? 'Enter your income, occupation, and a complete delivery address of at least 10 characters.'
+          : 'Enter your income, occupation, requested daily limit, and a complete delivery address of at least 10 characters.');
         return false;
       }
       self.actionError('');
@@ -939,7 +1136,7 @@ define([
         cardType: self.cardApplicationType(),
         cardProduct: self.cardProduct(),
         annualIncome: monthlyIncome * 12,
-        occupation: self.cardApplicantOccupation().trim() || 'Not specified',
+        occupation: occupation,
         deliveryAddress: address,
         requestedDailyLimit: requestedLimit
       }) }, params.app.authToken()).then(function (response) {
@@ -970,12 +1167,14 @@ define([
       const unavailable = self.adminServiceRows().filter(function (row) { return row.status !== 'AVAILABLE'; }).length;
       self.highlights([
         { label: 'Pending KYC reviews', value: String(self.adminKycReviews().length) },
+        { label: 'Pending beneficiaries', value: String(self.adminBeneficiaryApprovals().length) },
         { label: 'Pending card applications', value: String(self.adminCardApplications().length) },
         { label: 'Pending loan applications', value: String(self.adminLoanApplications().length) }
       ]);
       self.secondaryItems([
         { icon: 'API', name: 'Operational APIs', meta: 'Admin dashboard requests completed on page entry', value: String(self.adminServiceRows().length), status: unavailable ? unavailable + ' unavailable' : 'All available', progress: unavailable ? 70 : 100 },
         { icon: 'KYC', name: 'Identity verification', meta: 'Approvals enable customer account opening', value: String(self.adminKycReviews().length), status: 'Pending' },
+        { icon: 'BN', name: 'Payment approvals', meta: 'Beneficiaries awaiting bank verification', value: String(self.adminBeneficiaryApprovals().length), status: 'Pending' },
         { icon: 'AP', name: 'Product approvals', meta: 'Card and loan applications awaiting a decision', value: String(self.adminCardApplications().length + self.adminLoanApplications().length), status: 'Pending' }
       ]);
     };
@@ -986,12 +1185,16 @@ define([
           .then(responseData).catch(function (error) { return { failed: true, message: 'Card approvals: ' + error.message }; }),
         api.request('/api/loans/admin/applications?status=PENDING&page=0&size=50', {}, token)
           .then(responseData).catch(function (error) { return { failed: true, message: 'Loan approvals: ' + error.message }; }),
+        api.request('/api/admin/beneficiaries?status=PENDING&page=0&size=50', {}, token)
+          .then(responseData).catch(function (error) { return { failed: true, message: 'Beneficiary approvals: ' + error.message }; }),
         api.request('/api/customers/kyc/reviews?status=PENDING', {}, token)
           .then(responseData).catch(function (error) { return { failed: true, message: 'KYC approvals: ' + error.message }; })
       ]).then(function (responses) {
         self.adminCardApplications(Array.isArray(responses[0]) ? responses[0] : []);
         self.adminLoanApplications(Array.isArray(responses[1]) ? responses[1] : []);
-        const kycReviews = Array.isArray(responses[2]) ? responses[2].map(function (review) {
+        const beneficiaryPage = responses[2] || {};
+        self.adminBeneficiaryApprovals(Array.isArray(beneficiaryPage.items) ? beneficiaryPage.items : Array.isArray(beneficiaryPage) ? beneficiaryPage : []);
+        const kycReviews = Array.isArray(responses[3]) ? responses[3].map(function (review) {
           return Object.assign({}, review, {
             documents: ko.observableArray([]),
             documentsLoading: ko.observable(true),
@@ -1109,6 +1312,21 @@ define([
         self.actionError(error.message || 'Unable to approve the KYC review.');
       }).finally(function () { self.adminActionBusy(''); });
     };
+    this.setBeneficiaryApprovalStatus = function (beneficiary, status) {
+      const actionId = 'beneficiary-' + status.toLowerCase() + '-' + beneficiary.beneficiaryId;
+      if (self.adminActionBusy()) { return; }
+      self.adminActionBusy(actionId); self.actionError(''); self.actionSuccess('');
+      api.request('/api/beneficiaries/' + encodeURIComponent(beneficiary.beneficiaryId) + '/status', {
+        method: 'PUT', body: JSON.stringify({ status: status })
+      }, params.app.authToken()).then(function () {
+        self.actionSuccess(status === 'VERIFIED' ? 'Beneficiary approved and enabled for customer transfers.' : 'Beneficiary blocked and removed from the approval queue.');
+        return self.loadAdminApprovalQueues();
+      }).catch(function (error) {
+        self.actionError(error.message || 'Unable to update the beneficiary approval.');
+      }).finally(function () { self.adminActionBusy(''); });
+    };
+    this.approveBeneficiary = function (beneficiary) { return self.setBeneficiaryApprovalStatus(beneficiary, 'VERIFIED'); };
+    this.blockBeneficiary = function (beneficiary) { return self.setBeneficiaryApprovalStatus(beneficiary, 'BLOCKED'); };
     this.openKycDocument = function (document) {
       const actionId = 'document-' + document.documentId;
       if (self.adminDocumentBusy()) { return; }

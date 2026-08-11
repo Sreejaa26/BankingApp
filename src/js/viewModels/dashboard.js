@@ -105,6 +105,14 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/
     self.hasAccounts = ko.pureComputed(function () { return !self.dashboardLoading() && !self.onboardingRequired() && self.accounts().length > 0; });
 
     self.transactions = ko.observableArray([]);
+    self.optionalSummariesLoading = ko.observable(true);
+    self.optionalSummaries = ko.observableArray([
+      { key: 'bills', icon: 'BP', label: 'Bill payments', value: '—', meta: 'Loading payment activity…', status: 'Loading', route: 'bill-payments', accent: 'dashboard-summary--bills', available: true },
+      { key: 'schedules', icon: 'SC', label: 'Schedules', value: '—', meta: 'Loading scheduled payments…', status: 'Loading', route: 'scheduled-payments', accent: 'dashboard-summary--schedules', available: true },
+      { key: 'reports', icon: 'RP', label: 'Reports', value: '—', meta: 'Loading report jobs…', status: 'Loading', route: 'reports', accent: 'dashboard-summary--reports', available: true },
+      { key: 'loans', icon: 'LN', label: 'Loans', value: '—', meta: 'Loading loan portfolio…', status: 'Loading', route: 'loans', accent: 'dashboard-summary--loans', available: true },
+      { key: 'cards', icon: 'CD', label: 'Cards', value: '—', meta: 'Loading card portfolio…', status: 'Loading', route: 'cards', accent: 'dashboard-summary--cards', available: true }
+    ]);
 
     self.offers = ko.observableArray([
       { icon: '◇', tag: 'Pre-approved', eyebrow: 'Personal loan', title: 'Funds when plans cannot wait', copy: 'Borrow up to ₹8 lakh with a simple digital journey.', action: 'View your offer', route: 'loans', accentClass: 'offer-card--blue' },
@@ -113,6 +121,43 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/
     ]);
 
     self.go = function (route) { self.app.navigate(route); };
+    self.openSummary = function (summary) { if (summary && summary.available !== false) { self.go(summary.route); } };
+    self.summaryRows = function (response) {
+      const payload = api.unwrap(response);
+      if (Array.isArray(payload)) { return payload; }
+      if (payload && Array.isArray(payload.items)) { return payload.items; }
+      if (payload && Array.isArray(payload.content)) { return payload.content; }
+      return [];
+    };
+    self.optionalFailure = function (key, icon, label, route, accent, error) {
+      return { key: key, icon: icon, label: label, value: '—', meta: error && error.status ? 'Service returned HTTP ' + error.status : 'Temporarily unavailable', status: 'Unavailable', route: route, accent: accent + ' dashboard-summary--unavailable', available: false };
+    };
+    self.loadOptionalSummaries = function () {
+      const token = self.app.authToken(); self.optionalSummariesLoading(true);
+      const requests = [
+        api.request('/api/bill-payments', {}, token).then(function (response) {
+          const rows = self.summaryRows(response); const successful = rows.filter(function (row) { return row.status === 'SUCCESS'; }).length;
+          return { key: 'bills', icon: 'BP', label: 'Bill payments', value: String(rows.length), meta: successful + ' completed successfully', status: rows.length ? 'Activity' : 'None yet', route: 'bill-payments', accent: 'dashboard-summary--bills', available: true };
+        }).catch(function (error) { return self.optionalFailure('bills', 'BP', 'Bill payments', 'bill-payments', 'dashboard-summary--bills', error); }),
+        api.request('/api/schedules', {}, token).then(function (response) {
+          const rows = self.summaryRows(response); const active = rows.filter(function (row) { return row.status === 'ACTIVE'; }).length;
+          return { key: 'schedules', icon: 'SC', label: 'Schedules', value: String(active), meta: rows.length + ' total · ' + active + ' active', status: active ? 'Upcoming' : 'No active', route: 'scheduled-payments', accent: 'dashboard-summary--schedules', available: true };
+        }).catch(function (error) { return self.optionalFailure('schedules', 'SC', 'Schedules', 'scheduled-payments', 'dashboard-summary--schedules', error); }),
+        api.request('/api/reports/history?page=0&size=20', {}, token).then(function (response) {
+          const payload = api.unwrap(response) || {}; const rows = self.summaryRows(payload); const completed = rows.filter(function (row) { return row.status === 'COMPLETED'; }).length;
+          return { key: 'reports', icon: 'RP', label: 'Reports', value: String(payload.totalElements == null ? rows.length : payload.totalElements), meta: completed + ' ready on this page', status: completed ? 'Ready' : 'No downloads', route: 'reports', accent: 'dashboard-summary--reports', available: true };
+        }).catch(function (error) { return self.optionalFailure('reports', 'RP', 'Reports', 'reports', 'dashboard-summary--reports', error); }),
+        api.request('/api/loans', {}, token).then(function (response) {
+          const rows = self.summaryRows(response); const active = rows.filter(function (row) { return row.status === 'ACTIVE' || row.status === 'OVERDUE'; }).length;
+          return { key: 'loans', icon: 'LN', label: 'Loans', value: String(active), meta: rows.length + ' loan accounts in portfolio', status: active ? 'Active' : 'No active', route: 'loans', accent: 'dashboard-summary--loans', available: true };
+        }).catch(function (error) { return self.optionalFailure('loans', 'LN', 'Loans', 'loans', 'dashboard-summary--loans', error); }),
+        api.request('/api/cards', {}, token).then(function (response) {
+          const rows = self.summaryRows(response); const active = rows.filter(function (row) { return row.status === 'ACTIVE'; }).length; const blocked = rows.filter(function (row) { return row.status === 'BLOCKED'; }).length;
+          return { key: 'cards', icon: 'CD', label: 'Cards', value: String(active), meta: rows.length + ' cards · ' + blocked + ' blocked', status: active ? 'Active' : 'No active', route: 'cards', accent: 'dashboard-summary--cards', available: true };
+        }).catch(function (error) { return self.optionalFailure('cards', 'CD', 'Cards', 'cards', 'dashboard-summary--cards', error); })
+      ];
+      return Promise.all(requests).then(function (summaries) { self.optionalSummaries(summaries); }).then(function () { self.optionalSummariesLoading(false); });
+    };
     self.startOnboarding = function () {
       const dialog = document.getElementById('dashboard-onboarding-dialog');
       if (dialog && dialog.isOpen && dialog.isOpen()) { dialog.close(); }
@@ -218,6 +263,7 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/
       self.statementDownloadStatus(fileName + ' downloaded successfully.');
     };
     self.loadDashboardAccounts();
+    self.loadOptionalSummaries();
   }
 
   return DashboardViewModel;

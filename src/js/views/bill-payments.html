@@ -1,0 +1,59 @@
+<div class="bill-payments-page page-stack">
+  <section class="page-introduction page-introduction--visual">
+    <div><p class="page-eyebrow">Payments</p><h2>Bill Payments</h2><p>Register household billers, pay securely, and track every payment from one place.</p></div>
+    <div class="bill-page-actions"><button class="secondary-auth-button" type="button" data-bind="click: refresh, disable: loading">Refresh</button><button class="primary-page-button" type="button" data-bind="click: openRegistration">Register a biller</button></div>
+  </section>
+  <oj-messages messages="[[messages]]" display="general"></oj-messages>
+  <div class="bill-loading" data-bind="visible: loading">Loading billers, accounts, and payment history…</div>
+
+  <section class="bill-overview-grid" data-bind="visible: !loading()">
+    <article class="surface-card bill-pay-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Pay now</p><h3>Make a bill payment</h3></div><span class="status-chip">Secure workflow</span></div>
+      <form class="bill-form" data-bind="submit: reviewPayment">
+        <oj-select-single label-hint="Pay from" data="[[accountOptions]]" value="{{paymentAccountId}}" required></oj-select-single>
+        <oj-select-single label-hint="Registered biller" data="[[registrationOptions]]" value="{{paymentBillerId}}" required></oj-select-single>
+        <oj-input-number label-hint="Amount" value="{{paymentAmount}}" min="0.01" step="0.01" required></oj-input-number>
+        <oj-input-text label-hint="Description" value="{{paymentDescription}}" maxlength="160"></oj-input-text>
+        <button class="primary-page-button" type="submit" data-bind="disable: registrations().length === 0 || accounts().length === 0">Review payment</button>
+      </form>
+      <p class="bill-empty-note" data-bind="visible: registrations().length === 0">Register an active catalog biller before making a payment.</p>
+    </article>
+
+    <article class="surface-card biller-list-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Saved billers</p><h3>Your registered billers</h3></div><strong data-bind="text: registrations().length"></strong></div>
+      <div class="biller-list" data-bind="foreach: registrations">
+        <div class="biller-row"><span data-bind="text: biller.category.slice(0, 2)"></span><div><strong data-bind="text: nickname || biller.billerName"></strong><small data-bind="text: biller.billerName + ' · ' + consumerReference"></small></div><em data-bind="text: status"></em><button type="button" data-bind="click: $parent.editRegistration">Edit</button><button class="danger-text-button" type="button" data-bind="click: $parent.requestDeactivation, disable: status !== 'ACTIVE'">Deactivate</button></div>
+      </div>
+      <p class="bill-empty-note" data-bind="visible: registrations().length === 0">No registered billers yet.</p>
+    </article>
+  </section>
+
+  <section class="surface-card bill-registration-panel" data-bind="visible: registrationPanelOpen">
+    <div class="card-heading"><div><p class="page-eyebrow">Biller details</p><h3 data-bind="text: registrationMode() === 'edit' ? 'Update registered biller' : 'Register a new biller'"></h3></div><button class="dialog-close" type="button" data-bind="click: closeRegistration">×</button></div>
+    <form class="bill-form bill-form--registration" data-bind="submit: saveRegistration">
+      <oj-select-single label-hint="Category filter" data="[[categoryOptions]]" value="{{selectedCategory}}"></oj-select-single>
+      <oj-select-single label-hint="Catalog biller" data="[[catalogOptions]]" value="{{registrationBillerId}}" required></oj-select-single>
+      <oj-input-text label-hint="Consumer reference" value="{{registrationConsumerReference}}" maxlength="80" required></oj-input-text>
+      <oj-input-text label-hint="Nickname" value="{{registrationNickname}}" maxlength="80" required></oj-input-text>
+      <button class="primary-page-button" type="submit" data-bind="disable: busyAction() === 'registration', text: busyAction() === 'registration' ? 'Saving…' : registrationMode() === 'edit' ? 'Save changes' : 'Register biller'"></button>
+    </form>
+  </section>
+
+  <section class="surface-card bill-history-card" data-bind="visible: !loading()">
+    <div class="card-heading"><div><p class="page-eyebrow">Payment activity</p><h3>Bill payment history</h3></div><strong data-bind="text: historyTotalElements() + ' payments'"></strong></div>
+    <form class="bill-history-filters" data-bind="submit: applyHistoryFilters">
+      <oj-select-single label-hint="Status" data="[[historyStatusOptions]]" value="{{historyStatus}}"></oj-select-single><oj-select-single label-hint="Source account" data="[[accountOptions]]" value="{{historyAccountId}}"></oj-select-single><oj-select-single label-hint="Biller" data="[[historyBillerOptions]]" value="{{historyBillerId}}"></oj-select-single><oj-input-date label-hint="From" value="{{historyFrom}}"></oj-input-date><oj-input-date label-hint="To" value="{{historyTo}}"></oj-input-date><button class="secondary-auth-button" type="submit">Apply filters</button><button class="text-button" type="button" data-bind="click: clearHistoryFilters">Clear</button>
+    </form>
+    <div class="bill-history-list" data-bind="foreach: payments">
+      <button type="button" class="bill-history-row" data-bind="click: $parent.openPayment"><span data-bind="text: $parent.billerInitials($data)"></span><div><strong data-bind="text: billerName || 'Bill payment'"></strong><small data-bind="text: consumerReference + ' · ' + formattedCreatedAt"></small></div><em data-bind="text: $parent.formatMoney(amount)"></em><i data-bind="text: status, css: $parent.statusClass(status)"></i><b>View</b></button>
+    </div>
+    <p class="bill-empty-note" data-bind="visible: payments().length === 0">No payments match the selected filters.</p>
+    <div class="bill-pagination"><button type="button" data-bind="click: previousHistoryPage, disable: historyPage() === 0">Previous</button><span data-bind="text: historyTotalPages() ? 'Page ' + (historyPage() + 1) + ' of ' + historyTotalPages() : 'Page 1'"></span><button type="button" data-bind="click: nextHistoryPage, disable: historyPage() + 1 >= historyTotalPages()">Next</button></div>
+  </section>
+
+  <div class="bill-modal-backdrop" data-bind="visible: pendingPayment"><section class="bill-confirm-card" role="dialog" aria-modal="true" aria-labelledby="bill-confirm-title" data-bind="with: pendingPayment"><span class="bill-confirm-icon">₹</span><p class="page-eyebrow">Confirm payment</p><h3 id="bill-confirm-title" data-bind="text: $parent.formatMoney(amount) + ' to ' + billerLabel"></h3><dl><div><dt>From</dt><dd data-bind="text: accountLabel"></dd></div><div><dt>Description</dt><dd data-bind="text: description"></dd></div></dl><p>Submit only once. Northstar will safely reuse this payment reference if the request must be retried.</p><div><button class="secondary-auth-button" type="button" data-bind="click: $parent.cancelPayment, disable: $parent.busyAction() === 'payment'">Cancel</button><button class="primary-page-button" type="button" data-bind="click: $parent.confirmPayment, disable: $parent.busyAction() === 'payment', text: $parent.busyAction() === 'payment' ? 'Processing…' : 'Confirm payment'"></button></div></section></div>
+
+  <div class="bill-modal-backdrop" data-bind="visible: pendingDeactivation"><section class="bill-confirm-card" role="dialog" aria-modal="true" aria-labelledby="deactivate-biller-title" data-bind="with: pendingDeactivation"><span class="bill-confirm-icon bill-confirm-icon--warning">!</span><p class="page-eyebrow">Deactivate biller</p><h3 id="deactivate-biller-title" data-bind="text: nickname || biller.billerName"></h3><p>This biller will no longer be available for new payments.</p><div><button class="secondary-auth-button" type="button" data-bind="click: $parent.cancelDeactivation">Keep biller</button><button class="danger-button" type="button" data-bind="click: $parent.confirmDeactivation">Deactivate</button></div></section></div>
+
+  <aside class="bill-detail-drawer" data-bind="visible: selectedPayment, with: selectedPayment"><div class="card-heading"><div><p class="page-eyebrow">Payment detail</p><h3 data-bind="text: billerName"></h3></div><button class="dialog-close" type="button" data-bind="click: $parent.closePayment">×</button></div><dl><div><dt>Status</dt><dd data-bind="text: status"></dd></div><div><dt>Amount</dt><dd data-bind="text: $parent.formatMoney(amount)"></dd></div><div><dt>Consumer reference</dt><dd data-bind="text: consumerReference"></dd></div><div><dt>Workflow reference</dt><dd data-bind="text: workflowReference || '—'"></dd></div><div><dt>Transaction reference</dt><dd data-bind="text: transactionReference || '—'"></dd></div><div><dt>Created</dt><dd data-bind="text: formattedCreatedAt"></dd></div><div data-bind="visible: failureReason"><dt>Failure reason</dt><dd data-bind="text: failureReason"></dd></div></dl></aside>
+</div>

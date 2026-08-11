@@ -22,7 +22,7 @@
         <p>Operational APIs and pending customer decisions load automatically when this dashboard opens.</p>
       </div>
       <div class="admin-command-centre__refresh">
-        <span data-bind="text: 'Last updated: ' + adminLastUpdated()"></span>
+        <span data-bind="text: 'Last updated: ' + (adminLastUpdated() || 'Waiting for refresh')"></span>
         <button class="primary-page-button" type="button" data-bind="click: loadAdminData, disable: adminLoading, text: adminLoading() ? 'Refreshing...' : 'Refresh all data'"></button>
       </div>
     </div>
@@ -68,6 +68,22 @@
         </div>
       </section>
 
+      <section class="admin-approval-panel admin-beneficiary-approvals" aria-labelledby="admin-beneficiary-approvals">
+        <div class="admin-approval-panel__heading">
+          <div><p class="page-eyebrow">Payment security</p><h4 id="admin-beneficiary-approvals">Pending beneficiary approvals</h4></div>
+          <span class="admin-queue-count" data-bind="text: adminBeneficiaryApprovals().length"></span>
+        </div>
+        <p class="admin-empty-state" data-bind="visible: adminBeneficiaryApprovals().length === 0">No beneficiaries are waiting for approval.</p>
+        <div class="admin-approval-list" data-bind="foreach: adminBeneficiaryApprovals">
+          <article class="admin-approval-item">
+            <div class="admin-approval-item__title"><span>BN</span><div><strong data-bind="text: beneficiaryName"></strong><small data-bind="text: nickname + ' · ' + $parent.adminShortId(beneficiaryId)"></small></div><b data-bind="text: status"></b></div>
+            <dl><div><dt>Customer</dt><dd data-bind="text: $parent.adminShortId(customerUserId)"></dd></div><div><dt>Account</dt><dd data-bind="text: maskedAccountNumber"></dd></div><div><dt>IFSC</dt><dd data-bind="text: ifscCode"></dd></div></dl>
+            <p data-bind="text: $parent.adminEnumLabel(relationship) + (favourite ? ' · Customer favourite' : '')"></p>
+            <div class="admin-beneficiary-actions"><button class="admin-block-button" type="button" data-bind="click: $parent.blockBeneficiary, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'beneficiary-blocked-' + beneficiaryId ? 'Blocking...' : 'Block' "></button><button class="admin-approve-button" type="button" data-bind="click: $parent.approveBeneficiary, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'beneficiary-verified-' + beneficiaryId ? 'Approving...' : 'Approve beneficiary'"></button></div>
+          </article>
+        </div>
+      </section>
+
       <section class="admin-approval-panel" aria-labelledby="admin-kyc-approvals">
         <div class="admin-approval-panel__heading">
           <div><p class="page-eyebrow">Customer onboarding</p><h4 id="admin-kyc-approvals">KYC verification queue</h4></div>
@@ -98,11 +114,79 @@
     <div class="page-action-success" role="status" aria-live="polite" data-bind="visible: actionSuccess, text: actionSuccess"></div>
   </section>
 
-  <section class="surface-card transaction-table-card" data-bind="visible: isTransactions" aria-label="Transaction table">
-    <div class="card-heading"><div><p class="page-eyebrow">Oracle JET table</p><h3>Transaction history</h3></div><span class="status-chip">Latest activity</span></div>
-    <oj-table class="transaction-jet-table" aria-label="Transaction history" data="[[pagingTransactions]]" columns="[[transactionColumns]]" display="grid"></oj-table>
-    <oj-paging-control class="transaction-paging" data="[[pagingTransactions]]" page-size="3"></oj-paging-control>
+  <section class="beneficiary-centre" data-bind="visible: isBeneficiaries" aria-label="Beneficiary management">
+    <article class="surface-card beneficiary-list-card">
+      <div class="beneficiary-list-heading"><div><p class="page-eyebrow">Trusted payment contacts</p><h3>Your beneficiaries</h3></div><div><button class="secondary-auth-button" type="button" data-bind="click: toggleFavouriteBeneficiaries, text: beneficiaryFavouritesOnly() ? 'Show all' : 'Favourites only'"></button><button class="primary-page-button" type="button" data-bind="click: openPageAction">Add beneficiary</button></div></div>
+      <div class="beneficiary-management-list" data-bind="foreach: beneficiaries">
+        <article><span data-bind="text: (beneficiaryName || '?').slice(0, 2).toUpperCase()"></span><div><strong data-bind="text: beneficiaryName"></strong><small data-bind="text: nickname + ' · ' + ifscCode + ' · •••• ' + accountNumber.slice(-4)"></small></div><i data-bind="text: favourite ? '★ Favourite' : relationship"></i><b data-bind="text: status"></b><div><button type="button" data-bind="click: $parent.openBeneficiaryDetail">Details</button><button type="button" data-bind="click: $parent.editBeneficiary">Edit</button><button class="beneficiary-delete-button" type="button" data-bind="click: $parent.requestBeneficiaryDelete">Delete</button></div></article>
+      </div>
+      <div class="schedule-empty" data-bind="visible: beneficiaries().length === 0"><span>BN</span><h4>No beneficiaries matched</h4><p data-bind="text: beneficiaryFavouritesOnly() ? 'You have no favourite beneficiaries yet.' : 'Add a trusted beneficiary to begin.'"></p></div>
+    </article>
   </section>
+
+  <aside class="report-detail-drawer beneficiary-detail-drawer" data-bind="visible: selectedBeneficiary, with: selectedBeneficiary"><div class="card-heading"><div><p class="page-eyebrow">Beneficiary detail</p><h3 data-bind="text: beneficiaryName"></h3></div><button class="dialog-close" type="button" data-bind="click: $parent.closeBeneficiaryDetail">×</button></div><div class="schedule-detail-status"><i data-bind="text: status"></i><strong data-bind="text: favourite ? '★ Favourite' : relationship"></strong></div><dl><div><dt>Beneficiary ID</dt><dd data-bind="text: beneficiaryId"></dd></div><div><dt>Nickname</dt><dd data-bind="text: nickname"></dd></div><div><dt>Account number</dt><dd data-bind="text: accountNumber"></dd></div><div><dt>IFSC code</dt><dd data-bind="text: ifscCode"></dd></div><div><dt>Relationship</dt><dd data-bind="text: relationship"></dd></div><div><dt>Created</dt><dd data-bind="text: $parent.transactionDate(createdAt)"></dd></div><div><dt>Updated</dt><dd data-bind="text: $parent.transactionDate(updatedAt)"></dd></div></dl><div class="beneficiary-detail-actions"><button class="secondary-auth-button" type="button" data-bind="click: $parent.editBeneficiary">Edit beneficiary</button><button class="beneficiary-delete-button" type="button" data-bind="click: $parent.requestBeneficiaryDelete">Delete</button></div></aside>
+
+  <div class="bill-modal-backdrop" data-bind="visible: pendingBeneficiaryDelete"><section class="bill-confirm-card" role="dialog" aria-modal="true" aria-labelledby="delete-beneficiary-title" data-bind="with: pendingBeneficiaryDelete"><span class="bill-confirm-icon">BN</span><p class="page-eyebrow">Remove trusted contact</p><h3 id="delete-beneficiary-title" data-bind="text: 'Delete ' + beneficiaryName + '?'"></h3><p>This beneficiary will be removed from your payment contacts. This action cannot be undone.</p><div><button class="secondary-auth-button" type="button" data-bind="click: $parent.cancelBeneficiaryDelete, disable: $parent.beneficiaryBusy() !== ''">Cancel</button><button class="beneficiary-delete-button" type="button" data-bind="click: $parent.confirmBeneficiaryDelete, disable: $parent.beneficiaryBusy() !== '', text: $parent.beneficiaryBusy() ? 'Deleting…' : 'Delete beneficiary'"></button></div></section></div>
+
+  <section class="account-detail-workspace" data-bind="visible: isAccounts" aria-label="Account portfolio and details">
+    <article class="surface-card account-selector-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Portfolio</p><h3>Your accounts</h3></div><span class="status-chip" data-bind="text: accountPortfolio().length + ' accounts'"></span></div>
+      <div class="account-selector-list" data-bind="foreach: accountPortfolio">
+        <button type="button" data-bind="click: $parent.openAccountDetail, css: {'is-selected': $parent.selectedAccount() && $parent.selectedAccount().accountId === accountId}">
+          <span data-bind="text: icon"></span><div><strong data-bind="text: name"></strong><small data-bind="text: meta"></small></div><div><strong data-bind="text: value"></strong><small data-bind="text: primaryAccount ? 'Primary · ' + status : status"></small></div>
+        </button>
+      </div>
+      <p class="admin-empty-state" data-bind="visible: accountPortfolio().length === 0">No bank accounts are available yet.</p>
+    </article>
+
+    <article class="surface-card account-detail-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Account detail</p><h3>Account information</h3></div><button class="text-button" type="button" data-bind="click: refreshAccountDetail, disable: accountDetailLoading">Refresh</button></div>
+      <p class="account-detail-loading" data-bind="visible: accountDetailLoading">Loading account information…</p>
+      <p class="form-error" role="alert" data-bind="visible: accountDetailError, text: accountDetailError"></p>
+      <div class="account-detail-empty" data-bind="visible: !accountDetailLoading() && !selectedAccount()">Select an account to view its information.</div>
+      <div class="account-detail-body" data-bind="with: selectedAccount">
+        <div class="account-detail-balance"><span data-bind="text: $parent.accountTypeLabel(accountType)"></span><strong data-bind="text: $parent.accountMoney(availableBalance)"></strong><small>Available balance from your account portfolio</small></div>
+        <dl><div><dt>Account number</dt><dd data-bind="text: accountNumber"></dd></div><div><dt>Status</dt><dd data-bind="text: status"></dd></div><div><dt>Branch IFSC</dt><dd data-bind="text: branchIfsc"></dd></div><div><dt>Ledger balance</dt><dd data-bind="text: $parent.accountMoney(ledgerBalance)"></dd></div><div><dt>Primary account</dt><dd data-bind="text: primaryAccount ? 'Yes' : 'No'"></dd></div><div><dt>Opened</dt><dd data-bind="text: $parent.accountCreatedDate(createdAt)"></dd></div></dl>
+      </div>
+    </article>
+
+    <article class="surface-card account-mini-statement-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Recent activity</p><h3>Mini-statement</h3></div><span class="status-chip">Latest 10</span></div>
+      <div class="account-mini-list" data-bind="foreach: accountMiniStatement">
+        <div><span data-bind="text: $parent.accountTransactionIcon(transactionType)"></span><div><strong data-bind="text: transactionType"></strong><small data-bind="text: referenceNumber + ' · ' + $parent.accountTransactionDate(transactionDate)"></small></div><strong data-bind="text: $parent.accountTransactionAmount($data), css: {'amount-positive': debitCredit === 'CREDIT'}"></strong><i data-bind="text: status"></i></div>
+      </div>
+      <div class="schedule-empty" data-bind="visible: !accountDetailLoading() && accountMiniStatement().length === 0"><span>MS</span><h4>No recent transactions</h4><p>This account has no entries in its latest mini-statement.</p></div>
+    </article>
+  </section>
+
+  <section class="transaction-centre" data-bind="visible: isTransactions" aria-label="Transaction centre">
+    <article class="surface-card transaction-filter-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Search & statements</p><h3>Find transactions</h3></div><button class="text-button" type="button" data-bind="click: clearTransactionFilters">Reset</button></div>
+      <form class="transaction-filter-grid" data-bind="submit: searchTransactions">
+        <oj-select-single label-hint="Account" data="[[transactionAccountOptions]]" value="{{transactionAccountId}}"></oj-select-single><oj-input-text label-hint="Exact account number" value="{{transactionAccountNumber}}"></oj-input-text>
+        <oj-select-single label-hint="Transaction type" data="[[transactionTypeOptions]]" value="{{transactionTypeFilter}}"></oj-select-single><oj-select-single label-hint="Status" data="[[transactionStatusOptions]]" value="{{transactionStatusFilter}}"></oj-select-single>
+        <oj-input-number label-hint="Minimum amount" value="{{transactionMinAmount}}" min="0"></oj-input-number><oj-input-number label-hint="Maximum amount" value="{{transactionMaxAmount}}" min="0"></oj-input-number>
+        <oj-input-text label-hint="Exact reference number" value="{{transactionReference}}"></oj-input-text><oj-input-date label-hint="From date" value="{{transactionFromDate}}"></oj-input-date><oj-input-date label-hint="To date" value="{{transactionToDate}}"></oj-input-date>
+        <oj-select-single label-hint="Sort by" data="[[transactionSortOptions]]" value="{{transactionSortBy}}"></oj-select-single><oj-select-single label-hint="Direction" data="[[transactionDirectionOptions]]" value="{{transactionDirection}}"></oj-select-single>
+        <div class="transaction-filter-actions"><button class="secondary-auth-button" type="button" data-bind="click: showAllTransactions">All activity</button><button class="secondary-auth-button" type="button" data-bind="click: showAccountTransactions">Account history</button><button class="secondary-auth-button" type="button" data-bind="click: loadStatementData">Statement data</button><button class="primary-page-button" type="submit">Search transactions</button></div>
+      </form>
+    </article>
+
+    <article class="surface-card transaction-results-card">
+      <div class="transaction-results-heading"><div><p class="page-eyebrow" data-bind="text: transactionMode"></p><h3><span data-bind="text: transactionTotalElements"></span> transactions</h3></div><span data-bind="visible: transactionLoading">Loading…</span></div>
+      <div class="transaction-result-list" data-bind="foreach: transactionRows, visible: !transactionStatement()">
+        <div><span data-bind="text: $parent.transactionIcon(transactionType)"></span><div><strong data-bind="text: description || $parent.transactionEnum(transactionType)"></strong><small data-bind="text: referenceNumber + ' · ' + $parent.transactionDate(transactionDate)"></small></div><strong data-bind="text: $parent.transactionAmount($data), css: {'amount-positive': debitCredit === 'CREDIT'}"></strong><i data-bind="text: status"></i><button type="button" data-bind="click: $parent.openTransactionDetail">Details</button></div>
+      </div>
+      <div class="transaction-statement" data-bind="with: transactionStatement">
+        <div class="transaction-statement-heading"><span>JSON statement scope</span><strong data-bind="text: accountId"></strong><small data-bind="text: $parent.transactionDate(fromDate) + ' — ' + $parent.transactionDate(toDate)"></small></div>
+        <div class="transaction-result-list" data-bind="foreach: transactions"><div><span data-bind="text: $parents[1].transactionIcon(transactionType)"></span><div><strong data-bind="text: description || $parents[1].transactionEnum(transactionType)"></strong><small data-bind="text: referenceNumber + ' · ' + $parents[1].transactionDate(transactionDate)"></small></div><strong data-bind="text: $parents[1].transactionAmount($data), css: {'amount-positive': debitCredit === 'CREDIT'}"></strong><i data-bind="text: status"></i><button type="button" data-bind="click: $parents[1].openTransactionDetail">Details</button></div></div>
+      </div>
+      <div class="schedule-empty" data-bind="visible: !transactionLoading() && !transactionStatement() && transactionRows().length === 0"><span>TX</span><h4>No transactions matched</h4><p>Adjust your filters or select another account.</p></div>
+      <div class="bill-pagination" data-bind="visible: !transactionStatement()"><button type="button" data-bind="click: previousTransactionPage, disable: transactionPage() === 0">Previous</button><span data-bind="text: transactionTotalPages() ? 'Page ' + (transactionPage() + 1) + ' of ' + transactionTotalPages() : 'Page 1'"></span><button type="button" data-bind="click: nextTransactionPage, disable: transactionPage() + 1 >= transactionTotalPages()">Next</button></div>
+    </article>
+  </section>
+
+  <aside class="report-detail-drawer transaction-detail-drawer" data-bind="visible: transactionSelected, with: transactionSelected"><div class="card-heading"><div><p class="page-eyebrow">Transaction detail</p><h3 data-bind="text: $parent.transactionEnum(transactionType)"></h3></div><button class="dialog-close" type="button" data-bind="click: $parent.closeTransactionDetail">×</button></div><div class="schedule-detail-status"><i data-bind="text: status"></i><strong data-bind="text: $parent.transactionAmount($data)"></strong></div><dl><div><dt>Transaction ID</dt><dd data-bind="text: transactionId"></dd></div><div><dt>Account</dt><dd data-bind="text: accountNumber"></dd></div><div><dt>Reference</dt><dd data-bind="text: referenceNumber"></dd></div><div><dt>Reference type</dt><dd data-bind="text: referenceType || 'Not provided'"></dd></div><div><dt>Direction</dt><dd data-bind="text: debitCredit"></dd></div><div><dt>Date</dt><dd data-bind="text: $parent.transactionDate(transactionDate)"></dd></div><div><dt>Customer user ID</dt><dd data-bind="text: customerUserId"></dd></div><div><dt>Description</dt><dd data-bind="text: description || 'No description'"></dd></div></dl></aside>
 
   <section id="page-action-panel" class="surface-card page-action-panel" data-bind="visible: !isLoans && !isTransactions && actionPanelOpen()" aria-labelledby="page-action-title">
     <div class="page-action-panel__header">
@@ -126,15 +210,15 @@
     <form class="page-action-form profile-step-form" data-bind="visible: isProfile && !profileOnboardingLoading() && profileOnboardingStep() === 1, submit: submitProfile">
       <div class="profile-step-form__heading"><span>Step 1 of 3</span><div><p class="page-eyebrow">Personal details</p><h4>Tell us about yourself and your address</h4></div></div>
       <oj-validation-group class="jet-validation-group">
-        <oj-input-text label-hint="Full name" value="{{profileFullName}}" maxlength="120" required></oj-input-text>
-        <oj-input-text label-hint="Father or spouse name" value="{{profileFatherOrSpouseName}}" maxlength="120" required></oj-input-text>
+        <oj-input-text label-hint="Full name" value="{{profileFullName}}" validators="[[personNameValidators]]" maxlength="120" required></oj-input-text>
+        <oj-input-text label-hint="Father or spouse name" value="{{profileFatherOrSpouseName}}" validators="[[personNameValidators]]" maxlength="120" required></oj-input-text>
         <oj-input-date label-hint="Date of birth" value="{{profileDateOfBirth}}" max="[[profileDobMax]]" required></oj-input-date>
         <oj-input-text label-hint="Address line 1" value="{{profileAddressLine1}}" maxlength="160" required></oj-input-text>
         <oj-input-text label-hint="Address line 2 (optional)" value="{{profileAddressLine2}}" maxlength="160"></oj-input-text>
         <oj-input-text label-hint="City" value="{{profileCity}}" maxlength="80" required></oj-input-text>
         <oj-select-single label-hint="State or union territory" data="[[indiaStateOptions]]" item-text="label" value="{{profileState}}" required></oj-select-single>
         <oj-input-text label-hint="Country" value="{{profileCountry}}" maxlength="80" required></oj-input-text>
-        <oj-input-text label-hint="Postal code" value="{{profilePostalCode}}" maxlength="20" required></oj-input-text>
+        <oj-input-text label-hint="Postal code" value="{{profilePostalCode}}" validators="[[postalCodeValidators]]" maxlength="20" required></oj-input-text>
       </oj-validation-group>
       <p class="page-action-note">These details must be complete before you can request a new account.</p>
       <button class="primary-page-button" type="submit">Save details & continue</button>
@@ -143,8 +227,8 @@
     <form class="page-action-form profile-step-form" data-bind="visible: isProfile && !profileOnboardingLoading() && profileOnboardingStep() === 2, submit: submitKycIdentity">
       <div class="profile-step-form__heading"><span>Step 2 of 3</span><div><p class="page-eyebrow">Identity verification</p><h4>Add your Aadhaar and PAN details</h4></div></div>
       <oj-validation-group class="jet-validation-group">
-        <oj-input-text label-hint="Aadhaar number" value="{{kycAadhaar}}" maxlength="12" virtual-keyboard="number" required placeholder="12 digits"></oj-input-text>
-        <oj-input-text label-hint="PAN number" value="{{kycPan}}" maxlength="10" required placeholder="ABCDE1234F"></oj-input-text>
+        <oj-input-text label-hint="Aadhaar number" value="{{kycAadhaar}}" validators="[[aadhaarValidators]]" maxlength="12" virtual-keyboard="number" required placeholder="12 digits"></oj-input-text>
+        <oj-input-text label-hint="PAN number" value="{{kycPan}}" validators="[[panValidators]]" maxlength="10" required placeholder="ABCDE1234F"></oj-input-text>
       </oj-validation-group>
       <p class="page-action-note">Your Aadhaar and PAN are stored securely and displayed only in masked form afterward.</p>
       <button class="primary-page-button" type="submit">Save identity & continue</button>
@@ -189,16 +273,17 @@
     </form>
 
     <form class="page-action-form page-action-form--beneficiary" data-bind="visible: isBeneficiaries, submit: submitBeneficiary">
+      <div class="beneficiary-form-heading"><p class="page-eyebrow" data-bind="text: editingBeneficiaryId() ? 'Edit trusted contact' : 'New trusted contact'"></p><h4 data-bind="text: editingBeneficiaryId() ? 'Update beneficiary details' : 'Add a beneficiary'"></h4></div>
       <oj-validation-group class="jet-validation-group">
-      <oj-input-text label-hint="Beneficiary name" value="{{beneficiaryName}}" required placeholder="Enter full name"></oj-input-text>
-      <oj-input-text label-hint="Account number" value="{{beneficiaryAccount}}" validators="[[accountNumberValidators]]" required placeholder="Up to 30 digits"></oj-input-text>
+      <oj-input-text label-hint="Beneficiary name" value="{{beneficiaryName}}" validators="[[personNameValidators]]" maxlength="120" required placeholder="Enter full name"></oj-input-text>
+      <oj-input-text label-hint="Account number" value="{{beneficiaryAccount}}" validators="[[accountNumberValidators]]" maxlength="30" required placeholder="Up to 30 digits"></oj-input-text>
       <oj-select-single label-hint="Branch IFSC" data="[[beneficiaryIfscOptions]]" item-text="label" value="{{beneficiaryIfsc}}" required></oj-select-single>
       <oj-select-single label-hint="Relationship" data="[[beneficiaryRelationshipOptions]]" item-text="label" value="{{beneficiaryRelationship}}" required></oj-select-single>
-      <oj-input-text label-hint="Nickname" value="{{beneficiaryNickname}}" maxlength="80" required placeholder="Example: Rent"></oj-input-text>
+      <oj-input-text label-hint="Nickname" value="{{beneficiaryNickname}}" validators="[[nicknameValidators]]" maxlength="80" required placeholder="Example: Rent"></oj-input-text>
       </oj-validation-group>
       <label class="page-action-note"><input type="checkbox" data-bind="checked: beneficiaryFavourite"> Save as a favourite</label>
       <p class="page-action-note">Enter an active Northstar account number and its matching branch IFSC. For your security, a cooling period may apply before the first transfer.</p>
-      <button class="primary-page-button" type="submit">Add beneficiary securely</button>
+      <div class="beneficiary-form-actions"><button class="secondary-auth-button" type="button" data-bind="visible: editingBeneficiaryId, click: cancelBeneficiaryEdit">Cancel edit</button><button class="primary-page-button" type="submit" data-bind="text: beneficiarySubmitLabel, disable: beneficiaryBusy() !== ''"></button></div>
     </form>
 
     <form class="page-action-form" data-bind="visible: isTransfer, submit: submitTransfer">
@@ -206,7 +291,7 @@
       <oj-select-single label-hint="From account" data="[[transferAccountOptions]]" item-text="label" value="{{transferFrom}}" placeholder="[[transferAccountPlaceholder]]" disabled="[[transferAccountUnavailable]]" required></oj-select-single>
       <oj-select-single label-hint="Verified beneficiary" data="[[transferBeneficiaryOptions]]" item-text="label" value="{{transferBeneficiary}}" placeholder="[[transferBeneficiaryPlaceholder]]" disabled="[[transferBeneficiaryUnavailable]]" required></oj-select-single>
       <oj-input-number label-hint="Transfer amount" value="{{transferAmount}}" converter="[[currencyConverter]]" min="1" max="500000" step="100" required></oj-input-number>
-      <oj-input-text label-hint="Purpose" value="{{transferPurpose}}" maxlength="160" required></oj-input-text>
+      <oj-input-text label-hint="Purpose" value="{{transferPurpose}}" validators="[[purposeValidators]]" maxlength="160" required></oj-input-text>
       </oj-validation-group>
       <div class="page-action-summary" data-bind="visible: transferUnavailable"><span>Transfer setup required</span><strong data-bind="text: transferReadinessMessage"></strong></div>
       <button class="secondary-auth-button" type="button" data-bind="visible: transferAccountUnavailable, click: goToAccounts">Open an account</button>
@@ -231,7 +316,7 @@
         <oj-select-single label-hint="Card type" data="[[cardTypeOptions]]" item-text="label" value="{{cardApplicationType}}" required></oj-select-single>
         <oj-select-single label-hint="Card product" data="[[cardProductOptions]]" item-text="label" value="{{cardProduct}}" required></oj-select-single>
         <oj-input-number label-hint="Monthly income" value="{{cardApplicantIncome}}" min="0" max="10000000" step="5000" required></oj-input-number>
-        <oj-input-text label-hint="Occupation" value="{{cardApplicantOccupation}}" maxlength="120" required></oj-input-text>
+        <oj-input-text label-hint="Occupation" value="{{cardApplicantOccupation}}" validators="[[occupationValidators]]" maxlength="120" required></oj-input-text>
         <oj-input-number label-hint="Requested daily limit" value="{{cardRequestedLimit}}" min="1" max="500000" step="1000" required="[[!isDebitCardApplication()]]" data-bind="visible: !isDebitCardApplication()"></oj-input-number>
         <oj-input-text label-hint="Delivery address" value="{{cardDeliveryAddress}}" required placeholder="Enter complete address"></oj-input-text>
         <button class="primary-page-button" type="submit">Submit card application</button>
@@ -382,7 +467,7 @@
     </article>
   </section>
 
-  <section class="workspace-grid" data-bind="visible: !isSupport">
+  <section class="workspace-grid" data-bind="visible: !isSupport && !isAccounts && !isTransactions && !isBeneficiaries">
     <article class="surface-card workspace-panel">
       <div class="card-heading"><div><p class="page-eyebrow" data-bind="text: primaryEyebrow"></p><h3 data-bind="text: primaryTitle"></h3></div><button class="text-button" type="button" data-bind="visible: !isNotifications">View all</button></div>
       <div class="workspace-list" data-bind="foreach: items">

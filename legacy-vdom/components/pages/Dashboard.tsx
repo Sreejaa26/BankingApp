@@ -24,7 +24,7 @@ export const Dashboard: FunctionalComponent<DashboardProps> = ({ onNavigate }) =
       </div>
       <div class="hero-actions">
         <button class="secondary-action" onClick={() => onNavigate("transactions")}>
-          Download statement
+          Download Mini statement
         </button>
         <oj-button chroming="callToAction" onojAction={() => onNavigate("transfer")}>
           <span class="button-icon">↗</span> Make a transfer

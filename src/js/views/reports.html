@@ -1,0 +1,59 @@
+<div class="reports-page page-stack">
+  <section class="page-introduction page-introduction--visual">
+    <div><p class="page-eyebrow">Documents & exports</p><h2>Reports Centre</h2><p>Generate secure banking reports, monitor progress, and download completed files.</p></div>
+    <div class="bill-page-actions"><button class="secondary-auth-button" type="button" data-bind="click: refresh, disable: loading">Refresh</button><button class="primary-page-button" type="button" data-bind="click: reviewReport">Generate report</button></div>
+  </section>
+  <oj-messages messages="[[messages]]" display="general"></oj-messages>
+  <p class="download-status" role="status" aria-live="polite" data-bind="visible: downloadStatus, text: downloadStatus"></p>
+  <div class="bill-loading" data-bind="visible: loading">Loading report history and available accounts…</div>
+
+  <section class="report-metrics" data-bind="visible: !loading()">
+    <article><span>Report jobs</span><strong data-bind="text: historyTotalElements"></strong><small>Visible in your current scope</small></article>
+    <article><span>Ready to download</span><strong data-bind="text: completedCount"></strong><small>Completed on this page</small></article>
+    <article><span>In progress</span><strong data-bind="text: runningCount"></strong><small>Queued or generating</small></article>
+  </section>
+
+  <section class="report-workspace" data-bind="visible: !loading()">
+    <article class="surface-card report-builder-card">
+      <div class="card-heading"><div><p class="page-eyebrow">New report</p><h3>Configure your export</h3></div><span class="status-chip">Secure generation</span></div>
+      <form class="report-form" data-bind="submit: reviewReport">
+        <oj-select-single label-hint="Report type" data="[[reportTypeOptions]]" value="{{selectedReportType}}" required></oj-select-single>
+        <oj-select-single label-hint="File format" data="[[formatOptions]]" value="{{format}}" required></oj-select-single>
+        <oj-input-text label-hint="Owner user ID (optional)" value="{{ownerUserId}}" data-bind="visible: isAdmin"></oj-input-text>
+        <oj-select-single label-hint="Account" data="[[accountOptions]]" value="{{accountId}}" data-bind="visible: showAccount" required="[[accountRequired]]"></oj-select-single>
+        <oj-input-date label-hint="From" value="{{fromDate}}"></oj-input-date>
+        <oj-input-date label-hint="To" value="{{toDate}}"></oj-input-date>
+        <oj-input-text label-hint="[[subtypeLabel]]" value="{{filterSubtype}}" data-bind="visible: showSubtype"></oj-input-text>
+        <oj-input-text label-hint="Status filter" value="{{filterStatus}}" data-bind="visible: showStatus"></oj-input-text>
+        <oj-input-text label-hint="[[referenceLabel]]" value="{{referenceFilter}}" data-bind="visible: showReference"></oj-input-text>
+        <div class="report-form-summary"><span data-bind="text: selectedConfig().label"></span><strong data-bind="text: format"></strong><small>Generated asynchronously and retained until its expiry date.</small></div>
+        <button class="primary-page-button" type="submit">Review & generate</button>
+      </form>
+    </article>
+
+    <aside class="surface-card report-active-card">
+      <div class="card-heading"><div><p class="page-eyebrow">Latest job</p><h3>Generation status</h3></div></div>
+      <div class="report-active-empty" data-bind="visible: !activeJob()"><span>RP</span><p>Your latest generated report will appear here.</p></div>
+      <div class="report-active-job" data-bind="with: activeJob">
+        <span data-bind="text: $parent.jobInitials($data)"></span><h4 data-bind="text: $parent.reportLabel(reportType)"></h4><i data-bind="text: status, css: $parent.statusClass(status)"></i>
+        <div class="report-progress" data-bind="css: {'report-progress--complete': status === 'COMPLETED', 'report-progress--failed': status === 'FAILED' || status === 'EXPIRED'}"><span></span></div>
+        <p data-bind="text: status === 'QUEUED' ? 'Waiting for a report worker…' : status === 'RUNNING' ? 'Collecting data and creating your file…' : status === 'COMPLETED' ? 'Your file is ready.' : failureReason || 'Generation stopped.'"></p>
+        <dl data-bind="visible: generatedFile"><div><dt>File</dt><dd data-bind="text: generatedFile && generatedFile.fileName"></dd></div><div><dt>Rows</dt><dd data-bind="text: generatedFile && generatedFile.rowCount"></dd></div><div><dt>Size</dt><dd data-bind="text: generatedFile ? $parent.formatSize(generatedFile.fileSize) : '—'"></dd></div></dl>
+        <button class="primary-page-button" type="button" data-bind="visible: status === 'COMPLETED', click: $parent.downloadReport, disable: $parent.busyAction() !== ''">Download report</button>
+      </div>
+    </aside>
+  </section>
+
+  <section class="surface-card report-history-card" data-bind="visible: !loading()">
+    <div class="report-history-heading"><div><p class="page-eyebrow">Report library</p><h3>Generation history</h3></div><form data-bind="visible: isAdmin, submit: applyRequesterFilter"><oj-input-text label-hint="Requester user ID" value="{{requesterFilter}}"></oj-input-text><button class="secondary-auth-button" type="submit">Filter</button></form></div>
+    <div class="report-history-list" data-bind="foreach: history">
+      <article class="report-history-row"><span data-bind="text: $parent.jobInitials($data)"></span><div><strong data-bind="text: $parent.reportLabel(reportType)"></strong><small data-bind="text: format + ' · ' + $parent.formatDate(createdAt)"></small></div><i data-bind="text: status, css: $parent.statusClass(status)"></i><em data-bind="text: generatedFile ? $parent.formatSize(generatedFile.fileSize) : '—'"></em><div><button type="button" data-bind="click: $parent.openJob">Details</button><button type="button" data-bind="visible: status === 'QUEUED' || status === 'RUNNING', click: $parent.trackJob">Track</button><button class="report-download-button" type="button" data-bind="visible: status === 'COMPLETED', click: $parent.downloadReport, disable: $parent.busyAction() !== ''">Download</button></div></article>
+    </div>
+    <div class="schedule-empty" data-bind="visible: history().length === 0"><span>RP</span><h4>No report jobs yet</h4><p>Configure and generate your first report above.</p></div>
+    <div class="bill-pagination"><button type="button" data-bind="click: previousHistoryPage, disable: historyPage() === 0">Previous</button><span data-bind="text: historyTotalPages() ? 'Page ' + (historyPage() + 1) + ' of ' + historyTotalPages() : 'Page 1'"></span><button type="button" data-bind="click: nextHistoryPage, disable: historyPage() + 1 >= historyTotalPages()">Next</button></div>
+  </section>
+
+  <div class="bill-modal-backdrop" data-bind="visible: pendingReport"><section class="bill-confirm-card report-confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirm-report-title" data-bind="with: pendingReport"><span class="bill-confirm-icon">RP</span><p class="page-eyebrow">Generate report</p><h3 id="confirm-report-title" data-bind="text: label + ' · ' + payload.format"></h3><dl><div><dt>Date range</dt><dd data-bind="text: (payload.from || 'Any date') + ' to ' + (payload.to || 'Any date')"></dd></div><div data-bind="visible: payload.accountId"><dt>Account ID</dt><dd data-bind="text: payload.accountId"></dd></div><div><dt>Filters</dt><dd data-bind="text: $parent.hasFilters(payload.filters) ? 'Applied' : 'None'"></dd></div></dl><p>The same request reference will be retained across a safe retry.</p><div><button class="secondary-auth-button" type="button" data-bind="click: $parent.cancelReport, disable: $parent.busyAction() === 'queue'">Cancel</button><button class="primary-page-button" type="button" data-bind="click: $parent.confirmReport, disable: $parent.busyAction() === 'queue', text: $parent.busyAction() === 'queue' ? 'Queueing…' : 'Generate report'"></button></div></section></div>
+
+  <aside class="report-detail-drawer" data-bind="visible: selectedJob, with: selectedJob"><div class="card-heading"><div><p class="page-eyebrow">Report detail</p><h3 data-bind="text: $parent.reportLabel(reportType)"></h3></div><button class="dialog-close" type="button" data-bind="click: $parent.closeJob">×</button></div><div class="schedule-detail-status"><i data-bind="text: status, css: $parent.statusClass(status)"></i><strong data-bind="text: format"></strong></div><dl><div><dt>Job ID</dt><dd data-bind="text: reportJobId"></dd></div><div><dt>Requester</dt><dd data-bind="text: requesterUserId"></dd></div><div><dt>Created</dt><dd data-bind="text: $parent.formatDate(createdAt)"></dd></div><div><dt>Started</dt><dd data-bind="text: $parent.formatDate(startedAt)"></dd></div><div><dt>Completed</dt><dd data-bind="text: $parent.formatDate(completedAt)"></dd></div><div data-bind="visible: failureReason"><dt>Failure</dt><dd data-bind="text: failureReason"></dd></div><div data-bind="visible: generatedFile"><dt>Expires</dt><dd data-bind="text: generatedFile ? $parent.formatDate(generatedFile.expiresAt) : '—'"></dd></div></dl><button class="primary-page-button" type="button" data-bind="visible: status === 'COMPLETED', click: $parent.downloadReport">Download report</button></aside>
+</div>

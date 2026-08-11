@@ -44,16 +44,20 @@ define([
       { route: 'profile', labelKey: 'nav.profile', labelFallback: 'Profile', icon: 'P' },
       { route: 'support', labelKey: 'shell.helpSupport', labelFallback: 'Help & support', icon: '?', utility: true }
     ];
+    allNavigationItems.splice(5, 0, { route: 'bill-payments', labelKey: 'nav.billPayments', labelFallback: 'Bill Payments', icon: 'BP' });
+    allNavigationItems.splice(6, 0, { route: 'scheduled-payments', labelKey: 'nav.scheduledPayments', labelFallback: 'Scheduled Payments', icon: 'SC' });
+    allNavigationItems.splice(7, 0, { route: 'reports', labelKey: 'nav.reports', labelFallback: 'Reports', icon: 'RP' });
+    allNavigationItems.splice(8, 0, { route: 'audit', labelKey: 'nav.audit', labelFallback: 'Audit', icon: 'AU' });
     allNavigationItems.forEach(function (item) {
       item.label = ko.pureComputed(function () { return self.t(item.labelKey, item.labelFallback); });
     });
     self.navigationItems = ko.pureComputed(function () {
       if (self.isAdmin()) {
-        return allNavigationItems.filter(function (item) { return item.route === 'admin'; });
+        return allNavigationItems.filter(function (item) { return item.route === 'admin' || item.route === 'reports' || item.route === 'audit'; });
       }
-      return allNavigationItems.filter(function (item) { return item.route !== 'admin' && !item.utility; });
+      return allNavigationItems.filter(function (item) { return item.route !== 'admin' && item.route !== 'audit' && !item.utility; });
     });
-    self.primaryNavigationItems = ko.pureComputed(function () { return self.navigationItems().slice(0, 7); });
+    self.primaryNavigationItems = ko.pureComputed(function () { return self.navigationItems().slice(0, 8); });
 
     const validRoutes = allNavigationItems.map(function (item) { return item.route; });
 
@@ -90,11 +94,13 @@ define([
       }
 
       let route = validRoutes.indexOf(candidate) >= 0 ? candidate : 'dashboard';
-      if (self.isAdmin()) { route = 'admin'; }
-      else if (route === 'admin') { route = 'dashboard'; }
+      if (self.isAdmin() && ['admin', 'reports', 'audit'].indexOf(route) < 0) { route = 'admin'; }
+      else if (!self.isAdmin() && (route === 'admin' || route === 'audit')) { route = 'dashboard'; }
       self.activeRoute(route);
       self.navigationOpen(false);
-      return self.loadModule(route === 'dashboard' ? 'dashboard' : 'page', { route: route });
+      const dedicatedModules = ['bill-payments', 'scheduled-payments', 'reports', 'audit'];
+      const moduleName = route === 'dashboard' ? 'dashboard' : dedicatedModules.indexOf(route) >= 0 ? route : 'page';
+      return self.loadModule(moduleName, { route: route });
     };
 
     self.navigate = function (route) {
