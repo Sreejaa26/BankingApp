@@ -151,14 +151,16 @@ define([
     };
     self.closeRegistration = function () { self.registrationPanelOpen(false); };
     self.saveRegistration = function () {
-      if (!self.registrationBillerId() || !self.registrationConsumerReference().trim() || !self.registrationNickname().trim()) {
-        self.showMessage('error', 'Complete the biller form', 'Choose a biller and enter the consumer reference and nickname.'); return false;
+      const consumerReference = self.registrationConsumerReference().trim();
+      const nickname = self.registrationNickname().trim();
+      if (!self.registrationBillerId() || consumerReference.length < 3 || nickname.length < 2) {
+        self.showMessage('error', 'Complete the biller form', 'Choose a biller, enter a consumer reference of at least 3 characters, and a nickname of at least 2 characters.'); return false;
       }
       const editing = self.registrationMode() === 'edit';
       const path = editing ? '/api/billers/' + encodeURIComponent(self.editingRegistrationId()) : '/api/billers';
       self.busyAction('registration'); self.clearMessage();
       api.request(path, { method: editing ? 'PUT' : 'POST', body: JSON.stringify({
-        billerId: self.registrationBillerId(), consumerReference: self.registrationConsumerReference().trim(), nickname: self.registrationNickname().trim()
+        billerId: self.registrationBillerId(), consumerReference: consumerReference, nickname: nickname
       }) }, token()).then(function () {
         self.registrationPanelOpen(false); self.showMessage('confirmation', editing ? 'Biller updated' : 'Biller registered', 'The biller is ready for secure payments.');
         return self.loadRegistrations();
