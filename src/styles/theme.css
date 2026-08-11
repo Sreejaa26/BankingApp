@@ -1,6 +1,6 @@
 :root {
   /* Compact palette: these twelve values control the visual theme. */
-  /* --theme-navy: #071c32;
+  --theme-navy: #071c32;
   --theme-blue: #1769aa;
   --theme-sky: #eaf3fb;
   --theme-canvas: #f3f7fb;
@@ -11,19 +11,48 @@
   --theme-success: #12805c;
   --theme-warning: #c78b2c;
   --theme-danger: #b42318;
-  --theme-purple: #7356a8; */
-  --theme-navy: #123524;
---theme-blue: #2f6b4f;
---theme-sky: #e8f3ec;
---theme-canvas: #f2f7f3;
---theme-surface: #ffffff;
---theme-ink: #1b2e24;
---theme-muted: #68796f;
---theme-line: #d8e5dc;
---theme-success: #18794e;
---theme-warning: #b7791f;
---theme-danger: #b42318;
---theme-purple: #527a63;
+  --theme-purple: #7356a8;
+
+
+  /* --theme-navy: #3B1838;
+--theme-blue: #6E2F68;
+--theme-sky: #F1E3EF;
+--theme-canvas: #F7F0F6;
+--theme-surface: #FFFFFF;
+--theme-ink: #2D1F2B;
+--theme-muted: #766574;
+--theme-line: #DFD0DC;
+--theme-success: #4E8066;
+--theme-warning: #B8843E;
+--theme-danger: #B4233A;
+--theme-purple: #7A3473; */
+
+/* --theme-navy: #171717;
+--theme-blue: #333333;
+--theme-sky: #F5F5F5;
+--theme-canvas: #FAFAFA;
+--theme-surface: #FFFFFF;
+--theme-ink: #1F1F1F;
+--theme-muted: #737373;
+--theme-line: #E5E5E5;
+--theme-success: #404040;
+--theme-warning: #666666;
+--theme-danger: #222222;
+--theme-purple: #555555; */
+
+
+/* --theme-navy: #263F59;
+--theme-blue: #4F7193;
+--theme-sky: #E8EFF5;
+--theme-canvas: #F4F7FA;
+--theme-surface: #FFFFFF;
+--theme-ink: #263544;
+--theme-muted: #6D7D8C;
+--theme-line: #D9E2EA;
+--theme-success: #547A68;
+--theme-warning: #B18A50;
+--theme-danger: #B4554D;
+--theme-purple: #716C80; */
 
   --navy-950: var(--theme-navy);
   --navy-900: color-mix(in srgb,var(--theme-navy) 88%,var(--theme-blue));
@@ -161,7 +190,7 @@ oj-select-single.oj-text-field-label-inside.oj-has-no-value .oj-text-field-conta
   color: var(--muted);
   background: transparent;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 750;
   white-space: nowrap;
 }

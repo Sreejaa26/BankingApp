@@ -3615,7 +3615,7 @@ a:hover { text-decoration: underline; }
 .account-selector-list button small { margin-top:3px; color:var(--muted); font-size:8px; }
 .account-selector-list button > div:last-child { text-align:right; }
 .account-detail-loading,.account-detail-empty { padding:22px 0; color:var(--muted); font-size:10px; text-align:center; }
-.account-detail-balance { margin:15px 0; padding:17px; border-radius:14px; color:var(--white); background:linear-gradient(145deg,#18794e,#2f6b4f); }
+.account-detail-balance { margin:15px 0; padding:17px; border-radius:14px; color:var(--white); background:linear-gradient(145deg,#092f52,#0b537d); }
 .account-detail-balance span,.account-detail-balance strong,.account-detail-balance small { display:block; }
 .account-detail-balance span { color:#bbd8e9; font-size:8px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
 .account-detail-balance strong { margin:7px 0 4px; font-size:25px; }
