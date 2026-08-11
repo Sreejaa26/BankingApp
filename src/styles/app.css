@@ -3377,33 +3377,6 @@ a:hover { text-decoration: underline; }
 .loan-form-grid oj-input-number,
 .loan-form-grid oj-select-single { width: 100%; }
 
-.native-select-field {
-  display: grid;
-  gap: 7px;
-  min-width: 0;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.native-select-field select {
-  width: 100%;
-  min-height: 48px;
-  padding: 0 40px 0 13px;
-  border: 1px solid #8d8d8d;
-  border-radius: 4px;
-  color: var(--navy-950);
-  background: var(--white);
-  cursor: pointer;
-  font: inherit;
-  font-size: 14px;
-}
-
-.native-select-field select:focus {
-  border-color: var(--blue-600);
-  outline: 2px solid rgba(24,112,176,.18);
-  outline-offset: 1px;
-}
-
 .loan-product-choice {
   grid-column: 1 / -1;
   display: grid;

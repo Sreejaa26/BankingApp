@@ -36,10 +36,10 @@ export const Header: FunctionalComponent<HeaderProps> = ({
         <input type="search" placeholder="Search banking" aria-label="Search banking" />
         <kbd>⌘ K</kbd>
       </label>
-      <button class="header-icon-button" type="button" aria-label="View notifications">
+      {/* <button class="header-icon-button" type="button" aria-label="View notifications">
         <span aria-hidden="true">◌</span>
         <i />
-      </button>
+      </button> */}
       <div class="customer-summary" aria-label="Signed in customer">
         <span class="customer-avatar">SP</span>
         <span class="customer-copy">

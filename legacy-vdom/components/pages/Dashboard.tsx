@@ -23,9 +23,9 @@ export const Dashboard: FunctionalComponent<DashboardProps> = ({ onNavigate }) =
         <p>Your finances are looking healthy. Here’s today’s overview.</p>
       </div>
       <div class="hero-actions">
-        <button class="secondary-action" onClick={() => onNavigate("transactions")}>
+        {/* <button class="secondary-action" onClick={() => onNavigate("transactions")}>
           Download Mini statement
-        </button>
+        </button> */}
         <oj-button chroming="callToAction" onojAction={() => onNavigate("transfer")}>
           <span class="button-icon">↗</span> Make a transfer
         </oj-button>

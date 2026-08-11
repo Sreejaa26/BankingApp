@@ -13,6 +13,47 @@
   --theme-danger: #b42318;
   --theme-purple: #7356a8;
 
+
+  /* --theme-navy: #3B1838;
+--theme-blue: #6E2F68;
+--theme-sky: #F1E3EF;
+--theme-canvas: #F7F0F6;
+--theme-surface: #FFFFFF;
+--theme-ink: #2D1F2B;
+--theme-muted: #766574;
+--theme-line: #DFD0DC;
+--theme-success: #4E8066;
+--theme-warning: #B8843E;
+--theme-danger: #B4233A;
+--theme-purple: #7A3473; */
+
+/* --theme-navy: #171717;
+--theme-blue: #333333;
+--theme-sky: #F5F5F5;
+--theme-canvas: #FAFAFA;
+--theme-surface: #FFFFFF;
+--theme-ink: #1F1F1F;
+--theme-muted: #737373;
+--theme-line: #E5E5E5;
+--theme-success: #404040;
+--theme-warning: #666666;
+--theme-danger: #222222;
+--theme-purple: #555555; */
+
+
+/* --theme-navy: #263F59;
+--theme-blue: #4F7193;
+--theme-sky: #E8EFF5;
+--theme-canvas: #F4F7FA;
+--theme-surface: #FFFFFF;
+--theme-ink: #263544;
+--theme-muted: #6D7D8C;
+--theme-line: #D9E2EA;
+--theme-success: #547A68;
+--theme-warning: #B18A50;
+--theme-danger: #B4554D;
+--theme-purple: #716C80; */
+
   --navy-950: var(--theme-navy);
   --navy-900: color-mix(in srgb,var(--theme-navy) 88%,var(--theme-blue));
   --navy-800: color-mix(in srgb,var(--theme-navy) 72%,var(--theme-blue));
@@ -44,11 +85,11 @@
 
   /* Oracle JET form tokens: one geometry for every input and select. */
   --oj-text-field-height: var(--form-control-height);
-  --oj-text-field-inside-edge-height: var(--form-control-height);
+  --oj-text-field-inside-edge-height: calc(var(--form-control-height) + 8px);
   --oj-text-field-text-to-edge-padding: 14px;
   --oj-text-field-icon-to-edge-padding: 12px;
   --oj-text-field-icon-to-text-padding: 8px;
-  --oj-text-field-inside-edge-padding-top: 8px;
+  --oj-text-field-inside-edge-padding-top: 13px;
   --oj-text-field-font-size: 14px;
   --oj-text-field-border-radius: 10px;
   font-family: var(--font-ui);
@@ -95,6 +136,17 @@ button, input, select, textarea { font-family: inherit; }
   line-height: 1.4;
 }
 
+/* Empty-value options (for example "All statuses") still render display text.
+   Keep every select label above that text so the two can never overlap. */
+oj-select-single.oj-text-field-label-inside.oj-has-no-value .oj-text-field-container .oj-label {
+  top: var(--oj-label-inside-edge-position-top) !important;
+  color: var(--oj-label-inside-edge-color);
+  font-size: var(--oj-label-inside-edge-font-size) !important;
+  font-weight: var(--oj-label-inside-edge-font-weight) !important;
+  line-height: var(--oj-label-inside-edge-line-height) !important;
+  transform: none !important;
+}
+
 /* Shell */
 .banking-header { border-bottom: 1px solid color-mix(in srgb,var(--line) 82%,transparent); background: color-mix(in srgb,var(--white) 92%,transparent); box-shadow: 0 10px 34px color-mix(in srgb,var(--navy-950) 5%,transparent); backdrop-filter: blur(18px); }
 .main-navigation-row,.page-title-bar { width: min(100%,1500px); padding-inline: var(--page-gutter); }
@@ -109,6 +161,49 @@ button, input, select, textarea { font-family: inherit; }
 .page-title-bar { min-height: 64px; border-top: 1px solid var(--line-soft); }
 .page-title-bar h1 { font-size: 21px; letter-spacing: -.025em; }
 .page-content { width: min(100%,1500px); margin-inline: auto; padding: 30px var(--page-gutter) 44px; }
+
+/* Dual navigation: persistent sidebar plus a complete, scrollable top route bar. */
+.top-route-navigation {
+  width: min(100%,1500px);
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  margin-inline: auto;
+  padding: 6px var(--page-gutter);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  scrollbar-width: none;
+}
+
+.top-route-navigation::-webkit-scrollbar { display: none; }
+
+.top-route-navigation button {
+  min-height: 38px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.top-route-navigation button:hover { color: var(--navy-900); background: var(--blue-50); }
+.top-route-navigation button.is-active { color: var(--navy-950); background: var(--blue-100); }
+
+@media (min-width: 1321px) {
+  .app-shell--topnav { display: grid; grid-template-columns: 272px minmax(0,1fr); }
+  .app-shell--topnav .side-navigation { display: flex; transform: none; }
+  .app-shell--topnav .shell-content { min-width: 0; grid-column: 2; }
+  .app-shell--topnav .navigation-scrim { display: none !important; }
+}
 
 /* Typography and hierarchy */
 .login-story h1 { color: var(--white); font-family: var(--font-ui); letter-spacing: -.045em; }
@@ -175,6 +270,8 @@ button, input, select, textarea { font-family: inherit; }
   .locale-switcher select { max-width: 72px; }
   .page-title-bar { min-height: 60px; }
   .page-title-bar > span { display: none; }
+  .top-route-navigation { min-height: 48px; gap: 3px; padding-block: 5px; }
+  .top-route-navigation button { min-height: 36px; padding-inline: 9px; font-size: 10px; }
   .page-content { padding-block: 22px 36px; }
   .page-introduction { padding: 20px; border-radius: 16px; }
   .surface-card,.workspace-card { border-radius: 16px; }

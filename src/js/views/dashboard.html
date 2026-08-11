@@ -6,7 +6,7 @@
       <p data-bind="text: app.t('dashboard.overview')"></p>
     </div>
     <div class="hero-actions" data-bind="visible: hasAccounts">
-      <button class="secondary-action" type="button" data-bind="click: downloadStatement, text: app.t('dashboard.download')"></button>
+      <!-- <button class="secondary-action" type="button" data-bind="click: downloadStatement, text: app.t('dashboard.download')"></button> -->
       <button class="primary-page-button" data-bind="click: go.bind($data, 'transfer')"><span class="button-icon">↗</span><span data-bind="text: app.t('dashboard.transfer')"></span></button>
     </div>
     <p class="download-status" role="status" aria-live="polite" data-bind="visible: statementDownloadStatus, text: statementDownloadStatus"></p>
