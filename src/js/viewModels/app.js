@@ -2,10 +2,11 @@ define([
   'knockout',
   'utils/i18n',
   'utils/api',
+  'utils/uiLogic',
   'ojs/ojconfig',
   'ojs/ojcontext',
   'ojs/ojmodule-element-utils'
-], function (ko, i18n, api, Config, Context, ModuleElementUtils) {
+], function (ko, i18n, api, uiLogic, Config, Context, ModuleElementUtils) {
   'use strict';
 
   function AppViewModel() {
@@ -57,7 +58,10 @@ define([
       }
       return allNavigationItems.filter(function (item) { return item.route !== 'admin' && item.route !== 'audit' && !item.utility; });
     });
-    self.primaryNavigationItems = ko.pureComputed(function () { return self.navigationItems().slice(0, 8); });
+    self.primaryNavigationItems = ko.pureComputed(function () {
+      const items = self.navigationItems();
+      return uiLogic.primaryNavigationItems(items, allNavigationItems, self.isAdmin());
+    });
 
     const validRoutes = allNavigationItems.map(function (item) { return item.route; });
 

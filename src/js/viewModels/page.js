@@ -1,6 +1,7 @@
 define([
   'knockout',
   'utils/api',
+  'utils/uiLogic',
   'ojs/ojarraydataprovider',
   'ojs/ojpagingdataproviderview',
   'ojs/ojvalidator-regexp',
@@ -16,7 +17,7 @@ define([
   'ojs/ojmessages',
   'ojs/ojfilepicker',
   'ojs/ojvalidationgroup'
-], function (ko, api, ArrayDataProvider, PagingDataProviderView, RegExpValidator, NumberConverters, DateTimeConverters) {
+], function (ko, api, uiLogic, ArrayDataProvider, PagingDataProviderView, RegExpValidator, NumberConverters, DateTimeConverters) {
   'use strict';
 
   const pages = {
@@ -310,16 +311,7 @@ define([
       return self.transferBeneficiaryUnavailable() ? 'No verified beneficiaries available' : 'Select a verified beneficiary';
     });
     this.transferReadinessMessage = ko.pureComputed(function () {
-      if (self.transferAccountUnavailable() && self.transferBeneficiaryUnavailable()) {
-        return 'Open and activate an account, then add a beneficiary and wait for verification.';
-      }
-      if (self.transferAccountUnavailable()) {
-        return 'Open and activate an account before transferring money.';
-      }
-      if (self.transferBeneficiaryUnavailable()) {
-        return 'Add a beneficiary and wait for bank verification before transferring money.';
-      }
-      return 'Your account and beneficiary are ready for transfer.';
+      return uiLogic.transferReadinessMessage(self.transferAccountUnavailable(), self.transferBeneficiaryUnavailable());
     });
     this.goToAccounts = function () { params.app.navigate('accounts'); };
     this.goToBeneficiaries = function () { params.app.navigate('beneficiaries'); };
@@ -992,10 +984,8 @@ define([
           const accountNumber = String(account.accountNumber || '');
           return { value: account.accountId, label: account.accountType + ' · •••• ' + accountNumber.slice(-4) };
         }));
-        const selectedBeneficiaryIsVerified = verifiedBeneficiaries.some(function (beneficiary) { return beneficiary.beneficiaryId === self.transferBeneficiary(); });
-        const selectedAccountIsActive = activeAccounts.some(function (account) { return account.accountId === self.transferFrom(); });
-        self.transferBeneficiary(selectedBeneficiaryIsVerified ? self.transferBeneficiary() : (verifiedBeneficiaries.length ? verifiedBeneficiaries[0].beneficiaryId : ''));
-        self.transferFrom(selectedAccountIsActive ? self.transferFrom() : (activeAccounts.length ? activeAccounts[0].accountId : ''));
+        self.transferBeneficiary(uiLogic.selectedEligibleId(self.transferBeneficiary(), verifiedBeneficiaries, 'beneficiaryId'));
+        self.transferFrom(uiLogic.selectedEligibleId(self.transferFrom(), activeAccounts, 'accountId'));
       }).catch(function (error) {
         self.transferBeneficiaryUnavailable(true);
         self.transferAccountUnavailable(true);

@@ -2,6 +2,9 @@
   "name": "BankingApp",
   "version": "1.0.0",
   "description": "An Oracle JavaScript Extension Toolkit(JET) web app",
+  "scripts": {
+    "test": "node --test"
+  },
   "dependencies": {
     "@oracle/oraclejet": "~20.1.0",
     "@oracle/oraclejet-core-pack": "~20.1.0"

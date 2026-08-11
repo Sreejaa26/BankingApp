@@ -1,4 +1,4 @@
-define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/ojdialog'], function (ko, api, downloadStatementFile) {
+define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'ojs/ojchart', 'ojs/ojdialog'], function (ko, api, downloadStatementFile, uiLogic) {
   'use strict';
 
   function istMonthKey(value) {
@@ -66,17 +66,18 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/
       return new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'long', year: 'numeric' }).format(self.dashboardNow());
     });
     self.greeting = ko.pureComputed(function () {
-      const hour = new Date().getHours();
-      const salutation = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-      return salutation + ', ' + self.app.customerName() + '.';
+      return uiLogic.greetingFor(self.dashboardNow(), self.app.customerName());
     });
+    const dashboardClockTimer = window.setInterval(function () {
+      self.dashboardNow(new Date());
+    }, 60000);
     self.totalBalance = ko.observable(self.app.formatCurrency(0));
     self.monthlyIncome = ko.observable(self.app.formatCurrency(0));
     self.monthlySpending = ko.observable(self.app.formatCurrency(0));
     self.revealedMetric = ko.observable('');
-    self.totalBalanceDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'balance' ? self.totalBalance() : maskedCurrency(self.totalBalance()); });
-    self.monthlyIncomeDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'income' ? self.monthlyIncome() : maskedCurrency(self.monthlyIncome()); });
-    self.monthlySpendingDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'spending' ? self.monthlySpending() : maskedCurrency(self.monthlySpending()); });
+    self.totalBalanceDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'balance' ? self.totalBalance() : uiLogic.maskedCurrency(self.totalBalance()); });
+    self.monthlyIncomeDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'income' ? self.monthlyIncome() : uiLogic.maskedCurrency(self.monthlyIncome()); });
+    self.monthlySpendingDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'spending' ? self.monthlySpending() : uiLogic.maskedCurrency(self.monthlySpending()); });
     self.revealTotalBalance = function () { self.revealedMetric('balance'); };
     self.revealMonthlyIncome = function () { self.revealedMetric('income'); };
     self.revealMonthlySpending = function () { self.revealedMetric('spending'); };
@@ -206,9 +207,9 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/
         }
         self.onboardingRequired(requiresOnboarding);
         const total = accounts.reduce(function (sum, account) { return sum + Number(account.availableBalance || 0); }, 0);
-        const currentMonth = istMonthKey(self.dashboardNow());
+        const currentMonth = uiLogic.istMonthKey(self.dashboardNow());
         const monthlyTransactions = transactionRows.filter(function (transaction) {
-          return String(transaction.status || '').toUpperCase() === 'SUCCESS' && istMonthKey(transaction.transactionDate) === currentMonth;
+          return String(transaction.status || '').toUpperCase() === 'SUCCESS' && uiLogic.istMonthKey(transaction.transactionDate) === currentMonth;
         });
         const incoming = monthlyTransactions.filter(function (transaction) { return transaction.debitCredit === 'CREDIT'; }).reduce(function (sum, transaction) { return sum + Number(transaction.amount || 0); }, 0);
         const outgoing = monthlyTransactions.filter(function (transaction) { return transaction.debitCredit === 'DEBIT'; }).reduce(function (sum, transaction) { return sum + Number(transaction.amount || 0); }, 0);
@@ -261,6 +262,9 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'ojs/ojchart', 'ojs/
     self.downloadStatement = function () {
       const fileName = downloadStatementFile();
       self.statementDownloadStatus(fileName + ' downloaded successfully.');
+    };
+    self.disconnected = function () {
+      window.clearInterval(dashboardClockTimer);
     };
     self.loadDashboardAccounts();
     self.loadOptionalSummaries();

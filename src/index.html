@@ -65,9 +65,6 @@
                     <span data-bind="text: label"></span>
                   </button>
                 </nav>
-                <nav class="nav-utility-actions" aria-label="Support navigation" data-bind="visible: !isAdmin()">
-                  <button type="button" data-bind="click: navigate.bind($data, 'support'), css: {'is-active': activeRoute() === 'support'}, text: t('shell.helpSupport')"></button>
-                </nav>
                 <div class="header-actions">
                   <label class="locale-switcher">
                     <span aria-hidden="true">文</span>
