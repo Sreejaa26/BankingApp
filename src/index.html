@@ -74,14 +74,14 @@
                     <select data-bind="options: languageOptions, optionsText: 'label', optionsValue: 'value', value: locale" aria-label="Language / भाषा"></select>
                   </label>
                   <label class="header-search"><span aria-hidden="true">⌕</span><input type="search" data-bind="attr: {placeholder: t('shell.search'), 'aria-label': t('shell.search')}"><kbd>⌘ K</kbd></label>
-                  <button class="header-icon-button" type="button" aria-label="View notifications" data-bind="visible: !isAdmin(), click: navigate.bind($data, 'notifications')"><span aria-hidden="true">◌</span><i></i></button>
+                  <!-- <button class="header-icon-button" type="button" aria-label="View notifications" data-bind="visible: !isAdmin(), click: navigate.bind($data, 'notifications')"><span aria-hidden="true">◌</span><i></i></button> -->
                   <button class="customer-summary" type="button" aria-label="Open profile" data-bind="visible: !isAdmin(), click: navigate.bind($data, 'profile')">
-                    <span class="customer-copy"><strong data-bind="text: customerName"></strong><small data-bind="text: t('shell.primaryCustomer')"></small></span>
+                    <span class="customer-copy">☻<strong data-bind="text: customerName"></strong></span>
                   </button>
                   <div class="customer-summary" data-bind="visible: isAdmin">
                     <span class="customer-copy"><strong data-bind="text: customerName"></strong><small>Administrator</small></span>
                   </div>
-                  <button class="signout-button" type="button" data-bind="click: logout" aria-label="Sign out">↪</button>
+                  <button class="signout-button" type="button" data-bind="click: logout" aria-label="Sign out">⏻</button>
                 </div>
               </div>
 

@@ -23,7 +23,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { route: "transfer", label: "Transfer Money", shortLabel: "↗" },
   { route: "loans", label: "Loans", shortLabel: "◇" },
   { route: "cards", label: "Cards", shortLabel: "▱" },
-  { route: "notifications", label: "Notifications", shortLabel: "◌" },
+  // { route: "notifications", label: "Notifications", shortLabel: "◌" },
   { route: "admin", label: "Admin Dashboard", shortLabel: "⌘" }
 ];
 
