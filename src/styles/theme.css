@@ -56,11 +56,11 @@
 
   /* Oracle JET form tokens: one geometry for every input and select. */
   --oj-text-field-height: var(--form-control-height);
-  --oj-text-field-inside-edge-height: var(--form-control-height);
+  --oj-text-field-inside-edge-height: calc(var(--form-control-height) + 8px);
   --oj-text-field-text-to-edge-padding: 14px;
   --oj-text-field-icon-to-edge-padding: 12px;
   --oj-text-field-icon-to-text-padding: 8px;
-  --oj-text-field-inside-edge-padding-top: 8px;
+  --oj-text-field-inside-edge-padding-top: 13px;
   --oj-text-field-font-size: 14px;
   --oj-text-field-border-radius: 10px;
   font-family: var(--font-ui);
@@ -105,6 +105,17 @@ button, input, select, textarea { font-family: inherit; }
 
 :where(.page-action-form,.bill-form,.schedule-form,.report-form,.transaction-filter-grid,.audit-filter-grid) :where(.oj-message,.oj-message-detail) {
   line-height: 1.4;
+}
+
+/* Empty-value options (for example "All statuses") still render display text.
+   Keep every select label above that text so the two can never overlap. */
+oj-select-single.oj-text-field-label-inside.oj-has-no-value .oj-text-field-container .oj-label {
+  top: var(--oj-label-inside-edge-position-top) !important;
+  color: var(--oj-label-inside-edge-color);
+  font-size: var(--oj-label-inside-edge-font-size) !important;
+  font-weight: var(--oj-label-inside-edge-font-weight) !important;
+  line-height: var(--oj-label-inside-edge-line-height) !important;
+  transform: none !important;
 }
 
 /* Shell */
