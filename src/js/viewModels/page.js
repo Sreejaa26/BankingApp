@@ -273,6 +273,7 @@ define([
     this.profileKycStatus = ko.observable('NOT_SUBMITTED');
     this.newAccountType = ko.observable('SAVINGS');
     this.branchIfsc = ko.observable('');
+    this.initialDeposit = ko.observable(0);
     this.accountOpeningEligible = ko.observable(false);
     this.accountOpeningEligibilityMessage = ko.observable('Checking profile and KYC eligibility...');
     this.selectedAccount = ko.observable(null);
@@ -952,11 +953,15 @@ define([
     this.submitNewAccount = function () {
       if (!self.accountOpeningEligible()) { self.actionError(self.accountOpeningEligibilityMessage()); self.showActionMessage('error', 'Complete account setup first', self.actionError()); return false; }
       if (!self.newAccountType() || !self.branchIfsc()) { self.actionError('Choose an account type and branch.'); return false; }
+      const initialDepositValue = self.initialDeposit();
+      if (initialDepositValue === null || initialDepositValue === undefined || initialDepositValue === '') { self.actionError('Enter the initial deposit amount.'); self.showActionMessage('error', 'Initial deposit is required', self.actionError()); return false; }
+      const initialDeposit = Number(initialDepositValue);
+      if (!Number.isFinite(initialDeposit) || initialDeposit < 0) { self.actionError('Enter an initial deposit of ₹0 or more.'); self.showActionMessage('error', 'Check the initial deposit', self.actionError()); return false; }
       const token = params.app.authToken();
       const idempotencyKey = api.createIdempotencyKey();
-      api.request('/api/banking/accounts/open', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, body: JSON.stringify({ accountType: self.newAccountType(), branchIfsc: self.branchIfsc() }) }, token).then(function (response) {
+      api.request('/api/banking/accounts/open', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey }, body: JSON.stringify({ accountType: self.newAccountType(), branchIfsc: self.branchIfsc(), initialDeposit: initialDeposit }) }, token).then(function (response) {
         const opened = responseData(response) || {};
-        self.actionError(''); self.actionSuccess('Account opened successfully. Reference ' + (opened.referenceNumber || opened.accountNumber || 'created') + '.'); self.showActionMessage('confirmation', 'Account opened', self.actionSuccess()); self.loadAccountsData();
+        self.initialDeposit(0); self.actionError(''); self.actionSuccess('Account opened successfully. Reference ' + (opened.referenceNumber || opened.accountNumber || 'created') + '.'); self.showActionMessage('confirmation', 'Account opened', self.actionSuccess()); self.loadAccountsData();
       }).catch(function (error) { self.actionError(error.message || 'Unable to open the account. Complete your profile and KYC, then try again.'); self.showActionMessage('error', 'Account request needs attention', self.actionError()); });
       return false;
     };

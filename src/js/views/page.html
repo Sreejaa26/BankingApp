@@ -349,6 +349,7 @@
     <form class="page-action-form" data-bind="visible: isAccounts, submit: submitNewAccount">
       <oj-select-single label-hint="Account type" data="[[accountTypeOptions]]" item-text="label" value="{{newAccountType}}" required></oj-select-single>
       <oj-select-single label-hint="Branch" data="[[branchOptions]]" item-text="label" value="{{branchIfsc}}" required></oj-select-single>
+      <oj-input-number label-hint="Initial deposit" value="{{initialDeposit}}" converter="[[currencyConverter]]" min="0" step="100" required></oj-input-number>
       <div class="page-action-summary"><span>Eligibility</span><strong data-bind="text: accountOpeningEligibilityMessage"></strong></div>
       <button class="secondary-auth-button" type="button" data-bind="visible: !accountOpeningEligible(), click: goToProfileSetup">Complete required profile</button>
       <button class="primary-page-button" type="submit" data-bind="disable: !accountOpeningEligible()">Open account securely</button>
