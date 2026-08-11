@@ -390,10 +390,7 @@
     <form class="loan-application__body" data-bind="submit: submitLoanApplication, visible: !loanApplicationSubmitted()">
       <div class="loan-form-grid">
         <label class="loan-product-choice"><span>Loan type</span><strong data-bind="text: loanType"></strong><small><span data-bind="text: selectedLoanRate"></span>% indicative annual rate</small></label>
-        <label class="native-select-field">
-          <span>Linked account</span>
-          <select data-bind="options: loanAccountOptionRows, optionsText: 'label', optionsValue: 'value', value: loanAccountId, optionsCaption: 'Choose linked account'" required></select>
-        </label>
+        <oj-select-single label-hint="Linked account" data="[[loanAccountOptions]]" item-text="label" value="{{loanAccountId}}" required></oj-select-single>
         <oj-input-number label-hint="Loan amount" value="{{loanAmount}}" min="50000" max="15000000" step="10000" required></oj-input-number>
         <oj-select-single label-hint="Repayment tenure" data="[[loanTenureOptions]]" item-text="label" value="{{loanTenure}}" required></oj-select-single>
         <oj-select-single label-hint="Purpose" data="[[loanPurposeOptions]]" item-text="label" value="{{loanPurpose}}" required></oj-select-single>
