@@ -127,7 +127,13 @@ define([
       self.editorMode('create'); self.editingScheduleId(''); self.scheduleType('MONTHLY'); self.amount(0); self.description('');
       self.timezone('Asia/Kolkata'); self.startAt(toLocalInput(start)); self.endAt(toLocalInput(end)); self.maxRetries(3);
     };
-    self.openCreate = function () { self.resetEditor(); self.editorOpen(true); self.clearMessage(); };
+    self.scrollToEditor = function () {
+      requestAnimationFrame(function () {
+        const panel = document.getElementById('schedule-editor');
+        if (panel) { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    };
+    self.openCreate = function () { self.resetEditor(); self.editorOpen(true); self.clearMessage(); self.scrollToEditor(); };
     self.closeEditor = function () { self.editorOpen(false); };
     self.payload = function () {
       return { scheduleType: self.scheduleType(), sourceAccountId: self.sourceAccountId(), customerBillerId: self.customerBillerId(),
@@ -164,6 +170,7 @@ define([
         self.description(detail.description || ''); self.timezone(detail.timezone || 'Asia/Kolkata');
         self.startAt(toLocalInput(detail.startAt)); self.endAt(detail.endAt ? toLocalInput(detail.endAt) : ''); self.maxRetries(Number(detail.maxRetries == null ? 3 : detail.maxRetries));
         self.editorOpen(true);
+        self.scrollToEditor();
       }).catch(function (error) { self.showMessage('error', 'Schedule detail could not be loaded', error.message); }).finally(function () { self.busyAction(''); });
     };
     self.openSchedule = function (row) {

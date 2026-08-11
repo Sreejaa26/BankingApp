@@ -44,9 +44,34 @@
         <p class="admin-empty-state" data-bind="visible: adminCardApplications().length === 0">No card applications are waiting for approval.</p>
         <div class="admin-approval-list" data-bind="foreach: adminCardApplications">
           <article class="admin-approval-item">
-            <div class="admin-approval-item__title"><span>CA</span><div><strong data-bind="text: $parent.adminEnumLabel(cardProduct) + ' ' + $parent.adminEnumLabel(cardType) + ' card'"></strong><small data-bind="text: 'Application ' + $parent.adminShortId(applicationId)"></small></div><b data-bind="text: status"></b></div>
-            <dl><div><dt>Customer</dt><dd data-bind="text: $parent.adminShortId(customerUserId)"></dd></div><div><dt>Annual income</dt><dd data-bind="text: $parent.adminMoney(annualIncome)"></dd></div><div><dt>Daily limit</dt><dd data-bind="text: $parent.adminMoney(requestedDailyLimit)"></dd></div></dl>
+            <div class="admin-approval-item__title"><span>CA</span><div><strong data-bind="text: $parent.adminEnumLabel(cardProduct) + ' ' + $parent.adminEnumLabel(cardType) + ' card'"></strong><small class="admin-full-id" data-bind="text: 'Application ID: ' + applicationId"></small></div><b data-bind="text: status"></b></div>
+            <dl><div class="admin-id-field"><dt>Customer user ID</dt><dd data-bind="text: customerUserId"></dd></div><div><dt>Annual income</dt><dd data-bind="text: $parent.adminMoney(annualIncome)"></dd></div><div><dt>Daily limit</dt><dd data-bind="text: $parent.adminMoney(requestedDailyLimit)"></dd></div></dl>
             <p data-bind="text: deliveryAddress"></p>
+            <button class="admin-details-button" type="button" data-bind="click: $parent.toggleAdminDetails, text: detailsOpen() ? 'Hide details' : 'View details', attr: {'aria-expanded': detailsOpen()}"></button>
+            <div class="admin-approval-details" data-bind="visible: detailsOpen">
+              <h5>Complete card application</h5>
+              <dl class="admin-approval-details__grid">
+                <div class="admin-id-field"><dt>Application ID</dt><dd data-bind="text: applicationId"></dd></div>
+                <div class="admin-id-field"><dt>Customer user ID</dt><dd data-bind="text: customerUserId"></dd></div>
+                <div class="admin-id-field"><dt>Linked account ID</dt><dd data-bind="text: accountId"></dd></div>
+                <div><dt>Card type</dt><dd data-bind="text: $parent.adminEnumLabel(cardType)"></dd></div>
+                <div><dt>Card product</dt><dd data-bind="text: $parent.adminEnumLabel(cardProduct)"></dd></div>
+                <div><dt>Occupation</dt><dd data-bind="text: occupation || 'Not provided'"></dd></div>
+                <div><dt>Annual income</dt><dd data-bind="text: $parent.adminMoney(annualIncome)"></dd></div>
+                <div><dt>Requested daily limit</dt><dd data-bind="text: $parent.adminMoney(requestedDailyLimit)"></dd></div>
+                <div><dt>Approved daily limit</dt><dd data-bind="text: approvedDailyLimit == null ? 'Not decided' : $parent.adminMoney(approvedDailyLimit)"></dd></div>
+                <div><dt>Approved credit limit</dt><dd data-bind="text: approvedCreditLimit == null ? 'Not decided' : $parent.adminMoney(approvedCreditLimit)"></dd></div>
+                <div class="admin-detail-wide"><dt>Delivery address</dt><dd data-bind="text: deliveryAddress || 'Not provided'"></dd></div>
+                <div><dt>Status</dt><dd data-bind="text: status"></dd></div>
+                <div><dt>Rejection reason</dt><dd data-bind="text: rejectionReason || 'None'"></dd></div>
+                <div class="admin-detail-wide"><dt>Decision notes</dt><dd data-bind="text: decisionNotes || 'None'"></dd></div>
+                <div class="admin-id-field"><dt>Issued card ID</dt><dd data-bind="text: issuedCardId || 'Not issued'"></dd></div>
+                <div class="admin-id-field"><dt>Decided by user ID</dt><dd data-bind="text: decidedByUserId || 'Not decided'"></dd></div>
+                <div><dt>Created</dt><dd data-bind="text: $parent.adminDate(createdAt)"></dd></div>
+                <div><dt>Updated</dt><dd data-bind="text: $parent.adminDate(updatedAt)"></dd></div>
+                <div><dt>Decided</dt><dd data-bind="text: $parent.adminDate(decidedAt)"></dd></div>
+              </dl>
+            </div>
             <button class="admin-approve-button" type="button" data-bind="click: $parent.approveCardApplication, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'card-' + applicationId ? 'Approving...' : 'Approve card'"></button>
           </article>
         </div>
@@ -60,9 +85,35 @@
         <p class="admin-empty-state" data-bind="visible: adminLoanApplications().length === 0">No loan applications are waiting for approval.</p>
         <div class="admin-approval-list" data-bind="foreach: adminLoanApplications">
           <article class="admin-approval-item">
-            <div class="admin-approval-item__title"><span>LA</span><div><strong data-bind="text: $parent.adminEnumLabel(loanType) + ' loan'"></strong><small data-bind="text: 'Application ' + $parent.adminShortId(applicationId)"></small></div><b data-bind="text: status"></b></div>
-            <dl><div><dt>Requested</dt><dd data-bind="text: $parent.adminMoney(requestedAmount)"></dd></div><div><dt>Tenure</dt><dd data-bind="text: requestedTenureMonths + ' months'"></dd></div><div><dt>Income</dt><dd data-bind="text: $parent.adminMoney(monthlyIncome)"></dd></div></dl>
+            <div class="admin-approval-item__title"><span>LA</span><div><strong data-bind="text: $parent.adminEnumLabel(loanType) + ' loan'"></strong><small class="admin-full-id" data-bind="text: 'Application ID: ' + applicationId"></small></div><b data-bind="text: status"></b></div>
+            <dl><div class="admin-id-field"><dt>Customer user ID</dt><dd data-bind="text: customerUserId"></dd></div><div><dt>Requested</dt><dd data-bind="text: $parent.adminMoney(requestedAmount)"></dd></div><div><dt>Tenure</dt><dd data-bind="text: requestedTenureMonths + ' months'"></dd></div><div><dt>Income</dt><dd data-bind="text: $parent.adminMoney(monthlyIncome)"></dd></div></dl>
             <p data-bind="text: purpose"></p>
+            <button class="admin-details-button" type="button" data-bind="click: $parent.toggleAdminDetails, text: detailsOpen() ? 'Hide details' : 'View details', attr: {'aria-expanded': detailsOpen()}"></button>
+            <div class="admin-approval-details" data-bind="visible: detailsOpen">
+              <h5>Complete loan application</h5>
+              <dl class="admin-approval-details__grid">
+                <div class="admin-id-field"><dt>Application ID</dt><dd data-bind="text: applicationId"></dd></div>
+                <div class="admin-id-field"><dt>Customer user ID</dt><dd data-bind="text: customerUserId"></dd></div>
+                <div class="admin-id-field"><dt>Linked account ID</dt><dd data-bind="text: linkedAccountId"></dd></div>
+                <div><dt>Loan type</dt><dd data-bind="text: $parent.adminEnumLabel(loanType)"></dd></div>
+                <div><dt>Requested amount</dt><dd data-bind="text: $parent.adminMoney(requestedAmount)"></dd></div>
+                <div><dt>Requested tenure</dt><dd data-bind="text: requestedTenureMonths + ' months'"></dd></div>
+                <div><dt>Monthly income</dt><dd data-bind="text: $parent.adminMoney(monthlyIncome)"></dd></div>
+                <div><dt>Employment type</dt><dd data-bind="text: $parent.adminEnumLabel(employmentType)"></dd></div>
+                <div class="admin-detail-wide"><dt>Purpose</dt><dd data-bind="text: purpose || 'Not provided'"></dd></div>
+                <div><dt>Approved amount</dt><dd data-bind="text: approvedAmount == null ? 'Not decided' : $parent.adminMoney(approvedAmount)"></dd></div>
+                <div><dt>Approved annual rate</dt><dd data-bind="text: approvedAnnualInterestRate == null ? 'Not decided' : approvedAnnualInterestRate + '%'"></dd></div>
+                <div><dt>Approved tenure</dt><dd data-bind="text: approvedTenureMonths == null ? 'Not decided' : approvedTenureMonths + ' months'"></dd></div>
+                <div><dt>Status</dt><dd data-bind="text: status"></dd></div>
+                <div><dt>Rejection reason</dt><dd data-bind="text: rejectionReason || 'None'"></dd></div>
+                <div class="admin-detail-wide"><dt>Decision notes</dt><dd data-bind="text: decisionNotes || 'None'"></dd></div>
+                <div class="admin-id-field"><dt>Issued loan ID</dt><dd data-bind="text: issuedLoanId || 'Not issued'"></dd></div>
+                <div class="admin-id-field"><dt>Decided by user ID</dt><dd data-bind="text: decidedByUserId || 'Not decided'"></dd></div>
+                <div><dt>Created</dt><dd data-bind="text: $parent.adminDate(createdAt)"></dd></div>
+                <div><dt>Updated</dt><dd data-bind="text: $parent.adminDate(updatedAt)"></dd></div>
+                <div><dt>Decided</dt><dd data-bind="text: $parent.adminDate(decidedAt)"></dd></div>
+              </dl>
+            </div>
             <button class="admin-approve-button" type="button" data-bind="click: $parent.approveLoanApplication, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'loan-' + applicationId ? 'Approving...' : 'Approve loan'"></button>
           </article>
         </div>
@@ -76,9 +127,26 @@
         <p class="admin-empty-state" data-bind="visible: adminBeneficiaryApprovals().length === 0">No beneficiaries are waiting for approval.</p>
         <div class="admin-approval-list" data-bind="foreach: adminBeneficiaryApprovals">
           <article class="admin-approval-item">
-            <div class="admin-approval-item__title"><span>BN</span><div><strong data-bind="text: beneficiaryName"></strong><small data-bind="text: nickname + ' · ' + $parent.adminShortId(beneficiaryId)"></small></div><b data-bind="text: status"></b></div>
-            <dl><div><dt>Customer</dt><dd data-bind="text: $parent.adminShortId(customerUserId)"></dd></div><div><dt>Account</dt><dd data-bind="text: maskedAccountNumber"></dd></div><div><dt>IFSC</dt><dd data-bind="text: ifscCode"></dd></div></dl>
+            <div class="admin-approval-item__title"><span>BN</span><div><strong data-bind="text: beneficiaryName"></strong><small class="admin-full-id" data-bind="text: 'Beneficiary ID: ' + beneficiaryId"></small></div><b data-bind="text: status"></b></div>
+            <dl><div class="admin-id-field"><dt>Customer user ID</dt><dd data-bind="text: customerUserId"></dd></div><div><dt>Account</dt><dd data-bind="text: maskedAccountNumber"></dd></div><div><dt>IFSC</dt><dd data-bind="text: ifscCode"></dd></div></dl>
             <p data-bind="text: $parent.adminEnumLabel(relationship) + (favourite ? ' · Customer favourite' : '')"></p>
+            <button class="admin-details-button" type="button" data-bind="click: $parent.toggleAdminDetails, text: detailsOpen() ? 'Hide details' : 'View details', attr: {'aria-expanded': detailsOpen()}"></button>
+            <div class="admin-approval-details" data-bind="visible: detailsOpen">
+              <h5>Complete beneficiary request</h5>
+              <dl class="admin-approval-details__grid">
+                <div class="admin-id-field"><dt>Beneficiary ID</dt><dd data-bind="text: beneficiaryId"></dd></div>
+                <div class="admin-id-field"><dt>Customer user ID</dt><dd data-bind="text: customerUserId"></dd></div>
+                <div><dt>Beneficiary name</dt><dd data-bind="text: beneficiaryName"></dd></div>
+                <div><dt>Nickname</dt><dd data-bind="text: nickname"></dd></div>
+                <div><dt>Relationship</dt><dd data-bind="text: $parent.adminEnumLabel(relationship)"></dd></div>
+                <div><dt>Masked account number</dt><dd data-bind="text: maskedAccountNumber"></dd></div>
+                <div><dt>IFSC code</dt><dd data-bind="text: ifscCode"></dd></div>
+                <div><dt>Favourite</dt><dd data-bind="text: favourite ? 'Yes' : 'No'"></dd></div>
+                <div><dt>Status</dt><dd data-bind="text: status"></dd></div>
+                <div><dt>Created</dt><dd data-bind="text: $parent.adminDate(createdAt)"></dd></div>
+                <div><dt>Updated</dt><dd data-bind="text: $parent.adminDate(updatedAt)"></dd></div>
+              </dl>
+            </div>
             <div class="admin-beneficiary-actions"><button class="admin-block-button" type="button" data-bind="click: $parent.blockBeneficiary, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'beneficiary-blocked-' + beneficiaryId ? 'Blocking...' : 'Block' "></button><button class="admin-approve-button" type="button" data-bind="click: $parent.approveBeneficiary, disable: $parent.adminActionBusy() !== '', text: $parent.adminActionBusy() === 'beneficiary-verified-' + beneficiaryId ? 'Approving...' : 'Approve beneficiary'"></button></div>
           </article>
         </div>
@@ -92,15 +160,29 @@
         <p class="admin-empty-state" data-bind="visible: adminKycReviews().length === 0">No KYC submissions are waiting for approval.</p>
         <div class="admin-approval-list" data-bind="foreach: adminKycReviews">
           <article class="admin-approval-item">
-            <div class="admin-approval-item__title"><span>KY</span><div><strong>Customer KYC review</strong><small data-bind="text: 'User ' + $parent.adminShortId(userId)"></small></div><b data-bind="text: status"></b></div>
-            <dl><div><dt>Documents</dt><dd data-bind="text: documentCount"></dd></div><div><dt>Types</dt><dd data-bind="text: (uploadedDocumentTypes || []).join(', ') || 'Identity details'"></dd></div><div><dt>Submitted</dt><dd data-bind="text: $parent.adminDate(createdAt)"></dd></div></dl>
-            <div class="admin-document-status" data-bind="visible: documentsLoading">Loading uploaded documents...</div>
-            <div class="admin-document-status admin-document-status--error" data-bind="visible: documentsError, text: documentsError"></div>
-            <div class="admin-document-list" data-bind="foreach: documents">
-              <div class="admin-document-row">
-                <span data-bind="text: contentType === 'application/pdf' ? 'PDF' : 'IMG'"></span>
-                <div><strong data-bind="text: originalFileName"></strong><small data-bind="text: $parents[1].adminEnumLabel(documentType) + ' · ' + $parents[1].adminFileSize(fileSize)"></small></div>
-                <button type="button" data-bind="click: $parents[1].openKycDocument, disable: $parents[1].adminDocumentBusy() !== '', text: $parents[1].adminDocumentBusy() === 'document-' + documentId ? 'Opening...' : $parents[1].adminDocumentActionLabel($data)"></button>
+            <div class="admin-approval-item__title"><span>KY</span><div><strong>Customer KYC review</strong><small class="admin-full-id" data-bind="text: 'User ID: ' + userId"></small></div><b data-bind="text: status"></b></div>
+            <dl><div class="admin-id-field"><dt>KYC ID</dt><dd data-bind="text: kycId"></dd></div><div><dt>Documents</dt><dd data-bind="text: documentCount"></dd></div><div><dt>Types</dt><dd data-bind="text: (uploadedDocumentTypes || []).join(', ') || 'Identity details'"></dd></div><div><dt>Submitted</dt><dd data-bind="text: $parent.adminDate(createdAt)"></dd></div></dl>
+            <button class="admin-details-button" type="button" data-bind="click: $parent.toggleAdminDetails, text: detailsOpen() ? 'Hide details' : 'View details', attr: {'aria-expanded': detailsOpen()}"></button>
+            <div class="admin-approval-details" data-bind="visible: detailsOpen">
+              <h5>Complete KYC review</h5>
+              <dl class="admin-approval-details__grid">
+                <div class="admin-id-field"><dt>KYC ID</dt><dd data-bind="text: kycId"></dd></div>
+                <div class="admin-id-field"><dt>User ID</dt><dd data-bind="text: userId"></dd></div>
+                <div><dt>Status</dt><dd data-bind="text: status"></dd></div>
+                <div><dt>Rejection reason</dt><dd data-bind="text: rejectionReason || 'None'"></dd></div>
+                <div><dt>Document count</dt><dd data-bind="text: documentCount"></dd></div>
+                <div class="admin-detail-wide"><dt>Uploaded document types</dt><dd data-bind="text: (uploadedDocumentTypes || []).join(', ') || 'None reported'"></dd></div>
+                <div><dt>Created</dt><dd data-bind="text: $parent.adminDate(createdAt)"></dd></div>
+                <div><dt>Updated</dt><dd data-bind="text: $parent.adminDate(updatedAt)"></dd></div>
+              </dl>
+              <div class="admin-document-status" data-bind="visible: documentsLoading">Loading uploaded documents...</div>
+              <div class="admin-document-status admin-document-status--error" data-bind="visible: documentsError, text: documentsError"></div>
+              <div class="admin-document-list" data-bind="foreach: documents">
+                <div class="admin-document-row">
+                  <span data-bind="text: contentType === 'application/pdf' ? 'PDF' : 'IMG'"></span>
+                  <div><strong data-bind="text: originalFileName"></strong><small data-bind="text: $parents[1].adminEnumLabel(documentType) + ' · ' + $parents[1].adminFileSize(fileSize)"></small><small class="admin-full-id" data-bind="text: 'Document ID: ' + documentId"></small></div>
+                  <button type="button" data-bind="click: $parents[1].openKycDocument, disable: $parents[1].adminDocumentBusy() !== '', text: $parents[1].adminDocumentBusy() === 'document-' + documentId ? 'Opening...' : $parents[1].adminDocumentActionLabel($data)"></button>
+                </div>
               </div>
             </div>
             <p>Approval verifies KYC and enables this customer to open a bank account.</p>

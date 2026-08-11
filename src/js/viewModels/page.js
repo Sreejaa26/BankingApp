@@ -358,8 +358,11 @@ define([
     };
     this.adminDate = function (value) {
       if (!value) { return 'Not provided'; }
-      var date = new Date(value);
-      return Number.isNaN(date.getTime()) ? 'Not provided' : self.transactionDateConverter.format(date);
+      var normalized = String(value).replace(/(\.\d{3})\d+(Z|[+-]\d{2}:\d{2})$/, '$1$2');
+      var date = new Date(normalized);
+      return Number.isNaN(date.getTime()) ? 'Not provided' : date.toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
     };
     this.adminShortId = function (value) {
       return String(value || '').slice(0, 8);
@@ -484,6 +487,9 @@ define([
     this.adminLoanApplications = ko.observableArray([]);
     this.adminKycReviews = ko.observableArray([]);
     this.adminBeneficiaryApprovals = ko.observableArray([]);
+    this.toggleAdminDetails = function (item) {
+      if (item && ko.isObservable(item.detailsOpen)) { item.detailsOpen(!item.detailsOpen()); }
+    };
 
     this.loanProducts = ko.observableArray([
       { icon: 'PL', type: 'Personal loan', rate: 10.4, limit: 'Up to ₹20 lakh', copy: 'Flexible funds for planned or unexpected personal expenses.', accent: 'loan-product--blue' },
@@ -1180,15 +1186,22 @@ define([
         api.request('/api/customers/kyc/reviews?status=PENDING', {}, token)
           .then(responseData).catch(function (error) { return { failed: true, message: 'KYC approvals: ' + error.message }; })
       ]).then(function (responses) {
-        self.adminCardApplications(Array.isArray(responses[0]) ? responses[0] : []);
-        self.adminLoanApplications(Array.isArray(responses[1]) ? responses[1] : []);
+        self.adminCardApplications((Array.isArray(responses[0]) ? responses[0] : []).map(function (application) {
+          return Object.assign({}, application, { detailsOpen: ko.observable(false) });
+        }));
+        self.adminLoanApplications((Array.isArray(responses[1]) ? responses[1] : []).map(function (application) {
+          return Object.assign({}, application, { detailsOpen: ko.observable(false) });
+        }));
         const beneficiaryPage = responses[2] || {};
-        self.adminBeneficiaryApprovals(Array.isArray(beneficiaryPage.items) ? beneficiaryPage.items : Array.isArray(beneficiaryPage) ? beneficiaryPage : []);
+        self.adminBeneficiaryApprovals((Array.isArray(beneficiaryPage.items) ? beneficiaryPage.items : Array.isArray(beneficiaryPage) ? beneficiaryPage : []).map(function (beneficiary) {
+          return Object.assign({}, beneficiary, { detailsOpen: ko.observable(false) });
+        }));
         const kycReviews = Array.isArray(responses[3]) ? responses[3].map(function (review) {
           return Object.assign({}, review, {
             documents: ko.observableArray([]),
             documentsLoading: ko.observable(true),
-            documentsError: ko.observable('')
+            documentsError: ko.observable(''),
+            detailsOpen: ko.observable(false)
           });
         }) : [];
         self.adminKycReviews(kycReviews);
@@ -1246,7 +1259,7 @@ define([
         self.items(results[0].map(function (row) {
           return { icon: row.name.slice(0, 2).toUpperCase(), name: row.name, meta: row.endpoint, value: row.count, status: row.status };
         }));
-        self.adminLastUpdated(self.transactionDateConverter.format(new Date()));
+        self.adminLastUpdated(self.adminDate(new Date().toISOString()));
         self.updateAdminHighlights();
       }).catch(function (error) {
         self.actionError(error.message || 'Unable to load the admin approval queues.');

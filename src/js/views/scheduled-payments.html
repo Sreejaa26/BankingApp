@@ -12,7 +12,7 @@
     <article><span>Next payment</span><strong class="schedule-next-date" data-bind="text: nextSchedule"></strong><small>Based on active schedules</small></article>
   </section>
 
-  <section class="surface-card schedule-editor" data-bind="visible: editorOpen">
+  <section id="schedule-editor" class="surface-card schedule-editor" data-bind="visible: editorOpen">
     <div class="card-heading"><div><p class="page-eyebrow">Schedule details</p><h3 data-bind="text: editorMode() === 'edit' ? 'Update scheduled payment' : 'Create a scheduled payment'"></h3></div><button class="dialog-close" type="button" data-bind="click: closeEditor">×</button></div>
     <form class="schedule-form" data-bind="submit: saveSchedule">
       <oj-select-single label-hint="Frequency" data="[[scheduleTypeOptions]]" value="{{scheduleType}}" required></oj-select-single>

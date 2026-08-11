@@ -28,7 +28,7 @@
     </article>
   </section>
 
-  <section class="surface-card bill-registration-panel" data-bind="visible: registrationPanelOpen">
+  <section id="bill-registration-panel" class="surface-card bill-registration-panel" data-bind="visible: registrationPanelOpen">
     <div class="card-heading"><div><p class="page-eyebrow">Biller details</p><h3 data-bind="text: registrationMode() === 'edit' ? 'Update registered biller' : 'Register a new biller'"></h3></div><button class="dialog-close" type="button" data-bind="click: closeRegistration">×</button></div>
     <form class="bill-form bill-form--registration" data-bind="submit: saveRegistration">
       <oj-select-single label-hint="Category filter" data="[[categoryOptions]]" value="{{selectedCategory}}"></oj-select-single>

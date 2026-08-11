@@ -134,9 +134,17 @@ define([
         .finally(function () { self.loading(false); });
     };
 
+    self.scrollToRegistration = function () {
+      requestAnimationFrame(function () {
+        const panel = document.getElementById('bill-registration-panel');
+        if (panel) { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    };
+
     self.openRegistration = function () {
       self.registrationMode('create'); self.editingRegistrationId(''); self.registrationBillerId('');
       self.registrationConsumerReference(''); self.registrationNickname(''); self.registrationPanelOpen(true); self.clearMessage();
+      self.scrollToRegistration();
     };
     self.editRegistration = function (row) {
       self.busyAction('detail-' + row.customerBillerId); self.clearMessage();
@@ -146,6 +154,7 @@ define([
         self.registrationBillerId(detail.biller && detail.biller.billerId || detail.billerId);
         self.registrationConsumerReference(detail.consumerReference || ''); self.registrationNickname(detail.nickname || '');
         self.registrationPanelOpen(true);
+        self.scrollToRegistration();
       }).catch(function (error) { self.showMessage('error', 'Biller detail could not be loaded', error.message); })
         .finally(function () { self.busyAction(''); });
     };
