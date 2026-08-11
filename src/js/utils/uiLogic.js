@@ -51,7 +51,10 @@
 
   function primaryNavigationItems(items, allItems, isAdmin) {
     if (isAdmin) { return items.slice(); }
-    const primaryRoutes = ['dashboard', 'accounts', 'transactions', 'beneficiaries', 'transfer', 'loans', 'cards'];
+    const primaryRoutes = [
+      'dashboard', 'accounts', 'transactions', 'beneficiaries', 'transfer',
+      'bill-payments', 'scheduled-payments', 'loans', 'cards'
+    ];
     const primaryItems = primaryRoutes.map(function (route) {
       return items.find(function (item) { return item.route === route; });
     }).filter(Boolean);
