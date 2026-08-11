@@ -133,6 +133,49 @@ oj-select-single.oj-text-field-label-inside.oj-has-no-value .oj-text-field-conta
 .page-title-bar h1 { font-size: 21px; letter-spacing: -.025em; }
 .page-content { width: min(100%,1500px); margin-inline: auto; padding: 30px var(--page-gutter) 44px; }
 
+/* Dual navigation: persistent sidebar plus a complete, scrollable top route bar. */
+.top-route-navigation {
+  width: min(100%,1500px);
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  margin-inline: auto;
+  padding: 6px var(--page-gutter);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  scrollbar-width: none;
+}
+
+.top-route-navigation::-webkit-scrollbar { display: none; }
+
+.top-route-navigation button {
+  min-height: 38px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.top-route-navigation button:hover { color: var(--navy-900); background: var(--blue-50); }
+.top-route-navigation button.is-active { color: var(--navy-950); background: var(--blue-100); }
+
+@media (min-width: 1321px) {
+  .app-shell--topnav { display: grid; grid-template-columns: 272px minmax(0,1fr); }
+  .app-shell--topnav .side-navigation { display: flex; transform: none; }
+  .app-shell--topnav .shell-content { min-width: 0; grid-column: 2; }
+  .app-shell--topnav .navigation-scrim { display: none !important; }
+}
+
 /* Typography and hierarchy */
 .login-story h1 { color: var(--white); font-family: var(--font-ui); letter-spacing: -.045em; }
 .login-heading h2,.page-introduction h2,.welcome-banner h2 { font-family: var(--font-ui); letter-spacing: -.035em; }
@@ -198,6 +241,8 @@ oj-select-single.oj-text-field-label-inside.oj-has-no-value .oj-text-field-conta
   .locale-switcher select { max-width: 72px; }
   .page-title-bar { min-height: 60px; }
   .page-title-bar > span { display: none; }
+  .top-route-navigation { min-height: 48px; gap: 3px; padding-block: 5px; }
+  .top-route-navigation button { min-height: 36px; padding-inline: 9px; font-size: 10px; }
   .page-content { padding-block: 22px 36px; }
   .page-introduction { padding: 20px; border-radius: 16px; }
   .surface-card,.workspace-card { border-radius: 16px; }
