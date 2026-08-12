@@ -2,6 +2,8 @@
 
 This is the frontend application for the Internet Banking platform. It provides the user interface for customer banking and admin operations such as login, registration, account management, beneficiary transfer, card services, loan applications, KYC upload, transactions, and support.
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/04b88180-9382-4a55-9f23-4ab6953208af" />
+
 ## Features
 
 - User login and registration
