@@ -1,4 +1,4 @@
-# BankingApp Frontend
+<img width="2043" height="1377" alt="image" src="https://github.com/user-attachments/assets/954af343-14c7-458a-8898-524844392df5" /># BankingApp Frontend
 
 This is the frontend application for the Internet Banking platform. It provides the user interface for customer banking and admin operations such as login, registration, account management, beneficiary transfer, card services, loan applications, KYC upload, transactions, and support.
 
@@ -102,6 +102,10 @@ http://localhost:8080
 - Approve loans
 - Review KYC and customer onboarding
 - Monitor operational dashboards
+
+  ###Architecture of project
+  <img width="2043" height="1377" alt="image" src="https://github.com/user-attachments/assets/52718b90-2dbd-4878-980f-a76511561edf" />
+ 
 
 ## License
 
