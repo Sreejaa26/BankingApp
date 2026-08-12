@@ -19,7 +19,7 @@ define([
     self.authModuleConfig = ko.observable({ view: [], viewModel: null });
     self.mainModuleConfig = ko.observable({ view: [], viewModel: null });
     self.navigationOpen = ko.observable(false);
-    self.customerName = ko.observable('Sreeja Pamu');
+    self.customerName = ko.observable('No data');
     self.authToken = ko.observable('');
     self.currentRole = ko.observable('CUSTOMER');
     self.isAdmin = ko.pureComputed(function () { return self.currentRole() === 'ADMIN'; });

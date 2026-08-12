@@ -23,60 +23,60 @@ define([
   const pages = {
     profile: {
       eyebrow: 'Your details', title: 'Profile', description: 'Keep your identity and contact details accurate for secure banking.', action: 'Update profile', endpoint: 'GET /api/customers/me',
-      highlights: [['Profile status', 'Loading'], ['KYC status', 'Not submitted'], ['Access level', 'Customer']],
+      highlights: [],
       primaryEyebrow: 'Personal profile', primaryTitle: 'Your banking identity', secondaryEyebrow: 'Security', secondaryTitle: 'Verification status', secondaryCopy: 'Complete your profile and KYC before requesting a new bank account.',
-      items: [['P', 'Customer profile', 'Personal and address information', 'Secure', 'Protected']],
-      secondary: [['ID', 'Identity details', 'Used for regulated banking services', 'Required', '', 100], ['KYC', 'KYC verification', 'Reviewed by bank operations', 'Pending', '', 35]]
+      items: [],
+      secondary: []
     },
     accounts: {
       eyebrow: 'Your money', title: 'Accounts', description: 'Review balances, account details, statements, and interest earned.', action: 'Open an account', endpoint: 'GET /api/accounts',
-      highlights: [['Total balance', '₹4,82,650'], ['Available now', '₹4,36,650'], ['Active accounts', '3']],
+      highlights: [],
       primaryEyebrow: 'Portfolio', primaryTitle: 'Your accounts', secondaryEyebrow: 'Monthly snapshot', secondaryTitle: 'Balance distribution', secondaryCopy: 'Your savings account holds most of your available balance.',
-      items: [['SA','Savings account','•••• 4821 · Primary','₹3,24,850','Active'],['CA','Current account','•••• 7634 · Business','₹1,11,800','Active'],['FD','Fixed deposit','Matures 18 Mar 2027','₹46,000','6.8% p.a.']],
-      secondary: [['01','Savings','67% of portfolio','₹3.25L','',67],['02','Current','23% of portfolio','₹1.12L','',23],['03','Deposits','10% of portfolio','₹46K','',10]]
+      items: [],
+      secondary: []
     },
     transactions: {
       eyebrow: 'Activity', title: 'Transactions', description: 'Search, filter, categorize, and export your complete transaction history.', action: 'Download statement', endpoint: 'GET /api/transactions',
-      highlights: [['This month','₹48,730'],['Incoming','₹1,04,500'],['Transactions','28']],
+      highlights: [],
       primaryEyebrow: 'Latest activity', primaryTitle: 'Recent transactions', secondaryEyebrow: 'Spending overview', secondaryTitle: 'Top categories', secondaryCopy: 'Essentials and monthly bills account for most of this month’s spend.',
-      items: [['UP','UPI · Fresh Basket','Today, 10:42 AM','−₹1,840','Completed'],['IN','Salary credit','28 Jul, 9:05 AM','+₹82,500','Received',null,true],['EB','Electricity bill','27 Jul, 6:30 PM','−₹3,260','Auto-paid'],['TR','Transfer to Ananya','26 Jul, 2:14 PM','−₹12,000','Completed']],
-      secondary: [['01','Bills & utilities','8 payments','₹18,400','',72],['02','Shopping','11 payments','₹14,260','',56],['03','Food & dining','9 payments','₹9,870','',39]]
+      items: [],
+      secondary: []
     },
     beneficiaries: {
       eyebrow: 'Payments', title: 'Beneficiaries', description: 'Manage trusted people and businesses you send money to.', action: 'Add beneficiary', endpoint: 'GET /api/beneficiaries',
-      highlights: [['Active','12'],['Recently paid','4'],['Pending approval','1']],
+      highlights: [],
       primaryEyebrow: 'Trusted contacts', primaryTitle: 'Recently paid', secondaryEyebrow: 'Beneficiary status', secondaryTitle: 'Your payment network', secondaryCopy: 'All recently used beneficiaries have completed bank verification.',
-      items: [['AS','Ananya Sharma','HDFC Bank · •••• 2046','₹12,000','Paid 26 Jul'],['RM','Rohan Mehta','ICICI Bank · •••• 9183','₹8,500','Paid 19 Jul'],['SP','Sreeja Pamu','Northstar Bank · •••• 5502','₹25,000','Paid 12 Jul']],
-      secondary: [['✓','Verified','Ready for instant payment','11','',92],['⌛','Pending approval','Available after cooling period','1','',8]]
+      items: [],
+      secondary: []
     },
     transfer: {
       eyebrow: 'Move money', title: 'Transfer Money', description: 'Make secure transfers between your accounts or to a beneficiary.', action: 'New transfer', endpoint: 'POST /api/transactions/transfer',
-      highlights: [['Daily limit','₹5,00,000'],['Available today','₹5,00,000'],['Scheduled','2']],
+      highlights: [],
       primaryEyebrow: 'Quick transfer', primaryTitle: 'Start a secure payment', secondaryEyebrow: 'Upcoming', secondaryTitle: 'Scheduled transfers', secondaryCopy: 'Review scheduled payments before they are processed.',
-      items: [['1','Choose an account','Savings account · ₹3,24,850 available','From','Selected'],['2','Select beneficiary','Choose from 12 verified contacts','To','Required'],['3','Enter transfer details','Amount, purpose and payment date','₹0','Next step']],
-      secondary: [['AS','Ananya Sharma','02 Aug · Monthly rent','₹22,000','Scheduled'],['MF','Mutual Fund SIP','05 Aug · Auto transfer','₹10,000','Scheduled']]
+      items: [],
+      secondary: []
     },
     loans: {
       eyebrow: 'Borrowing', title: 'Loans', description: 'Track existing loans, compare repayment estimates, and submit a new loan application.', action: 'Apply for a new loan', endpoint: 'GET /api/loans',
       heroImage: 'styles/images/northstar-loan-planning.png', heroAlt: 'Couple reviewing their financing options together on a laptop',
-      highlights: [['Outstanding','₹8,42,000'],['Next EMI','₹24,600'],['Due date','05 Aug']],
-      primaryEyebrow: 'Repayment overview', primaryTitle: 'Active loans', secondaryEyebrow: 'Next payment', secondaryTitle: 'Upcoming EMI', secondaryCopy: 'Your next instalment is scheduled for automatic payment from Savings •••• 4821.',
-      items: [['HL','Home loan','Loan •••• 8401 · 7.9% p.a.','₹7,64,000','62% repaid',62],['PL','Personal loan','Loan •••• 1178 · 10.4% p.a.','₹78,000','74% repaid',74]],
-      secondary: [['05','Home loan EMI','Due 05 Aug 2026','₹18,400','Auto-pay on'],['08','Personal loan EMI','Due 08 Aug 2026','₹6,200','Auto-pay on']]
+      highlights: [],
+      primaryEyebrow: 'Loan portfolio', primaryTitle: 'Active loans', secondaryEyebrow: '', secondaryTitle: '', secondaryCopy: '',
+      items: [],
+      secondary: []
     },
     cards: {
       eyebrow: 'Card controls', title: 'Cards', description: 'Manage limits, freeze cards, update usage controls, and view card activity.', action: 'Manage cards', endpoint: 'GET /api/cards',
       heroImage: 'styles/images/northstar-premium-cards.png', heroAlt: 'Two premium Northstar-style payment cards',
-      highlights: [['Available credit','₹1,76,400'],['Current spend','₹23,600'],['Active cards','2']],
+      highlights: [],
       primaryEyebrow: 'Wallet', primaryTitle: 'Your cards', secondaryEyebrow: 'Credit usage', secondaryTitle: 'Limit overview', secondaryCopy: 'You have used 12% of your total credit limit this billing cycle.',
-      items: [['VI','Northstar Signature','Visa · •••• 4902','₹1,76,400','Available'],['MC','Northstar Debit','Mastercard · •••• 8214','₹3,24,850','Active']],
-      secondary: [['₹','Current spend','Statement closes 12 Aug','₹23,600','',12],['L','Total limit','Across active credit cards','₹2,00,000','',100]]
+      items: [],
+      secondary: []
     },
     notifications: {
       eyebrow: 'Stay informed', title: 'Notifications', description: 'Your latest account and card updates.', action: '', endpoint: '',
       highlights: [],
       primaryEyebrow: 'Recent updates', primaryTitle: 'Notifications', secondaryEyebrow: '', secondaryTitle: '', secondaryCopy: '',
-      items: [['AC','Account created','Your new Northstar bank account was created successfully.','Recent','New'],['CA','Card application submitted','Your card application was received and is under review.','Recent','New']],
+      items: [],
       secondary: []
     },
     support: {
@@ -85,10 +85,10 @@ define([
     },
     admin: {
       eyebrow: 'Operations', title: 'Admin Dashboard', description: 'Monitor customer activity, service health, and operational risk.', action: 'Refresh operations', endpoint: 'GET /api/admin/dashboard',
-      highlights: [['Active customers','18,420'],['Pending reviews','24'],['Service health','99.99%']],
+      highlights: [],
       primaryEyebrow: 'Operations queue', primaryTitle: 'Items requiring attention', secondaryEyebrow: 'Platform overview', secondaryTitle: 'Service status', secondaryCopy: 'Core banking services are operating within their normal thresholds.',
-      items: [['KY','KYC reviews','12 applications awaiting verification','12','High priority'],['TR','Transfer reviews','7 payments flagged for review','7','Review'],['AC','Account approvals','5 new customer applications','5','Pending']],
-      secondary: [['API','Banking API','42 ms average response','99.99%','Operational',100],['UPI','Payments network','68 ms average response','99.98%','Operational',100],['ID','Identity service','51 ms average response','99.99%','Operational',100]]
+      items: [],
+      secondary: []
     }
   };
 
@@ -151,11 +151,21 @@ define([
   ];
 
   function normalizeItem(item) {
-    return { icon: item[0], name: item[1], meta: item[2], value: item[3], status: item[4] || '', progress: item[5], positive: Boolean(item[6]) };
+    return { icon: item[0], name: item[1], meta: item[2], value: item[3], status: item[4] || '', progress: item[5], positive: Boolean(item[6]), loan: null, repayable: false };
   }
 
   function responseData(response) {
     return response && Object.prototype.hasOwnProperty.call(response, 'data') ? response.data : response;
+  }
+
+  function responseArray(response) {
+    const payload = responseData(response);
+    if (Array.isArray(payload)) { return payload; }
+    if (payload && Array.isArray(payload.items)) { return payload.items; }
+    if (payload && Array.isArray(payload.content)) { return payload.content; }
+    if (payload && Array.isArray(payload.schedule)) { return payload.schedule; }
+    if (payload && Array.isArray(payload.history)) { return payload.history; }
+    return [];
   }
 
   function isCustomerProfileComplete(profile) {
@@ -323,9 +333,9 @@ define([
     this.cardApplicationAccountId = ko.observable('');
     this.cardApplicationType = ko.observable('CREDIT');
     this.cardProduct = ko.observable('GOLD');
-    this.cardApplicantIncome = ko.observable(85000);
-    this.cardApplicantOccupation = ko.observable('Salaried professional');
-    this.cardRequestedLimit = ko.observable(30000);
+    this.cardApplicantIncome = ko.observable(0);
+    this.cardApplicantOccupation = ko.observable('');
+    this.cardRequestedLimit = ko.observable(0);
     this.cardDeliveryAddress = ko.observable('');
     this.cardApplicationSubmitted = ko.observable(false);
     this.cardApplicationReference = ko.observable('Not submitted');
@@ -356,6 +366,12 @@ define([
     };
     this.adminMoney = function (value) {
       return self.currencyConverter.format(Number(value || 0));
+    };
+    this.pageMoney = function (value) {
+      return self.currencyConverter.format(Number(value || 0));
+    };
+    this.loanHistoryPrincipal = function (value) {
+      return value == null ? 'No data' : self.pageMoney(value);
     };
     this.adminDate = function (value) {
       if (!value) { return 'Not provided'; }
@@ -470,15 +486,60 @@ define([
     this.loanError = ko.observable('');
     this.loanInfo = ko.observable('');
     this.loanType = ko.observable('Personal loan');
-    this.loanAmount = ko.observable(500000);
-    this.loanTenure = ko.observable('36');
-    this.loanPurpose = ko.observable('Personal expenses');
-    this.employmentType = ko.observable('Salaried');
-    this.monthlyIncome = ko.observable(85000);
+    this.loanAmount = ko.observable(0);
+    this.loanTenure = ko.observable('');
+    this.loanPurpose = ko.observable('');
+    this.employmentType = ko.observable('');
+    this.monthlyIncome = ko.observable(0);
     this.applicationReference = ko.observable('');
     this.loanAccountId = ko.observable('');
     this.loanAccountOptionRows = ko.observableArray([]);
     this.loanAccountOptions = new ArrayDataProvider(this.loanAccountOptionRows, { keyAttributes: 'value' });
+    this.loanPortfolio = ko.observableArray([]);
+    this.activeLoanRows = ko.pureComputed(function () {
+      return self.loanPortfolio().filter(function (loan) {
+        const status = String(loan.status || '').toUpperCase();
+        return status === 'ACTIVE' || status === 'OVERDUE';
+      });
+    });
+    this.loanTypes = ko.observableArray([]);
+    this.loanHistoryLoanId = ko.observable('');
+    this.loanHistoryOptionRows = ko.observableArray([]);
+    this.loanHistoryOptions = new ArrayDataProvider(this.loanHistoryOptionRows, { keyAttributes: 'value' });
+    this.loanHistoryRows = ko.observableArray([]);
+    this.loanHistoryLoading = ko.observable(false);
+    this.loanHistoryError = ko.observable('');
+    this.loanEstimate = ko.observable(null);
+    this.loanEstimateBusy = ko.observable(false);
+    this.loanRepaymentOpen = ko.observable(false);
+    this.loanRepaymentLoanId = ko.observable('');
+    this.loanRepaymentAccountId = ko.observable('');
+    this.loanRepaymentAmount = ko.observable(0);
+    this.loanRepaymentDescription = ko.observable('EMI payment');
+    this.loanRepaymentBusy = ko.observable(false);
+    this.loanRepaymentError = ko.observable('');
+    this.loanRepaymentSuccess = ko.observable('');
+    this.pendingLoanRepayment = ko.observable(null);
+    this.loanRepaymentLoanOptionRows = ko.observableArray([]);
+    this.loanRepaymentLoanOptions = new ArrayDataProvider(this.loanRepaymentLoanOptionRows, { keyAttributes: 'value' });
+    this.loanRepaymentAccountOptionRows = ko.observableArray([]);
+    this.loanRepaymentAccountOptions = new ArrayDataProvider(this.loanRepaymentAccountOptionRows, { keyAttributes: 'value' });
+    this.selectedRepaymentLoan = ko.pureComputed(function () {
+      return self.loanPortfolio().find(function (loan) { return loan.loanId === self.loanRepaymentLoanId(); }) || null;
+    });
+    this.selectedRepaymentAccount = ko.pureComputed(function () {
+      return self.loanRepaymentAccountOptionRows().find(function (account) { return account.value === self.loanRepaymentAccountId(); }) || null;
+    });
+    this.loanRepaymentMaximum = ko.pureComputed(function () {
+      const loan = self.selectedRepaymentLoan();
+      return loan ? Math.max(1, Number(loan.outstandingBalance || 0)) : 1;
+    });
+    this.loanRepaymentLoanId.subscribe(function () {
+      const loan = self.selectedRepaymentLoan();
+      if (!loan) { return; }
+      const suggested = Math.min(Number(loan.emiAmount || loan.outstandingBalance || 0), Number(loan.outstandingBalance || 0));
+      if (!Number(self.loanRepaymentAmount()) || Number(self.loanRepaymentAmount()) > Number(loan.outstandingBalance || 0)) { self.loanRepaymentAmount(suggested); }
+    });
     this.adminLoading = ko.observable(false);
     this.adminActionBusy = ko.observable('');
     this.adminDocumentBusy = ko.observable('');
@@ -534,11 +595,16 @@ define([
       return Math.round(principal * monthlyRate * factor / (factor - 1));
     });
     this.formattedEmi = ko.pureComputed(function () {
-      return '₹' + self.estimatedEmi().toLocaleString('en-IN');
+      const estimate = self.loanEstimate();
+      return estimate ? self.currencyConverter.format(Number(estimate.monthlyEmi || 0)) : 'No data';
     });
     this.totalInterest = ko.pureComputed(function () {
-      const total = self.estimatedEmi() * (Number(self.loanTenure()) || 0) - (Number(self.loanAmount()) || 0);
-      return '₹' + Math.max(0, total).toLocaleString('en-IN');
+      const estimate = self.loanEstimate();
+      return estimate ? self.currencyConverter.format(Number(estimate.totalInterest || 0)) : 'No data';
+    });
+    this.totalRepayment = ko.pureComputed(function () {
+      const estimate = self.loanEstimate();
+      return estimate ? self.currencyConverter.format(Number(estimate.totalRepayment || 0)) : 'No data';
     });
 
     this.openLoanApplication = function () {
@@ -572,6 +638,126 @@ define([
     this.closeLoanApplication = function () {
       self.loanApplicationOpen(false);
       self.loanError('');
+    };
+    this.openLoanRepayment = function (loan) {
+      const eligibleLoans = self.loanPortfolio().filter(function (item) { const status = String(item.status || '').toUpperCase(); return status === 'ACTIVE' || status === 'OVERDUE'; });
+      const selected = loan && loan.loanId ? loan : eligibleLoans[0];
+      if (!selected) {
+        self.loanRepaymentError('No active or overdue loan is currently eligible for repayment.');
+        return;
+      }
+      self.loanRepaymentLoanId(selected.loanId);
+      const accounts = self.loanRepaymentAccountOptionRows();
+      const linkedAccount = accounts.find(function (account) { return account.value === selected.linkedAccountId; });
+      self.loanRepaymentAccountId((linkedAccount || accounts[0] || {}).value || '');
+      self.loanRepaymentAmount(Math.min(Number(selected.emiAmount || selected.outstandingBalance || 0), Number(selected.outstandingBalance || 0)));
+      self.loanRepaymentDescription('EMI payment');
+      self.loanRepaymentError('');
+      self.loanRepaymentSuccess('');
+      self.loanRepaymentOpen(true);
+      requestAnimationFrame(function () {
+        const panel = document.getElementById('loan-repayment-panel');
+        if (panel) { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    };
+    this.closeLoanRepayment = function () {
+      if (self.loanRepaymentBusy()) { return; }
+      self.loanRepaymentOpen(false);
+      self.pendingLoanRepayment(null);
+      self.loanRepaymentError('');
+    };
+    this.reviewLoanRepayment = function () {
+      const loan = self.selectedRepaymentLoan();
+      const account = self.selectedRepaymentAccount();
+      const amount = Number(self.loanRepaymentAmount());
+      if (!loan || ['ACTIVE', 'OVERDUE'].indexOf(String(loan.status || '').toUpperCase()) < 0) {
+        self.loanRepaymentError('Choose an active or overdue loan.'); return false;
+      }
+      if (!account) { self.loanRepaymentError('Choose an active source account.'); return false; }
+      if (!Number.isFinite(amount) || amount <= 0) { self.loanRepaymentError('Enter a repayment amount greater than zero.'); return false; }
+      if (amount > Number(loan.outstandingBalance || 0)) { self.loanRepaymentError('The repayment cannot exceed the outstanding loan balance.'); return false; }
+      if (amount > Number(account.availableBalance || 0)) { self.loanRepaymentError('The selected account does not have enough available balance.'); return false; }
+      self.loanRepaymentError('');
+      self.pendingLoanRepayment({
+        loanId: loan.loanId,
+        loanLabel: String(loan.loanType || 'Loan').replace(/_/g, ' ') + ' loan ending ' + String(loan.loanNumber || '').slice(-4),
+        sourceAccountId: account.value,
+        accountLabel: account.label,
+        amount: amount,
+        description: String(self.loanRepaymentDescription() || '').trim() || 'EMI payment',
+        idempotencyKey: api.createIdempotencyKey()
+      });
+      return false;
+    };
+    this.loadLoanRepaymentHistory = function () {
+      const loanId = self.loanHistoryLoanId();
+      self.loanHistoryRows([]);
+      self.loanHistoryError('');
+      if (!loanId) { return Promise.resolve(); }
+      self.loanHistoryLoading(true);
+      return api.request('/api/loans/' + encodeURIComponent(loanId) + '/history', {}, params.app.authToken()).then(function (response) {
+        self.loanHistoryRows(responseArray(response));
+      }).catch(function (error) {
+        self.loanHistoryError(error.message || 'Unable to load repayment history.');
+      }).finally(function () {
+        self.loanHistoryLoading(false);
+      });
+    };
+    this.calculateLoanEmi = function () {
+      const amount = Number(self.loanAmount());
+      const tenure = Number(self.loanTenure());
+      const rate = Number(self.selectedLoanRate());
+      self.loanEstimate(null);
+      if (!amount || amount < 50000 || !tenure || !rate) {
+        self.loanError('Choose a loan type and tenure, then enter a loan amount of at least ₹50,000.');
+        return;
+      }
+      self.loanEstimateBusy(true);
+      self.loanError('');
+      api.request('/api/loans/calculate', { method: 'POST', body: JSON.stringify({ loanAmount: amount, annualInterestRate: rate, tenureMonths: tenure, startDate: null }) }, params.app.authToken()).then(function (response) {
+        self.loanEstimate(responseData(response) || null);
+      }).catch(function (error) {
+        self.loanError(error.message || 'Unable to calculate the EMI.');
+      }).finally(function () {
+        self.loanEstimateBusy(false);
+      });
+    };
+    this.cancelLoanRepaymentConfirmation = function () {
+      if (!self.loanRepaymentBusy()) { self.pendingLoanRepayment(null); }
+    };
+    this.confirmLoanRepayment = function () {
+      const pending = self.pendingLoanRepayment();
+      if (!pending || self.loanRepaymentBusy()) { return; }
+      self.loanRepaymentBusy(true); self.loanRepaymentError(''); self.loanRepaymentSuccess('');
+      api.request('/api/banking/loans/' + encodeURIComponent(pending.loanId) + '/repay', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': pending.idempotencyKey },
+        body: JSON.stringify({ sourceAccountId: pending.sourceAccountId, amount: pending.amount, description: pending.description })
+      }, params.app.authToken()).then(function (response) {
+        const repayment = responseData(response) || {};
+        self.pendingLoanRepayment(null);
+        self.loanRepaymentSuccess('Repayment submitted successfully. Reference ' + (repayment.referenceNumber || repayment.loanRepaymentId || 'created') + '.');
+        self.loanInfo(self.loanRepaymentSuccess());
+        const refreshedLoanId = pending.loanId;
+        return self.loadLoanData().then(function () {
+          return api.request('/api/loans/' + encodeURIComponent(refreshedLoanId) + '/balance', {}, params.app.authToken());
+        }).then(function (balanceResponse) {
+          const balance = responseData(balanceResponse) || {};
+          const loan = self.loanPortfolio().find(function (item) { return item.loanId === refreshedLoanId; });
+          if (loan) {
+            loan.outstandingBalance = Number(balance.outstandingBalance == null ? loan.outstandingBalance : balance.outstandingBalance);
+            loan.emiAmount = Number(balance.emiAmount == null ? loan.emiAmount : balance.emiAmount);
+            loan.status = balance.status || loan.status;
+            self.loanPortfolio.valueHasMutated();
+            self.refreshLoanPresentation();
+            self.loanRepaymentLoanId(refreshedLoanId);
+            self.loanRepaymentAmount(Math.min(Number(loan.emiAmount || loan.outstandingBalance || 0), Number(loan.outstandingBalance || 0)));
+          }
+          if (self.loanHistoryLoanId() === refreshedLoanId) { return self.loadLoanRepaymentHistory(); }
+        });
+      }).catch(function (error) {
+        self.loanRepaymentError(error.message || 'Unable to complete the loan repayment.');
+      }).finally(function () { self.loanRepaymentBusy(false); });
     };
     this.submitLoanApplication = function () {
       const amount = Number(self.loanAmount());
@@ -633,33 +819,67 @@ define([
       self.applicationReference('');
       self.loanError('');
     };
+    this.refreshLoanPresentation = function () {
+      const loans = self.loanPortfolio();
+      const eligibleLoans = loans.filter(function (loan) {
+        const status = String(loan.status || '').trim().toUpperCase();
+        return status === 'ACTIVE' || status === 'OVERDUE';
+      });
+      self.items(eligibleLoans.map(function (loan) {
+        return {
+          icon: String(loan.loanType || 'LN').slice(0, 2),
+          name: String(loan.loanType || 'Loan').replace(/_/g, ' ') + ' loan',
+          meta: 'Loan ' + String(loan.loanNumber || loan.loanId || 'No data') + ' · EMI ' + self.currencyConverter.format(Number(loan.emiAmount || 0)),
+          value: self.currencyConverter.format(Number(loan.outstandingBalance || 0)),
+          status: loan.status,
+          loan: loan,
+          repayable: true
+        };
+      }));
+      self.secondaryItems([]);
+      self.loanRepaymentLoanOptionRows(eligibleLoans.map(function (loan) {
+        return { value: loan.loanId, label: String(loan.loanType || 'Loan').replace(/_/g, ' ') + ' · ' + String(loan.loanNumber || loan.loanId || 'No data') + ' · ' + self.currencyConverter.format(Number(loan.outstandingBalance || 0)) + ' outstanding' };
+      }));
+      self.loanHistoryOptionRows(loans.map(function (loan) {
+        return { value: loan.loanId, label: String(loan.loanType || 'Loan').replace(/_/g, ' ') + ' · ' + String(loan.loanNumber || loan.loanId || 'No data') };
+      }));
+      if (eligibleLoans.length && !eligibleLoans.some(function (loan) { return loan.loanId === self.loanRepaymentLoanId(); })) { self.loanRepaymentLoanId(eligibleLoans[0].loanId); }
+      if (!eligibleLoans.length) { self.loanRepaymentLoanId(''); }
+      if (loans.length && !loans.some(function (loan) { return loan.loanId === self.loanHistoryLoanId(); })) { self.loanHistoryLoanId(loans[0].loanId); }
+      if (!loans.length) { self.loanHistoryLoanId(''); self.loanHistoryRows([]); }
+      const outstanding = eligibleLoans.reduce(function (sum, loan) { return sum + Number(loan.outstandingBalance || 0); }, 0);
+      self.highlights([
+        { label: 'Outstanding', value: self.currencyConverter.format(outstanding) },
+        { label: 'Active loans', value: String(eligibleLoans.length) },
+        { label: 'All loans', value: String(loans.length) }
+      ]);
+    };
     this.loadLoanData = function () {
       if (!self.isLoans) { return; }
       const token = params.app.authToken();
-      api.request('/api/accounts', {}, token).then(function (response) {
-        const accounts = responseData(response) || [];
+      return Promise.all([
+        api.request('/api/accounts', {}, token),
+        api.request('/api/loans', {}, token)
+      ]).then(function (responses) {
+        const accounts = responseArray(responses[0]);
+        const loans = responseArray(responses[1]);
         const activeAccounts = accounts.filter(function (account) { return account.status === 'ACTIVE'; });
         self.loanAccountOptionRows(activeAccounts.map(function (account) {
           const number = String(account.accountNumber || '');
           return { value: account.accountId, label: String(account.accountType || 'Account').replace(/_/g, ' ') + ' - ending ' + number.slice(-4) };
         }));
+        self.loanRepaymentAccountOptionRows(activeAccounts.map(function (account) {
+          const number = String(account.accountNumber || '');
+          return { value: account.accountId, label: String(account.accountType || 'Account').replace(/_/g, ' ') + ' ending ' + number.slice(-4) + ' - ' + self.currencyConverter.format(Number(account.availableBalance || 0)) + ' available', availableBalance: Number(account.availableBalance || 0) };
+        }));
         if (activeAccounts.length && !activeAccounts.some(function (account) { return account.accountId === self.loanAccountId(); })) {
           self.loanAccountId(activeAccounts[0].accountId);
         }
-      }).catch(function (error) {
-        self.loanError(error.message || 'Unable to load active accounts for the loan application.');
-      });
-      Promise.all([
-        api.request('/api/loans', {}, token),
-        api.request('/api/loans/applications', {}, token)
-      ]).then(function (responses) {
-        const loans = responseData(responses[0]) || [];
-        const applications = responseData(responses[1]) || [];
-        const loanRows = loans.map(function (loan) { return { icon: String(loan.loanType || 'LN').slice(0, 2), name: String(loan.loanType || 'Loan').replace(/_/g, ' '), meta: 'Loan ending ' + String(loan.loanNumber || '').slice(-4) + ' - EMI ' + self.currencyConverter.format(Number(loan.emiAmount || 0)), value: self.currencyConverter.format(Number(loan.outstandingBalance || 0)), status: loan.status }; });
-        const applicationRows = applications.map(function (application) { return { icon: 'AP', name: String(application.loanType || 'Loan').replace(/_/g, ' ') + ' application', meta: 'Reference ' + String(application.applicationId || '').slice(0, 8), value: self.currencyConverter.format(Number(application.requestedAmount || 0)), status: application.status }; });
-        self.items(loanRows.concat(applicationRows));
-        const outstanding = loans.reduce(function (sum, loan) { return sum + Number(loan.outstandingBalance || 0); }, 0);
-        self.highlights([{ label: 'Outstanding', value: self.currencyConverter.format(outstanding) }, { label: 'Active loans', value: String(loans.filter(function (loan) { return loan.status === 'ACTIVE'; }).length) }, { label: 'Applications', value: String(applications.length) }]);
+        self.loanPortfolio(loans);
+        self.refreshLoanPresentation();
+        if (activeAccounts.length && !activeAccounts.some(function (account) { return account.accountId === self.loanRepaymentAccountId(); })) { self.loanRepaymentAccountId(activeAccounts[0].accountId); }
+        else if (!activeAccounts.length) { self.loanRepaymentAccountId(''); }
+        if (self.loanHistoryLoanId()) { return self.loadLoanRepaymentHistory(); }
       }).catch(function (error) { self.loanError(error.message || 'Unable to load loan details.'); });
     };
     this.transactionDate = function (value) {
@@ -818,8 +1038,7 @@ define([
         self.profileCountry(profile.country || 'India'); self.profilePostalCode(profile.postalCode || '');
         params.app.customerName(profile.fullName || params.app.customerName());
         self.profileKycStatus(kyc && kyc.status ? kyc.status : 'NOT_SUBMITTED');
-        self.highlights.splice(0, 1, { label: 'Profile status', value: profileComplete ? 'COMPLETE' : 'INCOMPLETE' });
-        self.highlights.splice(1, 1, { label: 'KYC status', value: self.profileKycStatus() });
+        self.highlights([{ label: 'Profile status', value: profileComplete ? 'COMPLETE' : 'INCOMPLETE' }, { label: 'KYC status', value: self.profileKycStatus() }]);
         if (!profileComplete) { self.profileOnboardingStep(1); }
         else if (!kyc) { self.profileOnboardingStep(2); }
         else if (!requiredDocumentsComplete && kyc.status !== 'VERIFIED') { self.profileOnboardingStep(3); }
@@ -1158,10 +1377,7 @@ define([
     this.loadNotificationData = function () {
       if (!self.isNotifications) { return; }
       self.highlights([]);
-      self.items([
-        { icon: 'AC', name: 'Account created', meta: 'Your new Northstar bank account was created successfully.', value: 'Recent', status: 'New', progress: null, positive: false },
-        { icon: 'CA', name: 'Card application submitted', meta: 'Your card application was received and is under review.', value: 'Recent', status: 'New', progress: null, positive: false }
-      ]);
+      self.items([]);
       self.secondaryItems([]);
     };
     this.updateAdminHighlights = function () {

@@ -369,7 +369,7 @@
       <div class="beneficiary-form-actions"><button class="secondary-auth-button" type="button" data-bind="visible: editingBeneficiaryId, click: cancelBeneficiaryEdit">Cancel edit</button><button class="primary-page-button" type="submit" data-bind="text: beneficiarySubmitLabel, disable: beneficiaryBusy() !== ''"></button></div>
     </form>
 
-    <form class="page-action-form" data-bind="visible: isTransfer, submit: submitTransfer">
+    <form class="page-action-form page-action-form--transfer" data-bind="visible: isTransfer, submit: submitTransfer">
       <oj-validation-group class="jet-validation-group">
       <oj-select-single label-hint="From account" data="[[transferAccountOptions]]" item-text="label" value="{{transferFrom}}" placeholder="[[transferAccountPlaceholder]]" disabled="[[transferAccountUnavailable]]" required></oj-select-single>
       <oj-select-single label-hint="Verified beneficiary" data="[[transferBeneficiaryOptions]]" item-text="label" value="{{transferBeneficiary}}" placeholder="[[transferBeneficiaryPlaceholder]]" disabled="[[transferBeneficiaryUnavailable]]" required></oj-select-single>
@@ -380,6 +380,7 @@
       <button class="secondary-auth-button" type="button" data-bind="visible: transferAccountUnavailable, click: goToAccounts">Open an account</button>
       <button class="secondary-auth-button" type="button" data-bind="visible: transferBeneficiaryUnavailable, click: goToBeneficiaries">Manage beneficiaries</button>
       <p class="page-action-note">To protect your money, transfers can only be made to beneficiaries with verified bank details. Add a beneficiary first if they are not listed.</p>
+      <strong class="transfer-limit-api-value" data-bind="text: 'Daily transfer limit: No data'"></strong>
       <div class="page-action-summary"><span>Daily transfer limit</span><strong>₹5,00,000</strong></div>
       <button class="primary-page-button" type="submit" data-bind="disable: transferUnavailable">Review secure transfer</button>
     </form>
@@ -446,6 +447,7 @@
       <div><p class="page-eyebrow">Pre-qualified options</p><h3 id="loan-products-title">Choose the loan that fits your plans</h3></div>
       <div class="loan-marketplace__actions">
         <span class="status-chip status-chip--positive">● Instant eligibility check</span>
+        <button class="secondary-auth-button loan-repay-button" type="button" data-bind="click: openLoanRepayment, disable: loanRepaymentLoanOptionRows().length === 0">Make a repayment</button>
         <button class="primary-page-button loan-apply-button" type="button" data-bind="click: openLoanApplication">Apply for a new loan</button>
         <div class="loan-scroll-controls" aria-label="Scroll loan options">
           <button type="button" data-bind="click: scrollLoanProducts.bind($data, -1)" aria-label="View previous loan options">←</button>
@@ -462,7 +464,45 @@
         <button type="button" data-bind="click: $parent.chooseLoanProduct">Check backend EMI <span aria-hidden="true">→</span></button>
       </article>
     </div>
+    <p class="page-action-success loan-repayment-success" role="status" aria-live="polite" data-bind="visible: loanRepaymentSuccess, text: loanRepaymentSuccess"></p>
   </section>
+
+  <section id="loan-repayment-panel" class="surface-card loan-repayment-panel" data-bind="visible: isLoans && loanRepaymentOpen()" aria-labelledby="loan-repayment-title">
+    <div class="loan-application__header">
+      <div><p class="page-eyebrow">Secure repayment</p><h3 id="loan-repayment-title">Repay an active loan</h3><p>Choose the loan and source account, then review the payment before it is submitted.</p></div>
+      <button class="loan-application__close" type="button" data-bind="click: closeLoanRepayment, disable: loanRepaymentBusy" aria-label="Close loan repayment">×</button>
+    </div>
+    <form class="loan-repayment-form" data-bind="submit: reviewLoanRepayment">
+      <div class="loan-repayment-fields">
+        <oj-select-single label-hint="Loan" data="[[loanRepaymentLoanOptions]]" item-text="label" value="{{loanRepaymentLoanId}}" required></oj-select-single>
+        <oj-select-single label-hint="Source account" data="[[loanRepaymentAccountOptions]]" item-text="label" value="{{loanRepaymentAccountId}}" required></oj-select-single>
+        <oj-input-number label-hint="Repayment amount" value="{{loanRepaymentAmount}}" converter="[[currencyConverter]]" min="1" max="[[loanRepaymentMaximum]]" step="100" required></oj-input-number>
+        <oj-input-text label-hint="Description" value="{{loanRepaymentDescription}}" maxlength="160" required></oj-input-text>
+      </div>
+      <aside class="loan-repayment-summary" data-bind="with: selectedRepaymentLoan">
+        <p>Payment overview</p>
+        <dl>
+          <div><dt>Loan status</dt><dd data-bind="text: status"></dd></div>
+          <div><dt>Outstanding balance</dt><dd data-bind="text: $parent.pageMoney(outstandingBalance)"></dd></div>
+          <div><dt>Regular EMI</dt><dd data-bind="text: $parent.pageMoney(emiAmount)"></dd></div>
+          <div><dt>Account available</dt><dd data-bind="text: $parent.selectedRepaymentAccount() ? $parent.pageMoney($parent.selectedRepaymentAccount().availableBalance) : 'Choose an account'"></dd></div>
+        </dl>
+        <small>The amount cannot exceed the outstanding balance or the source account's available balance.</small>
+      </aside>
+      <div class="form-error loan-repayment-message" role="alert" data-bind="visible: loanRepaymentError, text: loanRepaymentError"></div>
+      <div class="loan-form-actions"><button class="secondary-auth-button" type="button" data-bind="click: closeLoanRepayment, disable: loanRepaymentBusy">Cancel</button><button class="primary-page-button" type="submit" data-bind="disable: loanRepaymentBusy, text: loanRepaymentBusy() ? 'Processing…' : 'Review repayment'"></button></div>
+    </form>
+  </section>
+
+  <div class="bill-modal-backdrop" data-bind="visible: pendingLoanRepayment">
+    <section class="bill-confirm-card loan-repayment-confirm" role="dialog" aria-modal="true" aria-labelledby="loan-repayment-confirm-title" data-bind="with: pendingLoanRepayment">
+      <span class="bill-confirm-icon">₹</span><p class="page-eyebrow">Confirm loan repayment</p>
+      <h3 id="loan-repayment-confirm-title" data-bind="text: $parent.currencyConverter.format(amount) + ' repayment'"></h3>
+      <dl><div><dt>Loan</dt><dd data-bind="text: loanLabel"></dd></div><div><dt>From</dt><dd data-bind="text: accountLabel"></dd></div><div><dt>Description</dt><dd data-bind="text: description"></dd></div></dl>
+      <p>The payment will debit the selected account immediately. Submit it only once.</p>
+      <div><button class="secondary-auth-button" type="button" data-bind="click: $parent.cancelLoanRepaymentConfirmation, disable: $parent.loanRepaymentBusy">Cancel</button><button class="primary-page-button" type="button" data-bind="click: $parent.confirmLoanRepayment, disable: $parent.loanRepaymentBusy, text: $parent.loanRepaymentBusy() ? 'Processing…' : 'Confirm repayment'"></button></div>
+    </section>
+  </div>
 
   <section id="loan-application" class="surface-card loan-application" data-bind="visible: isLoans && loanApplicationOpen()" aria-labelledby="loan-application-title">
     <div class="loan-application__header">
@@ -482,11 +522,13 @@
       </div>
 
       <aside class="loan-estimate" aria-label="Estimated loan repayment">
-        <p>Estimated monthly EMI</p>
+        <p>Backend EMI calculator</p>
         <strong data-bind="text: formattedEmi"></strong>
         <div><span>Interest rate</span><b><span data-bind="text: selectedLoanRate"></span>% p.a.</b></div>
         <div><span>Total interest</span><b data-bind="text: totalInterest"></b></div>
-        <small>This is an estimate. Final approval and pricing depend on verification and eligibility.</small>
+        <div><span>Total repayment</span><b data-bind="text: totalRepayment"></b></div>
+        <button class="secondary-auth-button loan-calculate-button" type="button" data-bind="click: calculateLoanEmi, disable: loanEstimateBusy, text: loanEstimateBusy() ? 'Calculating…' : 'Calculate EMI'"></button>
+        <small>Calculated by <code>POST /api/loans/calculate</code>. Final approval and pricing depend on verification.</small>
       </aside>
 
       <div class="form-error loan-form-error" role="alert" data-bind="visible: loanError, text: loanError"></div>
@@ -503,6 +545,25 @@
       <button class="primary-page-button" type="button" data-bind="click: startAnotherApplication">Start another application</button>
     </div>
 
+  </section>
+
+  <section class="surface-card loan-history-panel" data-bind="visible: isLoans" aria-labelledby="loan-history-title">
+    <div class="loan-history-heading">
+      <div><p class="page-eyebrow">Payment records</p><h3 id="loan-history-title">Repayment history</h3><p>Select a loan to see every repayment returned by the backend.</p></div>
+      <div class="loan-history-selector"><oj-select-single label-hint="Loan" data="[[loanHistoryOptions]]" item-text="label" value="{{loanHistoryLoanId}}" placeholder="Select a loan"></oj-select-single><button class="primary-page-button" type="button" data-bind="click: loadLoanRepaymentHistory, disable: !loanHistoryLoanId() || loanHistoryLoading(), text: loanHistoryLoading() ? 'Loading…' : 'View history'"></button></div>
+    </div>
+    <p class="form-error" role="alert" data-bind="visible: loanHistoryError, text: loanHistoryError"></p>
+    <div class="loan-history-list" data-bind="foreach: loanHistoryRows">
+      <article>
+        <div class="loan-history-id"><span>Loan repayment ID</span><strong data-bind="text: loanRepaymentId || 'No data'"></strong></div>
+        <div class="loan-history-id"><span>Transaction ID</span><strong data-bind="text: transactionId || 'No data'"></strong></div>
+        <div><span>Amount</span><b data-bind="text: $parent.pageMoney(amount)"></b></div>
+        <div><span>Principal applied</span><b data-bind="text: $parent.loanHistoryPrincipal(principalApplied)"></b></div>
+        <div><span>Created</span><b data-bind="text: $parent.transactionDate(createdAt)"></b></div>
+        <i data-bind="text: status || 'No data'"></i>
+      </article>
+    </div>
+    <div class="schedule-empty" data-bind="visible: !loanHistoryLoading() && loanHistoryRows().length === 0"><span>RH</span><h4>No data</h4><p>No repayments were returned for the selected loan.</p></div>
   </section>
 
   <section class="support-centre" data-bind="visible: isSupport" aria-label="Help and support centre">
@@ -549,17 +610,19 @@
 
   <section class="workspace-grid" data-bind="visible: !isSupport && !isAccounts && !isTransactions && !isBeneficiaries">
     <article class="surface-card workspace-panel">
-      <div class="card-heading"><div><p class="page-eyebrow" data-bind="text: primaryEyebrow"></p><h3 data-bind="text: primaryTitle"></h3></div><button class="text-button" type="button" data-bind="visible: !isNotifications">View all</button></div>
+      <div class="card-heading"><div><p class="page-eyebrow" data-bind="text: primaryEyebrow"></p><h3 data-bind="text: primaryTitle"></h3></div><button class="text-button" type="button" data-bind="visible: !isNotifications && !isLoans">View all</button></div>
       <div class="workspace-list" data-bind="foreach: items">
         <div class="workspace-row">
           <span class="workspace-row__icon" data-bind="text: icon"></span>
           <div class="workspace-row__copy"><strong data-bind="text: name"></strong><small data-bind="text: meta"></small><div class="workspace-progress" data-bind="visible: $data.progress != null"><span data-bind="style: {width: ($data.progress || 0) + '%'}"></span></div></div>
           <div class="workspace-row__value"><strong data-bind="text: value, css: {'amount-positive': $data.positive}"></strong><small data-bind="text: status"></small></div>
+          <button class="workspace-row__action" type="button" data-bind="visible: $parent.isLoans && $data.repayable, click: $parent.openLoanRepayment.bind($parent, $data.loan)">Repay</button>
         </div>
       </div>
+      <div class="schedule-empty workspace-empty" data-bind="visible: items().length === 0"><span>—</span><h4>No data</h4><p>No data is available.</p></div>
     </article>
 
-    <article class="surface-card workspace-panel" data-bind="visible: !isNotifications">
+    <article class="surface-card workspace-panel" data-bind="visible: !isNotifications && !isLoans">
       <div class="card-heading"><div><p class="page-eyebrow" data-bind="text: secondaryEyebrow"></p><h3 data-bind="text: secondaryTitle"></h3></div><span class="status-chip status-chip--positive">Live</span></div>
       <p class="workspace-panel__description" data-bind="text: secondaryCopy"></p>
       <div class="workspace-list" data-bind="foreach: secondaryItems">
@@ -569,7 +632,8 @@
           <div class="workspace-row__value"><strong data-bind="text: value"></strong><small data-bind="text: status"></small></div>
         </div>
       </div>
-      <div class="workspace-integration"><span aria-hidden="true">◇</span><p><strong>API-ready workspace</strong><small>Connect to <code data-bind="text: endpoint"></code> when live banking data is available.</small></p></div>
+      <div class="schedule-empty workspace-empty" data-bind="visible: secondaryItems().length === 0"><span>—</span><h4>No data</h4><p>No data is available.</p></div>
+      <!-- <div class="workspace-integration"><span aria-hidden="true">◇</span><p><strong>API-ready workspace</strong><small>Connect to <code data-bind="text: endpoint"></code> when live banking data is available.</small></p></div> -->
     </article>
   </section>
 </div>

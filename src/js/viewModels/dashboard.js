@@ -71,13 +71,13 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'oj
     const dashboardClockTimer = window.setInterval(function () {
       self.dashboardNow(new Date());
     }, 60000);
-    self.totalBalance = ko.observable(self.app.formatCurrency(0));
-    self.monthlyIncome = ko.observable(self.app.formatCurrency(0));
-    self.monthlySpending = ko.observable(self.app.formatCurrency(0));
+    self.totalBalance = ko.observable('No data');
+    self.monthlyIncome = ko.observable('No data');
+    self.monthlySpending = ko.observable('No data');
     self.revealedMetric = ko.observable('');
-    self.totalBalanceDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'balance' ? self.totalBalance() : uiLogic.maskedCurrency(self.totalBalance()); });
-    self.monthlyIncomeDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'income' ? self.monthlyIncome() : uiLogic.maskedCurrency(self.monthlyIncome()); });
-    self.monthlySpendingDisplay = ko.pureComputed(function () { return self.revealedMetric() === 'spending' ? self.monthlySpending() : uiLogic.maskedCurrency(self.monthlySpending()); });
+    self.totalBalanceDisplay = ko.pureComputed(function () { return self.totalBalance() === 'No data' ? 'No data' : (self.revealedMetric() === 'balance' ? self.totalBalance() : uiLogic.maskedCurrency(self.totalBalance())); });
+    self.monthlyIncomeDisplay = ko.pureComputed(function () { return self.monthlyIncome() === 'No data' ? 'No data' : (self.revealedMetric() === 'income' ? self.monthlyIncome() : uiLogic.maskedCurrency(self.monthlyIncome())); });
+    self.monthlySpendingDisplay = ko.pureComputed(function () { return self.monthlySpending() === 'No data' ? 'No data' : (self.revealedMetric() === 'spending' ? self.monthlySpending() : uiLogic.maskedCurrency(self.monthlySpending())); });
     self.revealTotalBalance = function () { self.revealedMetric('balance'); };
     self.revealMonthlyIncome = function () { self.revealedMetric('income'); };
     self.revealMonthlySpending = function () { self.revealedMetric('spending'); };
@@ -85,18 +85,10 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'oj
     self.monthlySpendingShare = ko.observable('0% of monthly income');
     self.monthlySpendingShareWidth = ko.observable('0%');
 
-    self.cashFlowGroups = ko.observableArray(['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']);
-    self.cashFlowSeries = ko.observableArray([
-      { name: 'Income', items: [82, 91, 86, 98, 96, 105], color: '#27666b', markerDisplayed: 'on' },
-      { name: 'Spending', items: [52, 44, 58, 49, 61, 49], color: '#d87308', markerDisplayed: 'on' }
-    ]);
-    self.spendingGroups = ko.observableArray(['August']);
-    self.spendingSeries = ko.observableArray([
-      { name: 'Housing', items: [38], color: '#155183' },
-      { name: 'Food', items: [26], color: '#2391c4' },
-      { name: 'Bills', items: [21], color: '#d87308' },
-      { name: 'Travel', items: [15], color: '#12805c' }
-    ]);
+    self.cashFlowGroups = ko.observableArray([]);
+    self.cashFlowSeries = ko.observableArray([]);
+    self.spendingGroups = ko.observableArray([]);
+    self.spendingSeries = ko.observableArray([]);
     self.spendingDataLabel = function (context) {
       return context.value + '%';
     };
@@ -115,11 +107,7 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'oj
       { key: 'cards', icon: 'CD', label: 'Cards', value: '—', meta: 'Loading card portfolio…', status: 'Loading', route: 'cards', accent: 'dashboard-summary--cards', available: true }
     ]);
 
-    self.offers = ko.observableArray([
-      { icon: '◇', tag: 'Pre-approved', eyebrow: 'Personal loan', title: 'Funds when plans cannot wait', copy: 'Borrow up to ₹8 lakh with a simple digital journey.', action: 'View your offer', route: 'loans', accentClass: 'offer-card--blue' },
-      { icon: '▱', tag: 'Rewards', eyebrow: 'Northstar credit card', title: 'More value from everyday spending', copy: 'Earn 5× points on dining, travel and online purchases.', action: 'Explore cards', route: 'cards', accentClass: 'offer-card--gold' },
-      { icon: '↗', tag: 'New', eyebrow: 'Smart deposits', title: 'Put your surplus balance to work', copy: 'Flexible deposits with attractive rates and easy access.', action: 'Start saving', route: 'accounts', accentClass: 'offer-card--green' }
-    ]);
+    self.offers = ko.observableArray([]);
 
     self.go = function (route) { self.app.navigate(route); };
     self.openSummary = function (summary) { if (summary && summary.available !== false) { self.go(summary.route); } };
@@ -138,23 +126,24 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'oj
       const requests = [
         api.request('/api/bill-payments', {}, token).then(function (response) {
           const rows = self.summaryRows(response); const successful = rows.filter(function (row) { return row.status === 'SUCCESS'; }).length;
-          return { key: 'bills', icon: 'BP', label: 'Bill payments', value: String(rows.length), meta: successful + ' completed successfully', status: rows.length ? 'Activity' : 'None yet', route: 'bill-payments', accent: 'dashboard-summary--bills', available: true };
+          return { key: 'bills', icon: 'BP', label: 'Bill payments', value: rows.length ? String(rows.length) : 'No data', meta: rows.length ? successful + ' completed successfully' : 'No data', status: rows.length ? 'Activity' : 'No data', route: 'bill-payments', accent: 'dashboard-summary--bills', available: true };
         }).catch(function (error) { return self.optionalFailure('bills', 'BP', 'Bill payments', 'bill-payments', 'dashboard-summary--bills', error); }),
         api.request('/api/schedules', {}, token).then(function (response) {
           const rows = self.summaryRows(response); const active = rows.filter(function (row) { return row.status === 'ACTIVE'; }).length;
-          return { key: 'schedules', icon: 'SC', label: 'Schedules', value: String(active), meta: rows.length + ' total · ' + active + ' active', status: active ? 'Upcoming' : 'No active', route: 'scheduled-payments', accent: 'dashboard-summary--schedules', available: true };
+          return { key: 'schedules', icon: 'SC', label: 'Schedules', value: rows.length ? String(active) : 'No data', meta: rows.length ? rows.length + ' total · ' + active + ' active' : 'No data', status: rows.length ? (active ? 'Upcoming' : 'No active') : 'No data', route: 'scheduled-payments', accent: 'dashboard-summary--schedules', available: true };
         }).catch(function (error) { return self.optionalFailure('schedules', 'SC', 'Schedules', 'scheduled-payments', 'dashboard-summary--schedules', error); }),
         api.request('/api/reports/history?page=0&size=20', {}, token).then(function (response) {
           const payload = api.unwrap(response) || {}; const rows = self.summaryRows(payload); const completed = rows.filter(function (row) { return row.status === 'COMPLETED'; }).length;
-          return { key: 'reports', icon: 'RP', label: 'Reports', value: String(payload.totalElements == null ? rows.length : payload.totalElements), meta: completed + ' ready on this page', status: completed ? 'Ready' : 'No downloads', route: 'reports', accent: 'dashboard-summary--reports', available: true };
+          const total = payload.totalElements == null ? rows.length : payload.totalElements;
+          return { key: 'reports', icon: 'RP', label: 'Reports', value: total ? String(total) : 'No data', meta: total ? completed + ' ready on this page' : 'No data', status: total ? (completed ? 'Ready' : 'No downloads') : 'No data', route: 'reports', accent: 'dashboard-summary--reports', available: true };
         }).catch(function (error) { return self.optionalFailure('reports', 'RP', 'Reports', 'reports', 'dashboard-summary--reports', error); }),
         api.request('/api/loans', {}, token).then(function (response) {
           const rows = self.summaryRows(response); const active = rows.filter(function (row) { return row.status === 'ACTIVE' || row.status === 'OVERDUE'; }).length;
-          return { key: 'loans', icon: 'LN', label: 'Loans', value: String(active), meta: rows.length + ' loan accounts in portfolio', status: active ? 'Active' : 'No active', route: 'loans', accent: 'dashboard-summary--loans', available: true };
+          return { key: 'loans', icon: 'LN', label: 'Loans', value: rows.length ? String(active) : 'No data', meta: rows.length ? rows.length + ' loan accounts in portfolio' : 'No data', status: rows.length ? (active ? 'Active' : 'No active') : 'No data', route: 'loans', accent: 'dashboard-summary--loans', available: true };
         }).catch(function (error) { return self.optionalFailure('loans', 'LN', 'Loans', 'loans', 'dashboard-summary--loans', error); }),
         api.request('/api/cards', {}, token).then(function (response) {
           const rows = self.summaryRows(response); const active = rows.filter(function (row) { return row.status === 'ACTIVE'; }).length; const blocked = rows.filter(function (row) { return row.status === 'BLOCKED'; }).length;
-          return { key: 'cards', icon: 'CD', label: 'Cards', value: String(active), meta: rows.length + ' cards · ' + blocked + ' blocked', status: active ? 'Active' : 'No active', route: 'cards', accent: 'dashboard-summary--cards', available: true };
+          return { key: 'cards', icon: 'CD', label: 'Cards', value: rows.length ? String(active) : 'No data', meta: rows.length ? rows.length + ' cards · ' + blocked + ' blocked' : 'No data', status: rows.length ? (active ? 'Active' : 'No active') : 'No data', route: 'cards', accent: 'dashboard-summary--cards', available: true };
         }).catch(function (error) { return self.optionalFailure('cards', 'CD', 'Cards', 'cards', 'dashboard-summary--cards', error); })
       ];
       return Promise.all(requests).then(function (summaries) { self.optionalSummaries(summaries); }).then(function () { self.optionalSummariesLoading(false); });
@@ -240,9 +229,9 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'oj
           };
         }));
         if (requiresOnboarding) {
-          self.totalBalance(self.app.formatCurrency(0));
-          self.monthlyIncome(self.app.formatCurrency(0));
-          self.monthlySpending(self.app.formatCurrency(0));
+          self.totalBalance('No data');
+          self.monthlyIncome('No data');
+          self.monthlySpending('No data');
           self.monthlySpendingShare('0% of monthly income');
           self.monthlySpendingShareWidth('0%');
           self.transactions([]);
@@ -251,9 +240,9 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'oj
       }).catch(function (error) {
         self.dashboardError(error.message || 'Unable to load your account summary.');
         self.accounts([]);
-        self.totalBalance(self.app.formatCurrency(0));
-        self.monthlyIncome(self.app.formatCurrency(0));
-        self.monthlySpending(self.app.formatCurrency(0));
+        self.totalBalance('No data');
+        self.monthlyIncome('No data');
+        self.monthlySpending('No data');
         self.monthlySpendingShare('0% of monthly income');
         self.monthlySpendingShareWidth('0%');
         self.transactions([]);
@@ -261,7 +250,7 @@ define(['knockout', 'utils/api', 'utils/statementDownload', 'utils/uiLogic', 'oj
     };
     self.downloadStatement = function () {
       const fileName = downloadStatementFile();
-      self.statementDownloadStatus(fileName + ' downloaded successfully.');
+      self.statementDownloadStatus(fileName === 'No data' ? 'No data' : fileName + ' downloaded successfully.');
     };
     self.disconnected = function () {
       window.clearInterval(dashboardClockTimer);

@@ -28,7 +28,7 @@
     </article>
     <article class="metric-card metric-card--private" title="Double-click to reveal amount" data-bind="event: {dblclick: revealMonthlyIncome, mouseleave: hideRevealedMetric}">
       <div class="metric-card__top"><span data-bind="text: app.t('dashboard.monthlyIncome')"></span><span class="metric-icon metric-icon--green">↓</span></div>
-      <strong data-bind="text: monthlyIncomeDisplay"></strong><small data-bind="text: dashboardMonth"></small><span class="metric-card__privacy-hint">Double-click to reveal</span><div class="trend">Current credited transactions</div>
+      <strong data-bind="text: monthlyIncomeDisplay"></strong><small data-bind="text: dashboardMonth"></small><span class="metric-card__privacy-hint">Double-click to reveal</span><div class="trend">No data</div>
     </article>
     <article class="metric-card metric-card--private" title="Double-click to reveal amount" data-bind="event: {dblclick: revealMonthlySpending, mouseleave: hideRevealedMetric}">
       <div class="metric-card__top"><span data-bind="text: app.t('dashboard.monthlySpending')"></span><span class="metric-icon metric-icon--gold">↗</span></div>
@@ -63,12 +63,12 @@
     <figure><img src="styles/images/northstar-digital-life.png" alt="Customer securely managing finances on a smartphone"></figure>
   </section>
 
-  <section class="discovery-section" data-bind="visible: hasAccounts" aria-labelledby="offers-title">
+  <section class="discovery-section" data-bind="visible: hasAccounts && offers().length > 0" aria-labelledby="offers-title">
     <div class="section-heading-row">
       <div><p class="page-eyebrow">Selected for you</p><h3 id="offers-title">Make more of your money</h3></div>
       <button class="text-button" type="button" data-bind="click: go.bind($data, 'accounts')">Explore all products →</button>
     </div>
-    <div class="offer-grid" data-bind="foreach: offers">
+    <div class="offer-grid" data-bind="visible: offers().length > 0, foreach: offers">
       <article class="offer-card" data-bind="css: accentClass">
         <div class="offer-card__top"><span class="offer-icon" data-bind="text: icon"></span><span class="offer-tag" data-bind="text: tag"></span></div>
         <div><p data-bind="text: eyebrow"></p><h4 data-bind="text: title"></h4><span data-bind="text: copy"></span></div>
@@ -77,7 +77,7 @@
     </div>
   </section>
 
-  <section class="chart-grid" data-bind="visible: hasAccounts" aria-label="Financial charts">
+  <section class="chart-grid" data-bind="visible: hasAccounts && (cashFlowSeries().length > 0 || spendingSeries().length > 0)" aria-label="Financial charts">
     <article class="surface-card chart-card">
       <div class="card-heading"><div><p class="page-eyebrow">Six-month overview</p><h3>Cash flow</h3></div><div class="chart-heading-actions"><span class="status-chip status-chip--positive">● Healthy</span><button class="period-select">Last 6 months⌄</button></div></div>
       <oj-chart class="banking-chart" type="line" series="[[cashFlowSeries]]" groups="[[cashFlowGroups]]" animation-on-display="auto" hover-behavior="dim" style-defaults.line-type="curved" style-defaults.line-width="3" legend.position="bottom"></oj-chart>
@@ -87,6 +87,7 @@
       <oj-chart class="banking-chart" type="pie" series="[[spendingSeries]]" groups="[[spendingGroups]]" data-label="[[spendingDataLabel]]" animation-on-display="auto" hover-behavior="dim" style-defaults.pie-inner-radius="0.58" style-defaults.data-label-position="outsideSlice" legend.position="bottom"></oj-chart>
     </article>
   </section>
+  <p class="schedule-empty dashboard-no-data" data-bind="visible: hasAccounts && cashFlowSeries().length === 0 && spendingSeries().length === 0">No data</p>
 
   <section class="dashboard-grid" data-bind="visible: hasAccounts">
     <article class="surface-card">
@@ -94,12 +95,14 @@
       <div class="account-list" data-bind="foreach: accounts">
         <div class="account-row"><span class="account-icon" data-bind="text: icon, css: iconClass"></span><div><strong data-bind="text: name"></strong><small data-bind="text: meta"></small></div><strong data-bind="text: amount"></strong></div>
       </div>
+      <p class="schedule-empty" data-bind="visible: accounts().length === 0">No data</p>
     </article>
     <article class="surface-card">
       <div class="card-heading"><div><p class="page-eyebrow">Latest activity</p><h3>Recent transactions</h3></div><button class="text-button" data-bind="click: go.bind($data, 'transactions')">View all →</button></div>
       <div class="transaction-list" data-bind="foreach: transactions">
         <div class="transaction-row"><span class="transaction-icon" data-bind="text: icon"></span><div><strong data-bind="text: name"></strong><small data-bind="text: meta"></small></div><strong data-bind="text: amount, css: {'amount-positive': positive}"></strong></div>
       </div>
+      <p class="schedule-empty" data-bind="visible: transactions().length === 0">No data</p>
     </article>
   </section>
 
